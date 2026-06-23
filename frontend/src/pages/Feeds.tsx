@@ -262,7 +262,7 @@ export const Feeds = () => {
         </main>
 
         {/* Right spacer - mirrors sidebar width on desktop */}
-        <div className="hidden sm:block min-w-56 shrink-0 bg-gray-100" />
+        <div className="hidden lg:block min-w-52 shrink-0 bg-gray-100" />
       </div>
     </div>
   );

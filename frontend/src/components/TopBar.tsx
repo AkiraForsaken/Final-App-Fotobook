@@ -16,7 +16,7 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
       <div className="w-full px-4 lg:px-8">
         <div className="flex h-14 items-center justify-between gap-4 ml-2">
           {/* Left: hamburger + logo + search */}
-          <div className="flex items-center gap-4 min-w-0">
+          <div className="flex items-center gap-4 min-w-0 sm:ml-8">
             {/* Hamburger - mobile only */}
             <button
               onClick={onMenuToggle}
@@ -26,7 +26,7 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
               <i className="fa-solid fa-bars" />
             </button>
 
-            <span className="shrink-0 text-xl font-bold text-white tracking-tight">
+            <span className="shrink-0 text-2xl font-bold text-white tracking-tight">
               FotoBook
             </span>
 
@@ -49,16 +49,16 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
                     lastName={currentUser.lastName}
                     size="sm"
                   />
-                  <span className="hidden md:block text-sm font-medium text-white">
+                  <span className="hidden md:block text-md font-medium text-white">
                     {currentUser.firstName} {currentUser.lastName}
                   </span>
                 </div>
-                <Button size="sm" variant="secondary" onClick={onLogout}>
+                <Button size="md" variant="secondary" onClick={onLogout}>
                   Logout
                 </Button>
               </>
             ) : (
-              <Button size="sm" variant="secondary">
+              <Button size="md" variant="secondary">
                 <a href="/login">Log in</a>
               </Button>
             )}

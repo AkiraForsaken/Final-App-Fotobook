@@ -29,7 +29,7 @@ export const SideBar = ({ items, mobileOpen, onClose }: SideBarProps) => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden sm:flex flex-col min-w-56 shrink-0 bg-gray-100 py-4">
+      <aside className="hidden sm:flex flex-col min-w-40 lg:min-w-52 shrink-0 bg-gray-100 py-4">
         <nav className="flex flex-col space-y-1 px-1">
           {items.map((item) => (
             <SideBarItem key={item.to} item={item} />

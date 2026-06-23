@@ -7,9 +7,9 @@ interface AvatarProps {
 }
 
 const sizeClasses = {
-  sm: "h-7 w-7 text-xs",
-  md: "h-9 w-9 text-sm",
-  lg: "h-12 w-12 text-base",
+  sm: "h-8 w-8 text-sm",
+  md: "h-10 w-10 text-md",
+  lg: "h-12 w-12 text-lg",
 };
 
 export const Avatar = ({ src, firstName, lastName, size = "md", className = "" }: AvatarProps) => {
