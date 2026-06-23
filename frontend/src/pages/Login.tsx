@@ -1,6 +1,8 @@
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import type { User } from "../types/index.ts";
+
+const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 // Replace with a real POST /api/auth/login call later.
 const MOCK_ACCOUNT = {
@@ -20,32 +22,82 @@ const MOCK_ACCOUNT = {
 
 export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
   const navigate = useNavigate();
-  const emailRef = useRef<HTMLInputElement>(null);
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => { emailRef.current?.focus(); }, []);
+  const validate = () => {
+    const e: Record<string, string> = {};
+    if (!formData.email.trim()) e.email = "Email is required.";
+    else if (!isValidEmail(formData.email)) e.email = "Enter a valid email address.";
+
+    if (!formData.password) e.password = "Password is required.";
+    else if (formData.password.length > 64) e.password = "Max 64 characters.";
+    return e;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
+    const validation = validate();
+    if (Object.keys(validation).length) {
+      setErrors(validation);
+      setAuthError(null);
+      return;
+    }
+
+    setErrors({});
+    setAuthError(null);
     setLoading(true);
 
     if (
-      email.trim().toLowerCase() === MOCK_ACCOUNT.email &&
-      password === MOCK_ACCOUNT.password
+      formData.email.trim().toLowerCase() === MOCK_ACCOUNT.email &&
+      formData.password === MOCK_ACCOUNT.password
     ) {
       onLogin(MOCK_ACCOUNT.user);
       navigate("/feeds");
     } else {
-      setError("Incorrect email or password");
+      setAuthError("Incorrect email or password");
     }
 
     setLoading(false);
   };
+
+  const field = (
+    id: string,
+    label: string,
+    type: string,
+    value: string,
+    onChange: (v: string) => void,
+    opts?: { placeholder?: string; autoComplete?: string; autoFocus?: boolean }
+  ) => (
+    <div>
+      <label htmlFor={id} className="block font-medium text-gray-700 mb-1">
+        {label}
+      </label>
+      <input
+        id={id}
+        type={type}
+        autoComplete={opts?.autoComplete}
+        autoFocus={opts?.autoFocus}
+        required
+        placeholder={opts?.placeholder}
+        value={value}
+        onChange={(ev) => onChange(ev.target.value)}
+        className={[
+          "w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400",
+          "focus:outline-none focus:ring-1",
+          errors[id.replace("login-", "")]
+            ? "border-red-400 focus:border-red-500 focus:ring-red-400"
+            : "border-gray-300 focus:border-blue-600 focus:ring-blue-600",
+        ].join(" ")}
+      />
+      {errors[id.replace("login-", "")] && (
+        <p className="mt-1 text-red-600">{errors[id.replace("login-", "")]}</p>
+      )}
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
@@ -57,49 +109,25 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
         </div>
 
         {/* Error banner */}
-        {error && (
+        {authError && (
           <div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800 flex items-start gap-2">
             <i className="fa-solid fa-circle-exclamation mt-0.5 shrink-0" />
-            <span>{error}</span>
+            <span>{authError}</span>
           </div>
         )}
 
         {/* Log in form */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Email */}
-          <div>
-            <label htmlFor="login-email" className="block font-medium text-gray-700 mb-1">
-              Email
-            </label>
-            <input
-              ref={emailRef}
-              id="login-email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="john@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
-            />
-          </div>
+          {field("login-email", "Email", "email", formData.email, (value) => setFormData((prev) => ({ ...prev, email: value })), {
+            placeholder: "john@example.com",
+            autoComplete: "email",
+            autoFocus: true,
+          })}
 
-          {/* Password */}
-          <div>
-            <label htmlFor="login-password" className="block font-medium text-gray-700 mb-1">
-              Password
-            </label>
-            <input
-              id="login-password"
-              type="password"
-              autoComplete="current-password"
-              required
-              placeholder="******"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-900 placeholder-gray-400 focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
-            />
-          </div>
+          {field("login-password", "Password", "password", formData.password, (value) => setFormData((prev) => ({ ...prev, password: value })), {
+            placeholder: "******",
+            autoComplete: "current-password",
+          })}
 
           {/* Forgot password */}
           <div className="text-right">

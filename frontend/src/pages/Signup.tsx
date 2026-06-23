@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import type { User } from "../types/index.ts";
 
@@ -7,32 +7,30 @@ const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
   const navigate = useNavigate();
-  const firstNameRef = useRef<HTMLInputElement>(null);
 
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  // Auto-focus first name on mount
-  useEffect(() => { firstNameRef.current?.focus(); }, []);
-
   const validate = () => {
     const e: Record<string, string> = {};
-    if (!firstName.trim()) e.firstName = "First name is required.";
-    else if (firstName.length > 25) e.firstName = "Max 25 characters.";
+    if (!formData.firstName.trim()) e.firstName = "First name is required.";
+    else if (formData.firstName.length > 25) e.firstName = "Max 25 characters.";
 
-    if (!lastName.trim()) e.lastName = "Last name is required.";
-    else if (lastName.length > 25) e.lastName = "Max 25 characters.";
+    if (!formData.lastName.trim()) e.lastName = "Last name is required.";
+    else if (formData.lastName.length > 25) e.lastName = "Max 25 characters.";
 
-    if (!email.trim()) e.email = "Email is required.";
-    else if (!isValidEmail(email)) e.email = "Enter a valid email address.";
-    else if (email.length > 255) e.email = "Max 255 characters.";
+    if (!formData.email.trim()) e.email = "Email is required.";
+    else if (!isValidEmail(formData.email)) e.email = "Enter a valid email address.";
+    else if (formData.email.length > 255) e.email = "Max 255 characters.";
 
-    if (!password) e.password = "Password is required.";
-    else if (password.length > 64) e.password = "Max 64 characters.";
+    if (!formData.password) e.password = "Password is required.";
+    else if (formData.password.length > 64) e.password = "Max 64 characters.";
     return e;
   };
 
@@ -48,9 +46,9 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
     // Mock: create user in memory and log them in
     const newUser: User = {
       id: Date.now(),
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      email: email.trim().toLowerCase(),
+      firstName: formData.firstName.trim(),
+      lastName: formData.lastName.trim(),
+      email: formData.email.trim().toLowerCase(),
       avatarUrl: undefined,
       isActive: true,
       isAdmin: false,
@@ -68,14 +66,13 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
     type: string,
     value: string,
     onChange: (v: string) => void,
-    opts?: { placeholder?: string; maxLength?: number; ref?: React.RefObject<HTMLInputElement | null>; autoComplete?: string }
+    opts?: { placeholder?: string; maxLength?: number; autoComplete?: string }
   ) => (
     <div>
       <label htmlFor={id} className="block font-medium text-gray-700 mb-1">
         {label}
       </label>
       <input
-        ref={opts?.ref as React.RefObject<HTMLInputElement>}
         id={id}
         type={type}
         autoComplete={opts?.autoComplete}
@@ -116,15 +113,15 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
                 First name
               </label>
               <input
-                ref={firstNameRef}
                 id="signup-firstName"
                 type="text"
                 autoComplete="given-name"
                 required
+                autoFocus
                 placeholder="John"
                 maxLength={25}
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
+                value={formData.firstName}
+                onChange={(e) => setFormData((prev) => ({ ...prev, firstName: e.target.value }))}
                 className={[
                   "w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400",
                   "focus:outline-none focus:ring-1",
@@ -133,7 +130,7 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
                     : "border-gray-300 focus:border-blue-600 focus:ring-blue-600",
                 ].join(" ")}
               />
-              {errors.firstName && <p className="mt-1 text-xs text-red-600">{errors.firstName}</p>}
+              {errors.firstName && <p className="mt-1 text-red-600">{errors.firstName}</p>}
             </div>
 
             <div>
@@ -147,8 +144,8 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
                 required
                 placeholder="Smith"
                 maxLength={25}
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
+                value={formData.lastName}
+                onChange={(e) => setFormData((prev) => ({ ...prev, lastName: e.target.value }))}
                 className={[
                   "w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400",
                   "focus:outline-none focus:ring-1",
@@ -157,19 +154,19 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
                     : "border-gray-300 focus:border-blue-600 focus:ring-blue-600",
                 ].join(" ")}
               />
-              {errors.lastName && <p className="mt-1 text-xs text-red-600">{errors.lastName}</p>}
+              {errors.lastName && <p className="mt-1 text-red-600">{errors.lastName}</p>}
             </div>
           </div>
 
           {/* Email */}
-          {field("signup-email", "Email", "email", email, setEmail, {
+          {field("signup-email", "Email", "email", formData.email, (value) => setFormData((prev) => ({ ...prev, email: value })), {
             placeholder: "john@example.com",
             maxLength: 255,
             autoComplete: "email",
           })}
 
           {/* Password */}
-          {field("signup-password", "Password", "password", password, setPassword, {
+          {field("signup-password", "Password", "password", formData.password, (value) => setFormData((prev) => ({ ...prev, password: value })), {
             placeholder: "******",
             maxLength: 64,
             autoComplete: "new-password",

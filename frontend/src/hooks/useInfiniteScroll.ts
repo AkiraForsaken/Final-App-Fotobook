@@ -1,25 +1,16 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 
-/**
- useInfiniteScroll
+/*
+ Custom hook: useInfiniteScroll
 
  Slices `allItems` into pages of `pageSize` and exposes the currently
  visible slice. Attach the returned `sentinelRef` to a div placed after
  the last rendered item; the next page loads when that div enters the
  viewport.
-
- Design decisions:
- - rootMargin is "0px" — load only when the sentinel is actually visible,
-   not 200px before. This ensures the user must scroll to the bottom before
-   more items appear, which is the expected UX.
- - The observer effect depends on `[sentinelRef, loadMore]`. Because
-   `sentinelRef` is a stable ref object this effectively re-runs only when
-   `loadMore` identity changes (i.e. when `hasMore` flips). We additionally
-   use a ref-callback pattern so the observer is always attached to whatever
-   DOM node is currently in the ref, even after re-renders that swap the node.
- */
-export function useInfiniteScroll<T>(allItems: T[], pageSize: number) {
+*/
+export function useInfiniteScroll<T>(allItems: T[], pageSize: number, loadDelay: number = 800) {
   const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   // Use a callback ref instead of useRef so the effect re-runs whenever the
   // sentinel DOM node itself is mounted/unmounted (e.g. after a mode switch
@@ -33,8 +24,12 @@ export function useInfiniteScroll<T>(allItems: T[], pageSize: number) {
   // Stable increment — identity only changes when hasMore flips so we don't
   // needlessly recreate the IntersectionObserver on every render.
   const loadMore = useCallback(() => {
-    setPage((p) => p + 1);
-  }, []);
+    setLoading(true);
+    setTimeout(() => {
+      setPage((p) => p + 1);
+      setLoading(false);
+    }, loadDelay);
+  }, [loadDelay]);
 
   // Reset whenever the source data changes (feed-mode switch, new data, etc.)
   useEffect(() => {
@@ -42,9 +37,6 @@ export function useInfiniteScroll<T>(allItems: T[], pageSize: number) {
   }, [allItems]);
 
   // Attach / detach the IntersectionObserver.
-  // We read sentinelRef.current *inside* the effect so we always get the
-  // current DOM node. The effect re-runs when `hasMore` changes so we
-  // disconnect the observer once everything is loaded.
   useEffect(() => {
     if (!hasMore) {
       observerRef.current?.disconnect();
@@ -60,10 +52,9 @@ export function useInfiniteScroll<T>(allItems: T[], pageSize: number) {
       (entries) => {
         if (entries[0].isIntersecting) loadMore();
       },
-      { rootMargin: "0px", threshold: 0.1 }
-      // threshold: 0.1 — fire when at least 10% of the sentinel is visible.
-      // This prevents the edge case where a 0-height sentinel triggers
-      // before it's meaningfully in view.
+      { rootMargin: "0px", threshold: 0.01 }
+      // load only when at least the sentinel is actually visible 
+      // prevents the edge case 0 height
     );
 
     observerRef.current.observe(sentinel);
@@ -73,5 +64,5 @@ export function useInfiniteScroll<T>(allItems: T[], pageSize: number) {
     };
   }, [hasMore, loadMore]);
 
-  return { visibleItems, sentinelRef, hasMore };
+  return { visibleItems, sentinelRef, hasMore, loading };
 }

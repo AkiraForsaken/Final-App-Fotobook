@@ -24,24 +24,29 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
           {/* Left: hamburger + logo + search */}
           <div className="flex items-center gap-4 min-w-0 sm:ml-8">
             {/* Hamburger - mobile only */}
-            <button
-              onClick={onMenuToggle}
-              aria-label="Open menu"
-              className="sm:hidden inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-blue-700 transition-colors"
-            >
-              <i className="fa-solid fa-bars" />
-            </button>
+            {currentUser && (
+              <button
+                onClick={onMenuToggle}
+                aria-label="Open menu"
+                className="sm:hidden inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-blue-700 transition-colors"
+              >
+                <i className="fa-solid fa-bars" />
+              </button>
+            )}
 
             <span className="shrink-0 text-2xl font-bold text-white tracking-tight">
               FotoBook
             </span>
 
             {/* Desktop search */}
-            <SearchBar
-              className="hidden sm:block w-64 md:w-80"
-              placeholder="Search photos / albums…"
-              onSearch={onSearch}
-            />
+            {currentUser && (
+              <SearchBar
+                className="hidden sm:block w-64 md:w-80"
+                placeholder="Search photos / albums…"
+                onSearch={onSearch}
+              />
+            )}
+
           </div>
 
           {/* Right: user control */}

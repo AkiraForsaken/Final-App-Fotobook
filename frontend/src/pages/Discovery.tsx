@@ -14,7 +14,7 @@ const NAV_ITEMS = [
 ];
 
 // 6 cards per load
-const PAGE_SIZE = 3;
+const PAGE_SIZE = 6;
 
 const ScrollFooter = ({ hasMore }: { hasMore: boolean }) => {
   return (
@@ -32,9 +32,8 @@ const ScrollFooter = ({ hasMore }: { hasMore: boolean }) => {
   )
 }
 
-export const Discovery = ({ currentUser }: { currentUser: User }) => {
+export const Discovery = ({ currentUser, mobileOpen, setMobileOpen }: { currentUser: User; mobileOpen: boolean; setMobileOpen: (open: boolean) => void }) => {
   const [feedMode, setFeedMode] = useState<FeedMode>("photos");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>(DISCOVERY_PHOTOS);
   const [albums, setAlbums] = useState<Album[]>(DISCOVERY_ALBUMS);
   // Track which author IDs the current user follows
@@ -85,8 +84,8 @@ export const Discovery = ({ currentUser }: { currentUser: User }) => {
       <div className="mx-auto flex max-w-screen gap-6">
         <SideBar
           items={NAV_ITEMS}
-          mobileOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+          mobileOpen={mobileOpen}
+          onClose={() => setMobileOpen(false)}
         />
 
         <main className="flex flex-col flex-1 px-4 sm:px-6 py-6 min-w-0">
@@ -122,7 +121,7 @@ export const Discovery = ({ currentUser }: { currentUser: User }) => {
                 ref={photoScroll.sentinelRef}
                 className="mt-4 flex justify-center py-6"
               >
-                <ScrollFooter hasMore={photoScroll.hasMore} />
+                <ScrollFooter hasMore={photoScroll.hasMore || photoScroll.loading} />
               </div>
             </div>
 
@@ -148,7 +147,7 @@ export const Discovery = ({ currentUser }: { currentUser: User }) => {
                 ref={albumScroll.sentinelRef}
                 className="mt-4 flex justify-center py-6"
               >
-                <ScrollFooter hasMore={albumScroll.hasMore} />
+                <ScrollFooter hasMore={albumScroll.hasMore || albumScroll.loading} />
               </div>
             </div>
           </div>

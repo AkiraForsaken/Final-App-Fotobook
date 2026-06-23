@@ -38,7 +38,7 @@ const NAV_ITEMS = [
   { label: "Discovery", to: "/discover", icon: "fa-solid fa-compass" },
 ];
 
-const PAGE_SIZE = 3; // keeps the batch from filling the viewport, preventing auto loading
+const PAGE_SIZE = 6;
 
 const ScrollFooter = ({ hasMore }: { hasMore: boolean; isFeeds: boolean }) => {
   return (
@@ -57,9 +57,8 @@ const ScrollFooter = ({ hasMore }: { hasMore: boolean; isFeeds: boolean }) => {
 }
 
 
-export const Feeds = ({ currentUser }: { currentUser: User }) => {
+export const Feeds = ({ currentUser, mobileOpen, setMobileOpen }: { currentUser: User; mobileOpen: boolean; setMobileOpen: (open: boolean) => void }) => {
   const [feedMode, setFeedMode] = useState<FeedMode>("photos");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [photos, setPhotos] = useState<Photo[]>(ALL_PHOTOS);
   const [albums, setAlbums] = useState<Album[]>(FEED_ALBUMS);
 
@@ -92,8 +91,8 @@ export const Feeds = ({ currentUser }: { currentUser: User }) => {
       <div className="mx-auto flex max-w-screen gap-6">
         <SideBar
           items={NAV_ITEMS}
-          mobileOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
+          mobileOpen={mobileOpen}
+          onClose={() => setMobileOpen(false)}
         />
 
         {/* Main content */}
@@ -119,7 +118,7 @@ export const Feeds = ({ currentUser }: { currentUser: User }) => {
                 ref={photoScroll.sentinelRef}
                 className="mt-4 flex justify-center py-6"
               >
-                <ScrollFooter hasMore={photoScroll.hasMore} isFeeds />
+                <ScrollFooter hasMore={photoScroll.hasMore || photoScroll.loading} isFeeds />
               </div>
             </div>
 
@@ -141,7 +140,7 @@ export const Feeds = ({ currentUser }: { currentUser: User }) => {
                 ref={albumScroll.sentinelRef}
                 className="mt-4 flex justify-center py-6"
               >
-                <ScrollFooter hasMore={albumScroll.hasMore} isFeeds />
+                <ScrollFooter hasMore={albumScroll.hasMore || albumScroll.loading} isFeeds />
               </div>
             </div>
           </div>

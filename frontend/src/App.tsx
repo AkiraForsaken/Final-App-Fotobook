@@ -7,10 +7,10 @@ import { LoginPage } from "./pages/Login.tsx";
 import { SignupPage } from "./pages/Signup.tsx";
 import type { User } from "./types/index.ts";
 
-const AppLayout = ({ currentUser, onLogout }: { currentUser: User | null; onLogout: () => void }) => {
+const AppLayout = ({ currentUser, onLogout, onMenuToggle }: { currentUser: User | null; onLogout: () => void; onMenuToggle?: () => void }) => {
   return (
     <>
-      <TopBar currentUser={currentUser} onLogout={onLogout} />
+      <TopBar currentUser={currentUser} onLogout={onLogout} onMenuToggle={onMenuToggle} />
       <Outlet />
     </>
   );
@@ -31,17 +31,20 @@ const App = () => {
   const handleLogin = (user: User) => setCurrentUser(user);
   const handleLogout = () => setCurrentUser(null);
 
+  // Mobile sidebar state lifted to App level
+  const [mobileOpen, setMobileOpen] = useState(false);
+
 
   return (
     <BrowserRouter>
       <Routes>
-        <Route element={<AppLayout currentUser={currentUser} onLogout={handleLogout} />}>
+        <Route element={<AppLayout currentUser={currentUser} onLogout={handleLogout} onMenuToggle={() => setMobileOpen(true)} />}>
           <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
           <Route path="/signup" element={<SignupPage onLogin={handleLogin} />} />
 
           <Route element={<ProtectedRoute currentUser={currentUser} />}>
-            <Route path="/feeds" element={<Feeds currentUser={currentUser!} />} />
-            <Route path="/discover" element={<Discovery currentUser={currentUser!} />} />
+            <Route path="/feeds" element={<Feeds currentUser={currentUser!} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />} />
+            <Route path="/discover" element={<Discovery currentUser={currentUser!} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />} />
             {/* Default */}
             <Route path="/" element={<Navigate to="/feeds" replace />} />
           </Route>
