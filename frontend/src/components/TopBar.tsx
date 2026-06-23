@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Avatar } from "./myUI/Avatar.tsx";
 import { SearchBar } from "./myUI/SearchBar.tsx";
 import { Button } from "./myUI/Button.tsx";
@@ -5,12 +6,17 @@ import type { User } from "../types/index.ts";
 
 interface TopBarProps {
   currentUser?: User | null;
-  onMenuToggle: () => void;
+  onMenuToggle?: () => void;
   onSearch?: (query: string) => void;
   onLogout?: () => void;
 }
 
 export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBarProps) => {
+  const navigate = useNavigate();
+  const handleLogout = () => {
+    onLogout?.();
+    navigate("/login");
+  }
   return (
     <header className="bg-blue-800 sticky top-0 z-20">
       <div className="w-full px-4 lg:px-8">
@@ -38,11 +44,11 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
             />
           </div>
 
-          {/* Right: user + logout */}
+          {/* Right: user control */}
           <div className="flex items-center gap-4 mr-2 sm:mr-8">
             {currentUser ? (
               <>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/profile")}>
                   <Avatar
                     src={currentUser.avatarUrl}
                     firstName={currentUser.firstName}
@@ -53,7 +59,7 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
                     {currentUser.firstName} {currentUser.lastName}
                   </span>
                 </div>
-                <Button size="md" variant="secondary" onClick={onLogout}>
+                <Button size="md" variant="secondary" onClick={handleLogout}>
                   Logout
                 </Button>
               </>

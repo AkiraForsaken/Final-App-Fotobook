@@ -20,7 +20,7 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
     <article className="flex items-stretch overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-shadow duration-150">
       {/* Thumbnail */}
       <button
-        className="w-[55%] shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+        className="w-60 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
         onClick={() => onClickPhoto?.(photo)}
         aria-label={`View photo: ${photo.title}`}
       >

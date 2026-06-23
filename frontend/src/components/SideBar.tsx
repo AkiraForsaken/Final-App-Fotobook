@@ -16,8 +16,8 @@ const SideBarItem = ({ item, onClick }: { item: NavItem, onClick?: () => void })
     to={item.to}
     onClick={onClick}
     className={({ isActive }) =>
-      `flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors 
-      ${isActive ? "bg-blue-50 text-blue-800" : "text-gray-700 hover:bg-gray-200"}`
+      `flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium transition-colors 
+      ${isActive ? "bg-blue-100 text-blue-800" : "text-gray-700 hover:bg-gray-300"}`
     }
   >
     <i className={`${item.icon} w-5 text-center`} />
@@ -29,7 +29,7 @@ export const SideBar = ({ items, mobileOpen, onClose }: SideBarProps) => {
   return (
     <>
       {/* Desktop sidebar */}
-      <aside className="hidden sm:flex flex-col min-w-40 lg:min-w-52 shrink-0 bg-gray-100 py-4">
+      <aside className="hidden sm:flex flex-col min-w-[13%] shrink-0 bg-gray-200 py-4">
         <nav className="flex flex-col space-y-1 px-1">
           {items.map((item) => (
             <SideBarItem key={item.to} item={item} />

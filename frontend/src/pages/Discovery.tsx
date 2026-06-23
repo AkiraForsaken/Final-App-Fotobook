@@ -3,44 +3,20 @@ import { SideBar } from "../components/SideBar.tsx";
 import { PhotoCard } from "../components/PhotoCard.tsx";
 import { AlbumCard } from "../components/AlbumCard.tsx";
 import { FeedToggle } from "../components/FeedToggle.tsx";
+import { FollowButton } from "../components/FollowButton.tsx";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll.ts";
 import type { FeedMode, Photo, Album, User } from "../types/index.ts";
-import { FEED_ALBUMS, FEED_PHOTO_META } from "../mockData.ts";
-
-// Local images
-import fernImage from "../assets/fern.jpeg"
-import frierenImage from "../assets/frieren.jpeg"
-import starkImage from "../assets/stark.jpeg"
-import himmelImage from "../assets/himmel.jpeg"
-import heiterImage from "../assets/heiter.jpeg"
-import eisenImage from "../assets/eisen.jpeg"
-
-const ASSET_MAP: Record<number, string> = {
-  1: fernImage,
-  2: frierenImage,
-  3: starkImage,
-  4: himmelImage,
-  5: heiterImage,
-  6: eisenImage,
-  // ids 7–12 fall back to picsum
-};
-
-const ALL_PHOTOS: Photo[] = FEED_PHOTO_META.map((meta) => ({
-  ...meta,
-  imageUrl: ASSET_MAP[meta.id] ?? `https://picsum.photos/seed/fp${meta.id}/600/400`,
-}));
-
-
-// Nav items
+import { DISCOVERY_PHOTOS, DISCOVERY_ALBUMS } from "../mockData.ts";
 
 const NAV_ITEMS = [
   { label: "Feeds", to: "/feeds", icon: "fa-solid fa-house" },
   { label: "Discovery", to: "/discover", icon: "fa-solid fa-compass" },
 ];
 
-const PAGE_SIZE = 3; // keeps the batch from filling the viewport, preventing auto loading
+// 6 cards per load
+const PAGE_SIZE = 3;
 
-const ScrollFooter = ({ hasMore }: { hasMore: boolean; isFeeds: boolean }) => {
+const ScrollFooter = ({ hasMore }: { hasMore: boolean }) => {
   return (
     hasMore ? (
       <span className="text-sm text-gray-400 flex items-center gap-2">
@@ -50,20 +26,20 @@ const ScrollFooter = ({ hasMore }: { hasMore: boolean; isFeeds: boolean }) => {
     ) : (
       <span className="text-sm text-gray-400">
         <i className="fa-solid fa-check-circle mr-1" />
-        You're all caught up!
+        You've seen everything!
       </span>
     )
   )
 }
 
-
-export const Feeds = ({ currentUser }: { currentUser: User }) => {
+export const Discovery = ({ currentUser }: { currentUser: User }) => {
   const [feedMode, setFeedMode] = useState<FeedMode>("photos");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [photos, setPhotos] = useState<Photo[]>(ALL_PHOTOS);
-  const [albums, setAlbums] = useState<Album[]>(FEED_ALBUMS);
+  const [photos, setPhotos] = useState<Photo[]>(DISCOVERY_PHOTOS);
+  const [albums, setAlbums] = useState<Album[]>(DISCOVERY_ALBUMS);
+  // Track which author IDs the current user follows
+  const [followedIds, setFollowedIds] = useState<Set<number>>(new Set());
 
-  // Separate infinite-scroll instances for each mode
   const photoScroll = useInfiniteScroll(photos, PAGE_SIZE);
   const albumScroll = useInfiniteScroll(albums, PAGE_SIZE);
 
@@ -87,6 +63,23 @@ export const Feeds = ({ currentUser }: { currentUser: User }) => {
     );
   };
 
+  const handleFollowToggle = (authorId: number) => {
+    setFollowedIds((prev) => {
+      const next = new Set(prev);
+      next.has(authorId) ? next.delete(authorId) : next.add(authorId);
+      return next;
+    });
+  };
+
+  const followBtn = (authorId: number) => (
+    <FollowButton
+      authorId={authorId}
+      currentUserId={currentUser.id}
+      isFollowing={followedIds.has(authorId)}
+      onToggle={handleFollowToggle}
+    />
+  );
+
   return (
     <div className="min-h-screen bg-gray-100">
       <div className="mx-auto flex max-w-screen gap-6">
@@ -96,22 +89,32 @@ export const Feeds = ({ currentUser }: { currentUser: User }) => {
           onClose={() => setSidebarOpen(false)}
         />
 
-        {/* Main content */}
         <main className="flex flex-col flex-1 px-4 sm:px-6 py-6 min-w-0">
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold text-gray-800">Discovery</h1>
+            <p className="text-sm text-gray-500 mt-1">
+              Explore public posts from everyone on FotoBook.
+            </p>
+          </div>
+
           <FeedToggle mode={feedMode} onChange={setFeedMode} />
 
           <div className="mt-6">
-            {/* Photos grid  */}
+            {/* Photos grid */}
             <div className={feedMode === "photos" ? "" : "hidden"}>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {(photoScroll.visibleItems as Photo[]).map((photo) => (
-                  <PhotoCard
-                    key={photo.id}
-                    photo={photo}
-                    onLike={handleLikePhoto}
-                    onClickPhoto={(p) => console.log("open photo", p.id)}
-                    onClickAuthor={(id) => console.log("go to profile", id)}
-                  />
+                  <div key={photo.id} className="relative">
+                    <PhotoCard
+                      photo={photo}
+                      onLike={handleLikePhoto}
+                      onClickPhoto={(p) => console.log("open photo", p.id)}
+                      onClickAuthor={(id) => console.log("go to profile", id)}
+                    />
+                    <div className="absolute top-3 right-3">
+                      {followBtn(photo.author.id)}
+                    </div>
+                  </div>
                 ))}
               </div>
               {/* Photo sentinel */}
@@ -119,7 +122,7 @@ export const Feeds = ({ currentUser }: { currentUser: User }) => {
                 ref={photoScroll.sentinelRef}
                 className="mt-4 flex justify-center py-6"
               >
-                <ScrollFooter hasMore={photoScroll.hasMore} isFeeds />
+                <ScrollFooter hasMore={photoScroll.hasMore} />
               </div>
             </div>
 
@@ -127,13 +130,17 @@ export const Feeds = ({ currentUser }: { currentUser: User }) => {
             <div className={feedMode === "albums" ? "" : "hidden"}>
               <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
                 {(albumScroll.visibleItems as Album[]).map((album) => (
-                  <AlbumCard
-                    key={album.id}
-                    album={album}
-                    onLike={handleLikeAlbum}
-                    onClickAlbum={(p) => console.log("open photo", p.id)}
-                    onClickAuthor={(id) => console.log("go to profile", id)}
-                  />
+                  <div key={album.id} className="relative">
+                    <AlbumCard
+                      album={album}
+                      onLike={handleLikeAlbum}
+                      onClickAlbum={(a) => console.log("open album", a.id)}
+                      onClickAuthor={(id) => console.log("go to profile", id)}
+                    />
+                    <div className="absolute top-3 right-3">
+                      {followBtn(album.author.id)}
+                    </div>
+                  </div>
                 ))}
               </div>
               {/* Album sentinel */}
@@ -141,13 +148,12 @@ export const Feeds = ({ currentUser }: { currentUser: User }) => {
                 ref={albumScroll.sentinelRef}
                 className="mt-4 flex justify-center py-6"
               >
-                <ScrollFooter hasMore={albumScroll.hasMore} isFeeds />
+                <ScrollFooter hasMore={albumScroll.hasMore} />
               </div>
             </div>
           </div>
         </main>
 
-        {/* Right spacer */}
         <div className="hidden lg:block min-w-[13%] shrink-0 bg-gray-100" />
       </div>
     </div>
