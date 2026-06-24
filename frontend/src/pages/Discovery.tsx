@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useDataContext } from "../contexts/DataContext.tsx";
 import { SideBar } from "../components/SideBar.tsx";
 import { PhotoCard } from "../components/PhotoCard.tsx";
 import { AlbumCard } from "../components/AlbumCard.tsx";
@@ -6,7 +7,8 @@ import { FeedToggle } from "../components/FeedToggle.tsx";
 import { FollowButton } from "../components/FollowButton.tsx";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll.ts";
 import type { FeedMode, Photo, Album, User } from "../types/index.ts";
-import { DISCOVERY_PHOTOS, DISCOVERY_ALBUMS } from "../mockData.ts";
+// import { DISCOVERY_PHOTOS, DISCOVERY_ALBUMS } from "../mockData.ts";
+
 
 const NAV_ITEMS = [
   { label: "Feeds", to: "/feeds", icon: "fa-solid fa-house" },
@@ -33,34 +35,20 @@ const ScrollFooter = ({ hasMore }: { hasMore: boolean }) => {
 }
 
 export const Discovery = ({ currentUser, mobileOpen, setMobileOpen }: { currentUser: User; mobileOpen: boolean; setMobileOpen: (open: boolean) => void }) => {
+  const { discoveryPhotos, discoveryAlbums, loading, toggleLikePhoto, toggleLikeAlbum } = useDataContext();
   const [feedMode, setFeedMode] = useState<FeedMode>("photos");
-  const [photos, setPhotos] = useState<Photo[]>(DISCOVERY_PHOTOS);
-  const [albums, setAlbums] = useState<Album[]>(DISCOVERY_ALBUMS);
+  // const [photos, setPhotos] = useState<Photo[]>([]);
+  // const [albums, setAlbums] = useState<Album[]>([]);
+
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center">Loading Content...</div>;
+  }
+
   // Track which author IDs the current user follows
   const [followedIds, setFollowedIds] = useState<Set<number>>(new Set());
 
-  const photoScroll = useInfiniteScroll(photos, PAGE_SIZE);
-  const albumScroll = useInfiniteScroll(albums, PAGE_SIZE);
-
-  const handleLikePhoto = (photoId: number) => {
-    setPhotos((prev) =>
-      prev.map((p) =>
-        p.id === photoId
-          ? { ...p, likedByMe: !p.likedByMe, likesCount: p.likedByMe ? p.likesCount - 1 : p.likesCount + 1 }
-          : p
-      )
-    );
-  };
-
-  const handleLikeAlbum = (albumId: number) => {
-    setAlbums((prev) =>
-      prev.map((a) =>
-        a.id === albumId
-          ? { ...a, likedByMe: !a.likedByMe, likesCount: a.likedByMe ? a.likesCount - 1 : a.likesCount + 1 }
-          : a
-      )
-    );
-  };
+  const photoScroll = useInfiniteScroll(discoveryPhotos, PAGE_SIZE);
+  const albumScroll = useInfiniteScroll(discoveryAlbums, PAGE_SIZE);
 
   const handleFollowToggle = (authorId: number) => {
     setFollowedIds((prev) => {
@@ -89,13 +77,6 @@ export const Discovery = ({ currentUser, mobileOpen, setMobileOpen }: { currentU
         />
 
         <main className="flex flex-col flex-1 px-4 sm:px-6 py-6 min-w-0">
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold text-gray-800">Discovery</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Explore public posts from everyone on FotoBook.
-            </p>
-          </div>
-
           <FeedToggle mode={feedMode} onChange={setFeedMode} />
 
           <div className="mt-6">
@@ -106,7 +87,7 @@ export const Discovery = ({ currentUser, mobileOpen, setMobileOpen }: { currentU
                   <div key={photo.id} className="relative">
                     <PhotoCard
                       photo={photo}
-                      onLike={handleLikePhoto}
+                      onLike={toggleLikePhoto}
                       onClickPhoto={(p) => console.log("open photo", p.id)}
                       onClickAuthor={(id) => console.log("go to profile", id)}
                     />
@@ -132,7 +113,7 @@ export const Discovery = ({ currentUser, mobileOpen, setMobileOpen }: { currentU
                   <div key={album.id} className="relative">
                     <AlbumCard
                       album={album}
-                      onLike={handleLikeAlbum}
+                      onLike={toggleLikeAlbum}
                       onClickAlbum={(a) => console.log("open album", a.id)}
                       onClickAuthor={(id) => console.log("go to profile", id)}
                     />
@@ -153,7 +134,7 @@ export const Discovery = ({ currentUser, mobileOpen, setMobileOpen }: { currentU
           </div>
         </main>
 
-        <div className="hidden lg:block min-w-[13%] shrink-0 bg-gray-100" />
+        <div className="hidden xl:block min-w-[13%] shrink-0 bg-gray-100" />
       </div>
     </div>
   );

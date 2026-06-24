@@ -1,35 +1,12 @@
 import { useState } from "react";
+import { useDataContext } from "../contexts/DataContext.tsx";
 import { SideBar } from "../components/SideBar.tsx";
 import { PhotoCard } from "../components/PhotoCard.tsx";
 import { AlbumCard } from "../components/AlbumCard.tsx";
 import { FeedToggle } from "../components/FeedToggle.tsx";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll.ts";
 import type { FeedMode, Photo, Album, User } from "../types/index.ts";
-import { FEED_ALBUMS, FEED_PHOTO_META } from "../mockData.ts";
-
-// Local images
-import fernImage from "../assets/fern.jpeg"
-import frierenImage from "../assets/frieren.jpeg"
-import starkImage from "../assets/stark.jpeg"
-import himmelImage from "../assets/himmel.jpeg"
-import heiterImage from "../assets/heiter.jpeg"
-import eisenImage from "../assets/eisen.jpeg"
-
-const ASSET_MAP: Record<number, string> = {
-  1: fernImage,
-  2: frierenImage,
-  3: starkImage,
-  4: himmelImage,
-  5: heiterImage,
-  6: eisenImage,
-  // ids 7–12 fall back to picsum
-};
-
-const ALL_PHOTOS: Photo[] = FEED_PHOTO_META.map((meta) => ({
-  ...meta,
-  imageUrl: ASSET_MAP[meta.id] ?? `https://picsum.photos/seed/fp${meta.id}/600/400`,
-}));
-
+// import { FEED_ALBUMS, FEED_PHOTO_META } from "../mockData.ts";
 
 // Nav items
 
@@ -57,34 +34,17 @@ const ScrollFooter = ({ hasMore }: { hasMore: boolean; isFeeds: boolean }) => {
 }
 
 
-export const Feeds = ({ currentUser, mobileOpen, setMobileOpen }: { currentUser: User; mobileOpen: boolean; setMobileOpen: (open: boolean) => void }) => {
+export const Feeds = ({ mobileOpen, setMobileOpen }: { mobileOpen: boolean; setMobileOpen: (open: boolean) => void }) => {
+  const { feedPhotos, feedAlbums, loading, toggleLikePhoto, toggleLikeAlbum } = useDataContext();
   const [feedMode, setFeedMode] = useState<FeedMode>("photos");
-  const [photos, setPhotos] = useState<Photo[]>(ALL_PHOTOS);
-  const [albums, setAlbums] = useState<Album[]>(FEED_ALBUMS);
 
   // Separate infinite-scroll instances for each mode
-  const photoScroll = useInfiniteScroll(photos, PAGE_SIZE);
-  const albumScroll = useInfiniteScroll(albums, PAGE_SIZE);
+  const photoScroll = useInfiniteScroll(feedPhotos, PAGE_SIZE);
+  const albumScroll = useInfiniteScroll(feedAlbums, PAGE_SIZE);
 
-  const handleLikePhoto = (photoId: number) => {
-    setPhotos((prev) =>
-      prev.map((p) =>
-        p.id === photoId
-          ? { ...p, likedByMe: !p.likedByMe, likesCount: p.likedByMe ? p.likesCount - 1 : p.likesCount + 1 }
-          : p
-      )
-    );
-  };
-
-  const handleLikeAlbum = (albumId: number) => {
-    setAlbums((prev) =>
-      prev.map((a) =>
-        a.id === albumId
-          ? { ...a, likedByMe: !a.likedByMe, likesCount: a.likedByMe ? a.likesCount - 1 : a.likesCount + 1 }
-          : a
-      )
-    );
-  };
+  if (loading) {
+    return <div className="flex h-screen items-center justify-center">Loading Content...</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -107,7 +67,7 @@ export const Feeds = ({ currentUser, mobileOpen, setMobileOpen }: { currentUser:
                   <PhotoCard
                     key={photo.id}
                     photo={photo}
-                    onLike={handleLikePhoto}
+                    onLike={toggleLikePhoto}
                     onClickPhoto={(p) => console.log("open photo", p.id)}
                     onClickAuthor={(id) => console.log("go to profile", id)}
                   />
@@ -129,7 +89,7 @@ export const Feeds = ({ currentUser, mobileOpen, setMobileOpen }: { currentUser:
                   <AlbumCard
                     key={album.id}
                     album={album}
-                    onLike={handleLikeAlbum}
+                    onLike={toggleLikeAlbum}
                     onClickAlbum={(p) => console.log("open photo", p.id)}
                     onClickAuthor={(id) => console.log("go to profile", id)}
                   />
@@ -147,7 +107,7 @@ export const Feeds = ({ currentUser, mobileOpen, setMobileOpen }: { currentUser:
         </main>
 
         {/* Right spacer */}
-        <div className="hidden lg:block min-w-[13%] shrink-0 bg-gray-100" />
+        <div className="hidden xl:block min-w-[13%] shrink-0 bg-gray-100" />
       </div>
     </div>
   );

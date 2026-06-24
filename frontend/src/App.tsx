@@ -1,11 +1,12 @@
 import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from "react-router-dom"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { TopBar } from "./components/TopBar.tsx";
 import { Feeds } from "./pages/Feeds.tsx";
 import { Discovery } from "./pages/Discovery.tsx";
 import { LoginPage } from "./pages/Login.tsx";
 import { SignupPage } from "./pages/Signup.tsx";
 import type { User } from "./types/index.ts";
+import { DataProvider } from "./contexts/DataContext.tsx";
 
 const AppLayout = ({ currentUser, onLogout, onMenuToggle }: { currentUser: User | null; onLogout: () => void; onMenuToggle?: () => void }) => {
   return (
@@ -19,21 +20,48 @@ const AppLayout = ({ currentUser, onLogout, onMenuToggle }: { currentUser: User 
 const ProtectedRoute = ({ currentUser }: { currentUser: User | null }) => {
   const location = useLocation();
   if (!currentUser) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return (
+      <Navigate to="/login" state={{ from: location }} replace />
+    )
   }
-  return <Outlet />;
+  return (
+    <DataProvider>
+      <Outlet />
+    </DataProvider>
+  )
 };
 
-
 const App = () => {
+  // Implement backend authentication later
+  const LOCAL_STORAGE_USER = "fotobook.currentUser";
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    if (typeof window === "undefined") return null;
+    const stored = window.localStorage.getItem(LOCAL_STORAGE_USER);
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored) as User;
+    } catch {
+      return null;
+    }
+  });
 
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const handleLogin = (user: User) => setCurrentUser(user);
-  const handleLogout = () => setCurrentUser(null);
+  const handleLogin = (user: User) => {
+    setCurrentUser(user);
+    window.localStorage.setItem(LOCAL_STORAGE_USER, JSON.stringify(user));
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    window.localStorage.removeItem(LOCAL_STORAGE_USER);
+  };
+
+  useEffect(() => {
+    if (!currentUser) return;
+    window.localStorage.setItem(LOCAL_STORAGE_USER, JSON.stringify(currentUser));
+  }, [currentUser]);
 
   // Mobile sidebar state lifted to App level
   const [mobileOpen, setMobileOpen] = useState(false);
-
 
   return (
     <BrowserRouter>
@@ -43,7 +71,7 @@ const App = () => {
           <Route path="/signup" element={<SignupPage onLogin={handleLogin} />} />
 
           <Route element={<ProtectedRoute currentUser={currentUser} />}>
-            <Route path="/feeds" element={<Feeds currentUser={currentUser!} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />} />
+            <Route path="/feeds" element={<Feeds mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />} />
             <Route path="/discover" element={<Discovery currentUser={currentUser!} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />} />
             {/* Default */}
             <Route path="/" element={<Navigate to="/feeds" replace />} />

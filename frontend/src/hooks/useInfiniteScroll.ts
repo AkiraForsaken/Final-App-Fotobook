@@ -2,67 +2,72 @@ import { useState, useRef, useEffect, useCallback } from "react";
 
 /*
  Custom hook: useInfiniteScroll
-
  Slices `allItems` into pages of `pageSize` and exposes the currently
- visible slice. Attach the returned `sentinelRef` to a div placed after
- the last rendered item; the next page loads when that div enters the
- viewport.
+ visible slice. It returns a `sentinelRef` callback function to be attached 
+ to your loader/sentinel element.
+
+ Note: when switching to a real API later on,
+  rewrite this hook to accept a fetching callback function that handles 
+  query parameters (e.g., ?page=2&limit=6) so the server only sends down chunks of data at a time.
 */
 export function useInfiniteScroll<T>(allItems: T[], pageSize: number, loadDelay: number = 800) {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  // Use a callback ref instead of useRef so the effect re-runs whenever the
-  // sentinel DOM node itself is mounted/unmounted (e.g. after a mode switch
-  // causes the sentinel to re-render into a different element).
+  const timeoutRef = useRef<number | null>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
-  const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const visibleItems = allItems.slice(0, page * pageSize);
   const hasMore = visibleItems.length < allItems.length;
 
-  // Stable increment — identity only changes when hasMore flips so we don't
-  // needlessly recreate the IntersectionObserver on every render.
   const loadMore = useCallback(() => {
+    if (loading || !hasMore) return;
+
     setLoading(true);
-    setTimeout(() => {
+    timeoutRef.current = setTimeout(() => {
       setPage((p) => p + 1);
       setLoading(false);
     }, loadDelay);
-  }, [loadDelay]);
+  }, [loadDelay, loading, hasMore]);
 
-  // Reset whenever the source data changes (feed-mode switch, new data, etc.)
+  // Reset page whenever the source data container changes
   useEffect(() => {
     setPage(1);
   }, [allItems]);
 
-  // Attach / detach the IntersectionObserver.
+  // Clean up timers and observers when the component unmounts
   useEffect(() => {
-    if (!hasMore) {
-      observerRef.current?.disconnect();
-      return;
-    }
-
-    const sentinel = sentinelRef.current;
-    if (!sentinel) return;
-
-    observerRef.current?.disconnect();
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) loadMore();
-      },
-      { rootMargin: "0px", threshold: 0.01 }
-      // load only when at least the sentinel is actually visible 
-      // prevents the edge case 0 height
-    );
-
-    observerRef.current.observe(sentinel);
-
     return () => {
-      observerRef.current?.disconnect();
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (observerRef.current) observerRef.current.disconnect();
     };
-  }, [hasMore, loadMore]);
+  }, []);
+
+  // Callback Ref: React calls this function with the DOM element node 
+  // when it mounts, and with `null` when it unmounts.
+  const sentinelRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      // Skip observing if there is no more data to load
+      if (!hasMore || !node) return;
+
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          // Trigger loading only if the element enters view and we aren't currently waiting on a timeout
+          if (entries[0].isIntersecting && !loading) {
+            loadMore();
+          }
+        },
+        { rootMargin: "0px", threshold: 0.05 }
+      );
+
+      observerRef.current.observe(node);
+      return () => {
+        if (observerRef.current)
+          observerRef.current.disconnect();
+      }
+    },
+    [hasMore, loading, loadMore]
+  );
 
   return { visibleItems, sentinelRef, hasMore, loading };
 }

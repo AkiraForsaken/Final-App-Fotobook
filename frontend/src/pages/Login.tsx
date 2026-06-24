@@ -38,7 +38,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
     return e;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const validation = validate();
     if (Object.keys(validation).length) {
@@ -64,6 +64,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
     setLoading(false);
   };
 
+  // Reuseable form field
   const field = (
     id: string,
     label: string,

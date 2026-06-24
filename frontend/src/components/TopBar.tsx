@@ -20,7 +20,7 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
   return (
     <header className="bg-blue-800 sticky top-0 z-20">
       <div className="w-full px-4 lg:px-8">
-        <div className="flex h-14 items-center justify-between gap-4 ml-2">
+        <div className="flex h-14 items-center justify-between lg:gap-6 lg:ml-6">
           {/* Left: hamburger + logo + search */}
           <div className="flex items-center gap-4 min-w-0 sm:ml-8">
             {/* Hamburger - mobile only */}
@@ -34,7 +34,7 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
               </button>
             )}
 
-            <span className="shrink-0 text-2xl font-bold text-white tracking-tight">
+            <span className="shrink-0 text-3xl font-bold text-white tracking-tight">
               FotoBook
             </span>
 
@@ -50,10 +50,11 @@ export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBar
           </div>
 
           {/* Right: user control */}
-          <div className="flex items-center gap-4 mr-2 sm:mr-8">
+          <div className="flex items-center gap-4 mr-2 lg:mr-8">
             {currentUser ? (
               <>
-                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/profile")}>
+                <div className="flex items-center gap-2 cursor-pointer"
+                  onClick={() => navigate("/profile")}>
                   <Avatar
                     src={currentUser.avatarUrl}
                     firstName={currentUser.firstName}

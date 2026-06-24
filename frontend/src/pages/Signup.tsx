@@ -34,7 +34,7 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
     return e;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const validation = validate();
     if (Object.keys(validation).length) { setErrors(validation); return; }
