@@ -5,7 +5,7 @@ import { PhotoCard } from "../components/PhotoCard.tsx";
 import { AlbumCard } from "../components/AlbumCard.tsx";
 import { FeedToggle } from "../components/FeedToggle.tsx";
 import { useInfiniteScroll } from "../hooks/useInfiniteScroll.ts";
-import type { FeedMode, Photo, Album, User } from "../types/index.ts";
+import type { FeedMode, Photo, Album } from "../types/index.ts";
 // import { FEED_ALBUMS, FEED_PHOTO_META } from "../mockData.ts";
 
 // Nav items

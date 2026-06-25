@@ -1,9 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import type { User } from "../types/index.ts";
-
-// Basic email-format check
-const isValidEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+import { validateSignup } from "../utils/validation.ts";
 
 export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
   const navigate = useNavigate();
@@ -17,26 +15,9 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(false);
 
-  const validate = () => {
-    const e: Record<string, string> = {};
-    if (!formData.firstName.trim()) e.firstName = "First name is required.";
-    else if (formData.firstName.length > 25) e.firstName = "Max 25 characters.";
-
-    if (!formData.lastName.trim()) e.lastName = "Last name is required.";
-    else if (formData.lastName.length > 25) e.lastName = "Max 25 characters.";
-
-    if (!formData.email.trim()) e.email = "Email is required.";
-    else if (!isValidEmail(formData.email)) e.email = "Enter a valid email address.";
-    else if (formData.email.length > 255) e.email = "Max 255 characters.";
-
-    if (!formData.password) e.password = "Password is required.";
-    else if (formData.password.length > 64) e.password = "Max 64 characters.";
-    return e;
-  };
-
   const handleSubmit = async (e: React.SubmitEvent) => {
     e.preventDefault();
-    const validation = validate();
+    const validation = validateSignup(formData);
     if (Object.keys(validation).length) { setErrors(validation); return; }
 
     setErrors({});
@@ -196,12 +177,12 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
           >
             <i className={`fa-brands fa-google text-red-600`} />
           </button>
-          <button id="google-btn"
+          <button id="facebook-btn"
             className="rounded-lg cursor-pointer"
           >
             <i className={`fa-brands fa-facebook text-blue-600`} />
           </button>
-          <button id="google-btn"
+          <button id="twitter-btn"
             className="rounded-lg cursor-pointer"
           >
             <i className={`fa-brands fa-twitter text-sky-600`} />
