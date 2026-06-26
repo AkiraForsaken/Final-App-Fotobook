@@ -1,4 +1,4 @@
-import { useDataContext } from '../hooks/useDataContext';
+import { useProfile } from '../hooks/useProfile';
 import { ProfileView } from '../components/ProfileView';
 import type { User } from '../types';
 // import { MY_USER_ID } from '../data/profileMockData';
@@ -14,11 +14,10 @@ interface MyProfileProps {
  */
 
 export const MyProfile = ({ currentUser }: MyProfileProps) => {
-	const { profilesMap, toggleFollowUser, loading } = useDataContext();
-	// In the real app, use currentUser.id. Mock always resolves to MY_USER_ID.
-	const profileInfo = profilesMap[currentUser.id];
+	const { profile, photos, albums, following, followers, loading, toggleFollowUser, profilesMap } =
+		useProfile(currentUser.id, currentUser);
 
-	if (!profileInfo) {
+	if (!profile) {
 		return <div className="text-center py-20 text-gray-400">Profile data unavailable.</div>;
 	}
 
@@ -28,11 +27,12 @@ export const MyProfile = ({ currentUser }: MyProfileProps) => {
 
 	return (
 		<ProfileView
-			profile={profileInfo.profile}
-			photos={profileInfo.ownerPhotos}
-			albums={profileInfo.ownerAlbums}
-			following={profileInfo.following}
-			followers={profileInfo.followers}
+			profile={profile}
+			photos={photos}
+			albums={albums}
+			following={following}
+			followers={followers}
+			profilesMap={profilesMap}
 			currentUser={currentUser}
 			isOwner={true}
 			onFollowToggle={(id) => toggleFollowUser(id)}

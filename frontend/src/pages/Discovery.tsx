@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll.ts';
 import type { FeedMode, Photo, Album, User } from '../types/index.ts';
-import { useDataContext } from '../hooks/useDataContext.ts';
+import { useDiscovery } from '../hooks/useDiscovery.ts';
+import { useProfile } from '../hooks/useProfile.ts';
 import { PhotoCard } from '../components/PhotoCard.tsx';
 import { AlbumCard } from '../components/AlbumCard.tsx';
 import { FeedToggle } from '../components/FeedToggle.tsx';
@@ -15,15 +16,9 @@ import { AlbumModal } from '../components/AlbumModal.tsx';
 const PAGE_SIZE = 6;
 
 export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
-	const {
-		discoveryPhotos,
-		discoveryAlbums,
-		profilesMap,
-		loading,
-		toggleLikePhoto,
-		toggleLikeAlbum,
-		toggleFollowUser,
-	} = useDataContext();
+	const { discoveryPhotos, discoveryAlbums, loading, toggleLikePhoto, toggleLikeAlbum } =
+		useDiscovery();
+	const { profilesMap, toggleFollowUser } = useProfile(null, currentUser);
 	const navigate = useNavigate();
 	const [feedMode, setFeedMode] = useState<FeedMode>('photos');
 

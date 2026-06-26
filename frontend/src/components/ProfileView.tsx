@@ -7,8 +7,7 @@ import { AlbumThumb } from './AlbumThumb';
 import { FollowCard } from './FollowCard';
 import { PhotoModal } from './PhotoModal';
 import { AlbumModal } from './AlbumModal';
-import { useDataContext } from '../hooks/useDataContext';
-import type { UserProfile, Photo, Album, FollowRelation, ProfileTab, User } from '../types/index';
+import type { UserProfile, Photo, Album, FollowRelation, ProfileTab, User, UserProfileData } from '../types/index';
 
 interface ProfileViewProps {
 	profile: UserProfile;
@@ -16,6 +15,7 @@ interface ProfileViewProps {
 	albums: Album[];
 	following: FollowRelation[];
 	followers: FollowRelation[];
+	profilesMap?: Record<number, UserProfileData>;
 	currentUser: User | null;
 	isOwner?: boolean;
 	onFollowToggle?: (userId: number) => void;
@@ -35,6 +35,7 @@ export const ProfileView = ({
 	albums,
 	following,
 	followers,
+	profilesMap = {},
 	currentUser,
 	isOwner = false,
 	onFollowToggle,
@@ -48,9 +49,6 @@ export const ProfileView = ({
 
 	const [activePhoto, setActivePhoto] = useState<Photo | null>(null);
 	const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
-
-	// profilesMap is the single source of truth for live follow state.
-	const { profilesMap } = useDataContext();
 
 	// ── Tab contents ───────────────────────────────────────────────────────
 

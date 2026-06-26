@@ -75,7 +75,11 @@
         "sharingMode": "private",
         "likesCount": 0,
         "likedByMe": false,
-        "author": { "id": 1, "firstName": "Frieren", "lastName": "The Mage" },
+        "author": {
+          "id": 1,
+          "firstName": "Frieren",
+          "lastName": "The Mage"
+        },
         "createdAt": "2026-06-10T08:00:00Z"
       }
     ],
@@ -615,6 +619,20 @@
         "isFollowedByMe": true
       }
     ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  },
+  "1782465869652": {
+    "profile": {
+      "id": 1782465869652,
+      "firstName": "asasd",
+      "lastName": "Stileer",
+      "isFollowedByMe": false,
+      "followerCount": 0,
+      "followingCount": 0
+    },
     "publicPhotos": [],
     "publicAlbums": [],
     "ownerPhotos": [],

@@ -51,6 +51,16 @@ export interface UserProfile {
 	isFollowedByMe: boolean;
 }
 
+export interface UserProfileData {
+	profile: UserProfile;
+	following: FollowRelation[];
+	followers: FollowRelation[];
+	publicPhotos: Photo[];
+	publicAlbums: Album[];
+	ownerPhotos: Photo[];
+	ownerAlbums: Album[];
+}
+
 // A user card shown in the Following / Followers tab
 export interface FollowRelation {
 	id: number;

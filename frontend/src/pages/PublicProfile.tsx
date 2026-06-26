@@ -1,8 +1,7 @@
 import { useParams } from 'react-router';
-import { useDataContext } from '../hooks/useDataContext';
+import { useProfile } from '../hooks/useProfile';
 import { ProfileView } from '../components/ProfileView';
 import type { User } from '../types/index';
-// import { MOCK_PROFILE_MAP, MOCK_FOLLOWING, MOCK_FOLLOWERS } from '../profileMockData';
 
 interface PublicProfileProps {
 	currentUser: User | null;
@@ -25,11 +24,11 @@ const ProfileNotFound = ({ userId }: { userId: string }) => (
  */
 export const PublicProfile = ({ currentUser }: PublicProfileProps) => {
 	const { userId } = useParams<{ userId: string }>();
-	const { profilesMap, toggleFollowUser, loading } = useDataContext();
 	const numericId = userId ? parseInt(userId, 10) : NaN;
-	const profileInfo = !isNaN(numericId) ? profilesMap[numericId] : undefined;
+	const { profile, photos, albums, following, followers, loading, toggleFollowUser, profilesMap } =
+		useProfile(!isNaN(numericId) ? numericId : null, currentUser);
 
-	if (!profileInfo) {
+	if (!profile) {
 		return <ProfileNotFound userId={userId ?? ''} />;
 	}
 
@@ -39,11 +38,12 @@ export const PublicProfile = ({ currentUser }: PublicProfileProps) => {
 
 	return (
 		<ProfileView
-			profile={profileInfo.profile}
-			photos={profileInfo.publicPhotos}
-			albums={profileInfo.publicAlbums}
-			following={profileInfo.following}
-			followers={profileInfo.followers}
+			profile={profile}
+			photos={photos}
+			albums={albums}
+			following={following}
+			followers={followers}
+			profilesMap={profilesMap}
 			currentUser={currentUser}
 			isOwner={false}
 			onFollowToggle={(id) => toggleFollowUser(id)}

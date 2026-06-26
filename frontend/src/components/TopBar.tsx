@@ -2,20 +2,19 @@ import { useNavigate } from 'react-router';
 import { Avatar } from './myUI/Avatar.tsx';
 import { SearchBar } from './myUI/SearchBar.tsx';
 import { Button } from './myUI/Button.tsx';
-import type { User } from '../types/index.ts';
 import { Link } from 'react-router';
+import { useAuth } from '../hooks/useAuth.ts';
 
 interface TopBarProps {
-	currentUser?: User | null;
 	onMenuToggle?: () => void;
 	onSearch?: (query: string) => void;
-	onLogout?: () => void;
 }
 
-export const TopBar = ({ currentUser, onMenuToggle, onSearch, onLogout }: TopBarProps) => {
+export const TopBar = ({ onMenuToggle, onSearch }: TopBarProps) => {
 	const navigate = useNavigate();
+	const { currentUser, logout } = useAuth();
 	const handleLogout = () => {
-		onLogout?.();
+		logout();
 		navigate('/login');
 	};
 	return (

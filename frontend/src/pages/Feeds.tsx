@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useInfiniteScroll } from '../hooks/useInfiniteScroll.ts';
 import type { FeedMode, Photo, Album } from '../types/index.ts';
-import { useDataContext } from '../hooks/useDataContext.ts';
+import { useFeed } from '../hooks/useFeed.ts';
 import { PhotoCard } from '../components/PhotoCard.tsx';
 import { AlbumCard } from '../components/AlbumCard.tsx';
 import { FeedToggle } from '../components/FeedToggle.tsx';
@@ -13,7 +13,7 @@ import { AlbumModal } from '../components/AlbumModal.tsx';
 const PAGE_SIZE = 6;
 
 export const Feeds = () => {
-	const { feedPhotos, feedAlbums, loading, toggleLikePhoto, toggleLikeAlbum } = useDataContext();
+	const { feedPhotos, feedAlbums, loading, toggleLikePhoto, toggleLikeAlbum } = useFeed();
 	const [feedMode, setFeedMode] = useState<FeedMode>('photos');
 	const navigate = useNavigate();
 
