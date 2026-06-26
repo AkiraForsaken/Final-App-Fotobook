@@ -1,7 +1,7 @@
-import type { Album, Photo, UserProfileData } from '../types/index.ts';
+import type { Album, Photo, RawProfiles, UserProfileData } from '../types/index.ts';
 
 export const buildHydratedProfiles = (
-	rawProfiles: Record<number, any>,
+	rawProfiles: RawProfiles,
 	feedPhotos: Photo[],
 	feedAlbums: Album[],
 	discoveryPhotos: Photo[],

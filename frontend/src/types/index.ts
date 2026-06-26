@@ -71,3 +71,26 @@ export interface FollowRelation {
 }
 
 export type ProfileTab = 'photos' | 'albums' | 'following' | 'followers';
+
+// Add these to your types/index.ts
+export interface RawProfileEntry {
+	profile: {
+		id: number;
+		firstName: string;
+		lastName: string;
+		avatarUrl?: string;
+		publicPhotoCount: number;
+		publicAlbumCount: number;
+		followingCount: number;
+		followerCount: number;
+		isFollowedByMe: boolean;
+	};
+	following?: FollowRelation[];
+	followers?: FollowRelation[];
+	publicPhotos?: Photo[];
+	publicAlbums?: Album[];
+	ownerPhotos?: Photo[];
+	ownerAlbums?: Album[];
+}
+
+export type RawProfiles = Record<number, RawProfileEntry>;
