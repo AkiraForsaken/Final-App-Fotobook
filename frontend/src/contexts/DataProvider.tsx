@@ -1,119 +1,101 @@
-// src/context/DataContext.tsx
 import React, { useState, useEffect } from 'react';
 import type { Photo, Album } from '../types/index.ts';
+import type { UserProfileData } from './DataContext.tsx';
 import { DataContext } from './DataContext.tsx';
 
-// Local Asset Imports
-import fernImage from '../assets/fern.jpeg';
-import frierenImage from '../assets/frieren.jpeg';
-import starkImage from '../assets/stark.jpeg';
-import himmelImage from '../assets/himmel.jpeg';
-import heiterImage from '../assets/heiter.jpeg';
-import eisenImage from '../assets/eisen.jpeg';
-import serieImage from '../assets/serie.jpeg';
-import flammeImage from '../assets/flamme.jpeg';
-
-const ASSET_MAP: Record<string, string> = {
-	'/assets/fern.jpeg': fernImage,
-	'/assets/frieren.jpeg': frierenImage,
-	'/assets/stark.jpeg': starkImage,
-	'/assets/himmel.jpeg': himmelImage,
-	'/assets/heiter.jpeg': heiterImage,
-	'/assets/eisen.jpeg': eisenImage,
-	'/assets/serie.jpeg': serieImage,
-	'/assets/flamme.jpeg': flammeImage,
-};
-
-const mapPhotos = (photos: Photo[]): Photo[] => {
-	return photos.map((photo) => {
-		const avatarKey = photo.author.avatarUrl || '';
-		return {
-			...photo,
-			imageUrl: ASSET_MAP[photo.imageUrl] ?? photo.imageUrl,
-			author: {
-				...photo.author,
-				avatarUrl: ASSET_MAP[avatarKey] ?? photo.author.avatarUrl,
-			},
-		};
-	});
-};
-
-const mapAlbums = (albums: Album[]): Album[] => {
-	return albums.map((album) => {
-		const avatarKey = album.author.avatarUrl || '';
-		return {
-			...album,
-			coverImageUrl: ASSET_MAP[album.coverImageUrl] ?? album.coverImageUrl,
-			author: {
-				...album.author,
-				avatarUrl: ASSET_MAP[avatarKey] ?? album.author.avatarUrl,
-			},
-		};
-	});
-};
-
-// // Define the types of state our Context will provide
-// interface DataContextProps {
-//   feedPhotos: Photo[];
-//   feedAlbums: Album[];
-//   discoveryPhotos: Photo[];
-//   discoveryAlbums: Album[];
-//   loading: boolean;
-//   error: string | null;
-//   toggleLikePhoto: (photoId: number) => void;
-//   toggleLikeAlbum: (albumId: number) => void;
-// }
-
-// const DataContext = createContext<DataContextProps | undefined>(undefined);
-
-// The Provider component that loads and maps everything
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 	const [feedPhotos, setFeedPhotos] = useState<Photo[]>([]);
 	const [feedAlbums, setFeedAlbums] = useState<Album[]>([]);
 	const [discoveryPhotos, setDiscoveryPhotos] = useState<Photo[]>([]);
 	const [discoveryAlbums, setDiscoveryAlbums] = useState<Album[]>([]);
+	const [profilesMap, setProfilesMap] = useState<Record<number, UserProfileData>>({});
+
 	const [loading, setLoading] = useState<boolean>(true);
 	const [error, setError] = useState<string | null>(null);
 
 	useEffect(() => {
-		const fetchAndMapAllData = async () => {
+		const loadEcosystemData = async () => {
 			try {
 				setLoading(true);
+				const [fPhotosRes, fAlbumsRes, dPhotosRes, dAlbumsRes, profilesRes] = await Promise.all([
+					fetch('http://localhost:4000/api/feed/photos'),
+					fetch('http://localhost:4000/api/feed/albums'),
+					fetch('http://localhost:4000/api/discovery/photos'),
+					fetch('http://localhost:4000/api/discovery/albums'),
+					fetch('http://localhost:4000/api/profiles'),
+				]);
 
-				// Fetch all 4 endpoints concurrently
-				const [feedPhotosRes, feedAlbumsRes, discoverPhotosRes, discoverAlbumsRes] =
-					await Promise.all([
-						fetch('http://localhost:4000/api/feed/photos'),
-						fetch('http://localhost:4000/api/feed/albums'),
-						fetch('http://localhost:4000/api/discovery/photos'),
-						fetch('http://localhost:4000/api/discovery/albums'),
-					]);
+				const fPhotos: Photo[] = await fPhotosRes.json();
+				const fAlbums: Album[] = await fAlbumsRes.json();
+				const dPhotos: Photo[] = await dPhotosRes.json();
+				const dAlbums: Album[] = await dAlbumsRes.json();
 
-				const feedPhotosRaw: Photo[] = await feedPhotosRes.json();
-				const feedAlbumsRaw: Album[] = await feedAlbumsRes.json();
-				const discoverPhotosRaw: Photo[] = await discoverPhotosRes.json();
-				const discoverAlbumsRaw: Album[] = await discoverAlbumsRes.json();
+				const rawProfiles: Record<number, UserProfileData> = await profilesRes.json();
 
-				// Intercept data and map image/avatar to local assets
-				setFeedPhotos(mapPhotos(feedPhotosRaw));
-				setFeedAlbums(mapAlbums(feedAlbumsRaw));
-				setDiscoveryPhotos(mapPhotos(discoverPhotosRaw));
-				setDiscoveryAlbums(mapAlbums(discoverAlbumsRaw));
+				setFeedPhotos(fPhotos);
+				setFeedAlbums(fAlbums);
+				setDiscoveryPhotos(dPhotos);
+				setDiscoveryAlbums(dAlbums);
 
+				// COMBINE SYSTEM ARRAYS TO MIMIC 1-TO-MANY DATABASE RELATIONS
+				const allPhotos = [...fPhotos, ...dPhotos];
+				const allAlbums = [...fAlbums, ...dAlbums];
+
+				// Deduplicate tracking arrays by asset ID
+				const uniquePhotos = Array.from(new Map(allPhotos.map((p) => [p.id, p])).values());
+				const uniqueAlbums = Array.from(new Map(allAlbums.map((a) => [a.id, a])).values());
+
+				const hydratedProfiles: Record<number, UserProfileData> = {};
+
+				Object.keys(rawProfiles).forEach((key) => {
+					const targetUserId = Number(key);
+					const rawConfig = rawProfiles[targetUserId];
+
+					// DYNAMIC RELATION FILTERS: Emulates "SELECT * FROM photos WHERE author_id = targetUserId"
+					const profilePublicPhotos = uniquePhotos.filter(
+						(p) => p.author.id === targetUserId && p.sharingMode === 'public'
+					);
+					const profilePublicAlbums = uniqueAlbums.filter(
+						(a) => a.author.id === targetUserId && a.sharingMode === 'public'
+					);
+
+					// Combine public items with user-specific private content placeholders
+					const profileOwnerPhotos = [
+						...profilePublicPhotos,
+						...(rawConfig.ownerPhotos || []).filter((p) => p.sharingMode === 'private'),
+					];
+					const profileOwnerAlbums = [
+						...profilePublicAlbums,
+						...(rawConfig.ownerAlbums || []).filter((a) => a.sharingMode === 'private'),
+					];
+
+					hydratedProfiles[targetUserId] = {
+						profile: rawConfig.profile,
+						following: rawConfig.following ?? [],
+						followers: rawConfig.followers ?? [],
+						publicPhotos: profilePublicPhotos,
+						publicAlbums: profilePublicAlbums,
+						ownerPhotos: profileOwnerPhotos,
+						ownerAlbums: profileOwnerAlbums,
+					};
+				});
+
+				setProfilesMap(hydratedProfiles);
 				setError(null);
 			} catch (err) {
-				console.error('Failed to load backend mock metadata:', err);
-				setError('Could not load media items.');
+				console.error('Failed to load backend ecosystems:', err);
+				setError('Could not populate system content maps.');
 			} finally {
 				setLoading(false);
 			}
 		};
 
-		fetchAndMapAllData();
+		loadEcosystemData();
 	}, []);
 
+	// Intercept and synchronize states globally across columns, grids, and sidebars simultaneously
 	const toggleLikePhoto = (photoId: number) => {
-		const updatePhoto = (photo: Photo) => {
+		const syncLike = (photo: Photo) => {
 			if (photo.id !== photoId) return photo;
 			return {
 				...photo,
@@ -122,12 +104,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			};
 		};
 
-		setFeedPhotos((prev) => prev.map(updatePhoto));
-		setDiscoveryPhotos((prev) => prev.map(updatePhoto));
+		setFeedPhotos((prev) => prev.map(syncLike));
+		setDiscoveryPhotos((prev) => prev.map(syncLike));
+		setProfilesMap((prev) => {
+			const updated = { ...prev };
+			Object.keys(updated).forEach((key) => {
+				const id = Number(key);
+				updated[id] = {
+					...updated[id],
+					publicPhotos: updated[id].publicPhotos.map(syncLike),
+					ownerPhotos: updated[id].ownerPhotos.map(syncLike),
+				};
+			});
+			return updated;
+		});
 	};
 
 	const toggleLikeAlbum = (albumId: number) => {
-		const updateAlbum = (album: Album) => {
+		const syncLike = (album: Album) => {
 			if (album.id !== albumId) return album;
 			return {
 				...album,
@@ -136,8 +130,40 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 			};
 		};
 
-		setFeedAlbums((prev) => prev.map(updateAlbum));
-		setDiscoveryAlbums((prev) => prev.map(updateAlbum));
+		setFeedAlbums((prev) => prev.map(syncLike));
+		setDiscoveryAlbums((prev) => prev.map(syncLike));
+		setProfilesMap((prev) => {
+			const updated = { ...prev };
+			Object.keys(updated).forEach((key) => {
+				const id = Number(key);
+				updated[id] = {
+					...updated[id],
+					publicAlbums: updated[id].publicAlbums.map(syncLike),
+					ownerAlbums: updated[id].ownerAlbums.map(syncLike),
+				};
+			});
+			return updated;
+		});
+	};
+
+	const toggleFollowUser = (userId: number) => {
+		setProfilesMap((prev) => {
+			if (!prev[userId]) return prev;
+			const isFollowing = prev[userId].profile.isFollowedByMe;
+			return {
+				...prev,
+				[userId]: {
+					...prev[userId],
+					profile: {
+						...prev[userId].profile,
+						isFollowedByMe: !isFollowing,
+						followerCount: isFollowing
+							? prev[userId].profile.followerCount - 1
+							: prev[userId].profile.followerCount + 1,
+					},
+				},
+			};
+		});
 	};
 
 	return (
@@ -151,18 +177,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 				error,
 				toggleLikePhoto,
 				toggleLikeAlbum,
+				profilesMap,
+				toggleFollowUser,
 			}}
 		>
 			{children}
 		</DataContext.Provider>
 	);
 };
-
-// Custom hook to consume the data cleanly
-// export const useDataContext = () => {
-//   const context = useContext(DataContext);
-//   if (!context) {
-//     throw new Error("useDataContext must be used within a DataProvider");
-//   }
-//   return context;
-// };

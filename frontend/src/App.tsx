@@ -1,40 +1,28 @@
-import { BrowserRouter, Routes, Route, Outlet, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import { useEffect, useState } from 'react';
-import { TopBar } from './components/TopBar.tsx';
 import { Feeds } from './pages/Feeds.tsx';
 import { Discovery } from './pages/Discovery.tsx';
 import { LoginPage } from './pages/Login.tsx';
 import { SignupPage } from './pages/Signup.tsx';
+import { PublicProfile } from './pages/PublicProfile.tsx';
+import { MyProfile } from './pages/MyProfile.tsx';
 import type { User } from './types/index.ts';
-import { DataProvider } from './contexts/DataProvider.tsx';
+import { AuthLayout } from './components/layouts/AuthLayout.tsx';
+import { ContentLayout } from './components/layouts/ContentLayout.tsx';
+import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 
-const AppLayout = ({
+const RequireAuth = ({
 	currentUser,
-	onLogout,
-	onMenuToggle,
+	children,
 }: {
 	currentUser: User | null;
-	onLogout: () => void;
-	onMenuToggle?: () => void;
+	children: React.ReactNode;
 }) => {
-	return (
-		<>
-			<TopBar currentUser={currentUser} onLogout={onLogout} onMenuToggle={onMenuToggle} />
-			<Outlet />
-		</>
-	);
-};
-
-const ProtectedRoute = ({ currentUser }: { currentUser: User | null }) => {
 	const location = useLocation();
 	if (!currentUser) {
 		return <Navigate to="/login" state={{ from: location }} replace />;
 	}
-	return (
-		<DataProvider>
-			<Outlet />
-		</DataProvider>
-	);
+	return <>{children}</>;
 };
 
 const App = () => {
@@ -66,46 +54,44 @@ const App = () => {
 		window.localStorage.setItem(LOCAL_STORAGE_USER, JSON.stringify(currentUser));
 	}, [currentUser]);
 
-	// Mobile sidebar state lifted to App level
-	const [mobileOpen, setMobileOpen] = useState(false);
-
 	return (
 		<BrowserRouter>
-			<Routes>
-				<Route
-					element={
-						<AppLayout
-							currentUser={currentUser}
-							onLogout={handleLogout}
-							onMenuToggle={() => setMobileOpen(true)}
-						/>
-					}
-				>
-					<Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
-					<Route path="/signup" element={<SignupPage onLogin={handleLogin} />} />
+			<ErrorBoundary>
+				<Routes>
+					{/* Auth pages (TopBar only, no sidebar) */}
+					<Route element={<AuthLayout currentUser={currentUser} onLogout={handleLogout} />}>
+						<Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
+						<Route path="/signup" element={<SignupPage onLogin={handleLogin} />} />
+					</Route>
 
-					<Route element={<ProtectedRoute currentUser={currentUser} />}>
+					<Route element={<ContentLayout currentUser={currentUser} onLogout={handleLogout} />}>
+						{/* Guests allowed */}
+						<Route path="/discover" element={<Discovery currentUser={currentUser} />} />
+						<Route path="/profile/:userId" element={<PublicProfile currentUser={currentUser} />} />
+
+						{/* Login required */}
 						<Route
 							path="/feeds"
-							element={<Feeds mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />}
-						/>
-						<Route
-							path="/discover"
 							element={
-								<Discovery
-									currentUser={currentUser!}
-									mobileOpen={mobileOpen}
-									setMobileOpen={setMobileOpen}
-								/>
+								<RequireAuth currentUser={currentUser}>
+									<Feeds />
+								</RequireAuth>
 							}
 						/>
-						{/* Default */}
-						<Route path="/" element={<Navigate to="/feeds" replace />} />
-					</Route>
-				</Route>
+						<Route
+							path="/my-profile"
+							element={
+								<RequireAuth currentUser={currentUser}>
+									<MyProfile currentUser={currentUser!} />
+								</RequireAuth>
+							}
+						/>
 
-				<Route path="*" element={<Navigate to="/" replace />} />
-			</Routes>
+						{/* Fall Back */}
+						<Route path="*" element={<Navigate to="/not-found" replace />} />
+					</Route>
+				</Routes>
+			</ErrorBoundary>
 		</BrowserRouter>
 	);
 };
