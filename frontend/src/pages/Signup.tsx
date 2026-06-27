@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import type { User } from '../types/index.ts';
 import { validateSignup } from '../utils/validation.ts';
+import { cn } from '../utils/cn.ts';
 
 export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 	const navigate = useNavigate();
@@ -73,13 +74,13 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				maxLength={opts?.maxLength}
 				value={value}
 				onChange={(ev) => onChange(ev.target.value)}
-				className={[
+				className={cn(
 					'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400',
 					'focus:outline-none focus:ring-1',
 					errors[id.replace('signup-', '')]
 						? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-						: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600',
-				].join(' ')}
+						: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600'
+				)}
 			/>
 			{errors[id.replace('signup-', '')] && (
 				<p className="mt-1 text-red-600">{errors[id.replace('signup-', '')]}</p>
@@ -122,13 +123,13 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 								maxLength={25}
 								value={formData.firstName}
 								onChange={(e) => setFormData((prev) => ({ ...prev, firstName: e.target.value }))}
-								className={[
+								className={cn(
 									'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400',
 									'focus:outline-none focus:ring-1',
 									errors.firstName
 										? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-										: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600',
-								].join(' ')}
+										: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600'
+								)}
 							/>
 							{errors.firstName && <p className="mt-1 text-red-600">{errors.firstName}</p>}
 						</div>
@@ -146,13 +147,13 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 								maxLength={25}
 								value={formData.lastName}
 								onChange={(e) => setFormData((prev) => ({ ...prev, lastName: e.target.value }))}
-								className={[
+								className={cn(
 									'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400',
 									'focus:outline-none focus:ring-1',
 									errors.lastName
 										? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-										: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600',
-								].join(' ')}
+										: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600'
+								)}
 							/>
 							{errors.lastName && <p className="mt-1 text-red-600">{errors.lastName}</p>}
 						</div>
@@ -206,13 +207,13 @@ export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				{/* Social placeholders */}
 				<div className="w-full flex items-center justify-around text-5xl space-y-2">
 					<button id="google-btn" className="rounded-lg cursor-pointer">
-						<i className={`fa-brands fa-google text-red-600`} />
+						<i className={'fa-brands fa-google text-red-600'} />
 					</button>
 					<button id="facebook-btn" className="rounded-lg cursor-pointer">
-						<i className={`fa-brands fa-facebook text-blue-600`} />
+						<i className={'fa-brands fa-facebook text-blue-600'} />
 					</button>
 					<button id="twitter-btn" className="rounded-lg cursor-pointer">
-						<i className={`fa-brands fa-twitter text-sky-600`} />
+						<i className={'fa-brands fa-twitter text-sky-600'} />
 					</button>
 				</div>
 

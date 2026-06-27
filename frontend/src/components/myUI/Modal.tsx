@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { cn } from '../../utils/cn.ts';
 
 interface ModalProps {
 	isOpen: boolean;
@@ -70,7 +71,10 @@ export const Modal = ({
 				aria-modal="true"
 				aria-label={ariaLabel}
 				tabIndex={-1}
-				className={`relative bg-white rounded-xl shadow-2xl outline-none flex flex-col ${panelClassName}`}
+				className={cn(
+					'relative bg-white rounded-xl shadow-2xl outline-none flex flex-col',
+					panelClassName
+				)}
 				onClick={(e) => e.stopPropagation()}
 			>
 				{children}

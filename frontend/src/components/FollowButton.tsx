@@ -1,3 +1,4 @@
+import { cn } from '../utils/cn.ts';
 interface FollowButtonProps {
 	authorId: number;
 	currentUserId?: number;
@@ -23,12 +24,12 @@ export const FollowButton = ({
 				e.stopPropagation(); // don't bubble up to card click handlers
 				onToggle(authorId);
 			}}
-			className={[
+			className={cn(
 				'text-xs font-semibold px-3 py-1 rounded-full border transition-colors',
 				isFollowing
 					? 'bg-blue-800 text-white border-blue-800 hover:bg-blue-700 hover:border-blue-700'
-					: 'bg-white text-blue-800 border-blue-800 hover:bg-blue-50',
-			].join(' ')}
+					: 'bg-white text-blue-800 border-blue-800 hover:bg-blue-50'
+			)}
 		>
 			{isFollowing ? (
 				<>

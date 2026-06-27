@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Avatar } from './myUI/Avatar.tsx';
 import type { Photo } from '../types/index.ts';
+import { cn } from '../utils/cn.ts';
 
 interface PhotoCardProps {
 	photo: Photo;
@@ -77,11 +78,12 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 					<button
 						onClick={() => onLike?.(photo.id)}
 						aria-label={photo.likedByMe ? `Unlike ${photo.title}` : `Like ${photo.title}`}
-						className={`flex items-center gap-1.5 transition-colors focus-visible:outline-none ${
+						className={cn(
+							'flex items-center gap-1.5 transition-colors focus-visible:outline-none',
 							photo.likedByMe ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
-						}`}
+						)}
 					>
-						<i className={`${photo.likedByMe ? 'fa-solid' : 'fa-regular'} fa-heart`} />
+						<i className={cn(photo.likedByMe ? 'fa-solid' : 'fa-regular', 'fa-heart')} />
 						<span>{photo.likesCount}</span>
 					</button>
 				</div>

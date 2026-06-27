@@ -1,4 +1,5 @@
 import React, { useRef } from 'react';
+import { cn } from '../../utils/cn.ts';
 
 interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {
 	onSearch?: (value: string) => void;
@@ -14,7 +15,7 @@ export const SearchBar = ({ onSearch, className = '', ...props }: SearchBarProps
 	};
 
 	return (
-		<div className={`relative ${className}`}>
+		<div className={cn('relative', className)}>
 			<div className="pointer-events-none absolute inset-y-0 left-3 flex items-center">
 				<i className="fa-solid fa-magnifying-glass text-gray-400 text-xs" />
 			</div>

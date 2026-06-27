@@ -1,6 +1,7 @@
 import { Avatar } from './myUI/Avatar.tsx';
 import type { Album } from '../types/index.ts';
 import { useState } from 'react';
+import { cn } from '../utils/cn.ts';
 
 interface AlbumCardProps {
 	album: Album;
@@ -82,11 +83,12 @@ export const AlbumCard = ({ album, onLike, onClickAlbum, onClickAuthor }: AlbumC
 					<button
 						onClick={() => onLike?.(album.id)}
 						aria-label={album.likedByMe ? `Unlike ${album.title}` : `Like ${album.title}`}
-						className={`flex items-center gap-1.5 transition-colors focus-visible:outline-none ${
+						className={cn(
+							'flex items-center gap-1.5 transition-colors focus-visible:outline-none',
 							album.likedByMe ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
-						}`}
+						)}
 					>
-						<i className={`${album.likedByMe ? 'fa-solid' : 'fa-regular'} fa-heart`} />
+						<i className={cn(album.likedByMe ? 'fa-solid' : 'fa-regular', 'fa-heart')} />
 						<span>{album.likesCount}</span>
 					</button>
 				</div>

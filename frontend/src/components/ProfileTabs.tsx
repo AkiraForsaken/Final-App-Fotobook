@@ -1,5 +1,6 @@
 import { useSearchParams } from 'react-router';
 import type { ProfileTab } from '../types/index';
+import { cn } from '../utils/cn.ts';
 
 const TABS: { value: ProfileTab; label: string; icon: string }[] = [
 	{ value: 'photos', label: 'Photos', icon: 'fa-solid fa-image' },
@@ -32,15 +33,15 @@ export const ProfileTabs = ({ activeTab }: ProfileTabsProps) => {
 						<button
 							key={value}
 							onClick={() => handleSelect(value)}
-							className={[
+							className={cn(
 								'flex items-center gap-2 px-4 py-3 text-sm font-medium cursor-pointer border-b-2 transition-colors',
 								isActive
 									? 'border-blue-800 text-blue-800'
-									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300',
-							].join(' ')}
+									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+							)}
 							aria-current={isActive ? 'page' : undefined}
 						>
-							<i className={`${icon} text-xs`} />
+							<i className={cn(icon, 'text-xs')} />
 							<span className="hidden sm:inline">{label}</span>
 						</button>
 					);

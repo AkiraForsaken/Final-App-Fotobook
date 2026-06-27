@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router';
 import type { User } from '../types/index.ts';
 import { validateLogin } from '../utils/validation.ts';
+import { cn } from '../utils/cn.ts';
 
 export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 	const navigate = useNavigate();
@@ -69,13 +70,13 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				placeholder={opts?.placeholder}
 				value={value}
 				onChange={(ev) => onChange(ev.target.value)}
-				className={[
+				className={cn(
 					'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400',
 					'focus:outline-none focus:ring-1',
 					errors[id.replace('login-', '')]
 						? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-						: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600',
-				].join(' ')}
+						: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600'
+				)}
 			/>
 			{errors[id.replace('login-', '')] && (
 				<p className="mt-1 text-red-600">{errors[id.replace('login-', '')]}</p>
@@ -156,13 +157,13 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				{/* Social login placeholders */}
 				<div className="w-full flex items-center justify-around text-5xl space-y-2">
 					<button id="google-btn" className="rounded-lg cursor-pointer">
-						<i className={`fa-brands fa-google text-red-600`} />
+						<i className={'fa-brands fa-google text-red-600'} />
 					</button>
 					<button id="facebook-btn" className="rounded-lg cursor-pointer">
-						<i className={`fa-brands fa-facebook text-blue-600`} />
+						<i className={'fa-brands fa-facebook text-blue-600'} />
 					</button>
 					<button id="twitter-btn" className="rounded-lg cursor-pointer">
-						<i className={`fa-brands fa-twitter text-sky-600`} />
+						<i className={'fa-brands fa-twitter text-sky-600'} />
 					</button>
 				</div>
 

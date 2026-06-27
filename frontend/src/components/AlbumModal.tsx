@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Modal } from './myUI/Modal';
 import type { Album } from '../types/index';
+import { cn } from '../utils/cn.ts';
 
 interface AlbumModalProps {
 	album: Album | null;
@@ -88,9 +89,10 @@ const Carousel = ({ album, onClose }: CarouselProps) => {
 								key={i}
 								onClick={() => setCurrentIndex(i)}
 								aria-label={`Go to image ${i + 1}`}
-								className={`w-2 h-2 rounded-full transition-colors focus-visible:outline-none ${
+								className={cn(
+									'w-2 h-2 rounded-full transition-colors focus-visible:outline-none',
 									i === currentIndex ? 'bg-blue-600' : 'bg-gray-300 hover:bg-gray-400'
-								}`}
+								)}
 							/>
 						))}
 					</div>

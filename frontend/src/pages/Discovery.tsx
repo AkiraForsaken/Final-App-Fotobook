@@ -54,8 +54,6 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 
 	return (
 		<div>
-			{/* <SideBar items={NAV_ITEMS} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} /> */}
-
 			<main className="flex flex-col">
 				<FeedToggle mode={feedMode} onChange={setFeedMode} />
 

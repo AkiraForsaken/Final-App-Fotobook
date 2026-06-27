@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router';
+import { cn } from '../utils/cn.ts';
 export type NavItem = {
 	label: string;
 	to: string; // e.g "/feeds"
@@ -20,7 +21,7 @@ const SideBarItem = ({ item, onClick }: { item: NavItem; onClick?: () => void })
       ${isActive ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-300'}`
 		}
 	>
-		<i className={`${item.icon} w-5 text-center`} />
+		<i className={cn(item.icon, 'w-5 text-center')} />
 		{item.label}
 	</NavLink>
 );
@@ -48,9 +49,10 @@ export const SideBar = ({ items, mobileOpen, onClose }: SideBarProps) => {
 
 			{/* Mobile drawer */}
 			<aside
-				className={`fixed inset-y-0 left-0 z-40 w-56 bg-white shadow-lg transform transition-transform duration-200 ease-in-out sm:hidden ${
+				className={cn(
+					'fixed inset-y-0 left-0 z-40 w-56 bg-white shadow-lg transform transition-transform duration-200 ease-in-out sm:hidden',
 					mobileOpen ? 'translate-x-0' : '-translate-x-full'
-				}`}
+				)}
 			>
 				<div className="flex h-14 items-center justify-end px-4">
 					<button

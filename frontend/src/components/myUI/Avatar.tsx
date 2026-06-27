@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { cn } from '../../utils/cn.ts';
 
 interface AvatarProps {
 	firstName: string;
@@ -20,7 +21,7 @@ export const Avatar = ({
 }: AvatarProps) => {
 	const initials = `${firstName?.[0] ?? ''}${lastName?.[0] ?? ''}`.toUpperCase();
 	const [imgError, setImgError] = useState(false);
-	const shared = `${size} rounded-full object-cover shrink-0 ${className}`;
+	const shared = cn(size, 'rounded-full object-cover shrink-0', className);
 
 	if (src && !imgError) {
 		return (
@@ -35,7 +36,10 @@ export const Avatar = ({
 
 	return (
 		<div
-			className={`${shared} bg-blue-600 flex items-center justify-center text-white font-semibold select-none`}
+			className={cn(
+				shared,
+				'bg-blue-600 flex items-center justify-center text-white font-semibold select-none'
+			)}
 		>
 			<span className="leading-none">{initials}</span>
 		</div>
