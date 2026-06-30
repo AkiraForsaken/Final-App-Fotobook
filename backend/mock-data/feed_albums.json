@@ -1,0 +1,128 @@
+[
+  {
+    "id": 1,
+    "title": "Journey Through the North",
+    "description": "A collection of our travels across the northern frontier.",
+    "coverImageUrl": "https://picsum.photos/seed/album1/736/736",
+    "imageUrls": [
+      "https://picsum.photos/seed/a1/400/400",
+      "https://picsum.photos/seed/a2/400/400",
+      "https://picsum.photos/seed/a3/400/400"
+    ],
+    "sharingMode": "public",
+    "likesCount": 45,
+    "likedByMe": false,
+    "author": {
+      "id": 2,
+      "firstName": "Fern",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/fern.jpeg"
+    },
+    "createdAt": "2024-06-10T10:00:00Z"
+  },
+  {
+    "id": 2,
+    "title": "Memories of the Party",
+    "description": "Candid shots from our adventures together as a group.",
+    "coverImageUrl": "https://picsum.photos/seed/album2/736/736",
+    "imageUrls": [
+      "https://picsum.photos/seed/b1/400/400",
+      "https://picsum.photos/seed/b2/400/400",
+      "https://picsum.photos/seed/b3/400/400",
+      "https://picsum.photos/seed/b4/400/400"
+    ],
+    "sharingMode": "public",
+    "likesCount": 182,
+    "likedByMe": true,
+    "author": {
+      "id": 4,
+      "firstName": "Himmel",
+      "lastName": "The Hero",
+      "avatarUrl": "/assets/himmel.jpeg"
+    },
+    "createdAt": "2024-06-08T16:00:00Z"
+  },
+  {
+    "id": 3,
+    "title": "Forge & Flame",
+    "description": "A year in Eisen's workshop, captured in iron and light.",
+    "coverImageUrl": "https://picsum.photos/seed/album3/736/736",
+    "imageUrls": [
+      "https://picsum.photos/seed/c1/400/400",
+      "https://picsum.photos/seed/c2/400/400"
+    ],
+    "sharingMode": "public",
+    "likesCount": 67,
+    "likedByMe": false,
+    "author": {
+      "id": 6,
+      "firstName": "Eisen",
+      "lastName": "The Warrior",
+      "avatarUrl": "/assets/eisen.jpeg"
+    },
+    "createdAt": "2024-06-06T09:00:00Z"
+  },
+  {
+    "id": 4,
+    "title": "Sacred Grounds",
+    "description": "Every temple Heiter has ever blessed, in one album.",
+    "coverImageUrl": "https://picsum.photos/seed/album4/736/736",
+    "imageUrls": [
+      "https://picsum.photos/seed/d1/400/400",
+      "https://picsum.photos/seed/d2/400/400",
+      "https://picsum.photos/seed/d3/400/400"
+    ],
+    "sharingMode": "public",
+    "likesCount": 38,
+    "likedByMe": false,
+    "author": {
+      "id": 5,
+      "firstName": "Heiter",
+      "lastName": "The Priest",
+      "avatarUrl": "/assets/heiter.jpeg"
+    },
+    "createdAt": "2024-06-04T07:30:00Z"
+  },
+  {
+    "id": 5,
+    "title": "Thousand-Year Skies",
+    "description": "Frieren's personal sky archive. A millennium of sunsets.",
+    "coverImageUrl": "https://picsum.photos/seed/album5/736/736",
+    "imageUrls": [
+      "https://picsum.photos/seed/e1/400/400",
+      "https://picsum.photos/seed/e2/400/400",
+      "https://picsum.photos/seed/e3/400/400",
+      "https://picsum.photos/seed/e4/400/400"
+    ],
+    "sharingMode": "public",
+    "likesCount": 499,
+    "likedByMe": true,
+    "author": {
+      "id": 1,
+      "firstName": "Frieren",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/frieren.jpeg"
+    },
+    "createdAt": "2024-06-01T20:00:00Z"
+  },
+  {
+    "id": 6,
+    "title": "The Road Continues",
+    "description": "Stark documents every road they've walked so far.",
+    "coverImageUrl": "https://picsum.photos/seed/album6/736/736",
+    "imageUrls": [
+      "https://picsum.photos/seed/f1/400/400",
+      "https://picsum.photos/seed/f2/400/400"
+    ],
+    "sharingMode": "public",
+    "likesCount": 101,
+    "likedByMe": false,
+    "author": {
+      "id": 3,
+      "firstName": "Stark",
+      "lastName": "The Warrior",
+      "avatarUrl": "/assets/stark.jpeg"
+    },
+    "createdAt": "2024-05-29T11:00:00Z"
+  }
+]

@@ -1,0 +1,641 @@
+{
+  "1": {
+    "profile": {
+      "id": 1,
+      "firstName": "Frieren",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/frieren.jpeg",
+      "publicPhotoCount": 3,
+      "publicAlbumCount": 1,
+      "followingCount": 3,
+      "followerCount": 4,
+      "isFollowedByMe": false
+    },
+    "following": [
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 2,
+        "firstName": "Fern",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/fern.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "followers": [
+      {
+        "id": 5,
+        "firstName": "Heiter",
+        "lastName": "The Priest",
+        "avatarUrl": "/assets/heiter.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 7,
+        "firstName": "Serie",
+        "lastName": "The Living Grimmoir",
+        "avatarUrl": "/assets/serie.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 4,
+        "firstName": "Himmel",
+        "lastName": "The Hero",
+        "avatarUrl": "/assets/himmel.jpeg",
+        "isFollowedByMe": false
+      }
+    ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [
+      {
+        "id": 199,
+        "title": "Private Spellbook Study",
+        "description": "Deciphering scripts alone in the evening. (Private to me)",
+        "imageUrl": "https://picsum.photos/seed/priv/600/600",
+        "sharingMode": "private",
+        "likesCount": 0,
+        "likedByMe": false,
+        "author": {
+          "id": 1,
+          "firstName": "Frieren",
+          "lastName": "The Mage"
+        },
+        "createdAt": "2026-06-10T08:00:00Z"
+      }
+    ],
+    "ownerAlbums": []
+  },
+  "2": {
+    "profile": {
+      "id": 2,
+      "firstName": "Fern",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/fern.jpeg",
+      "publicPhotoCount": 3,
+      "publicAlbumCount": 2,
+      "followingCount": 2,
+      "followerCount": 3,
+      "isFollowedByMe": false
+    },
+    "following": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "followers": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 4,
+        "firstName": "Himmel",
+        "lastName": "The Hero",
+        "avatarUrl": "/assets/himmel.jpeg",
+        "isFollowedByMe": false
+      }
+    ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  },
+  "3": {
+    "profile": {
+      "id": 3,
+      "firstName": "Stark",
+      "lastName": "The Warrior",
+      "avatarUrl": "/assets/stark.jpeg",
+      "publicPhotoCount": 3,
+      "publicAlbumCount": 2,
+      "followingCount": 3,
+      "followerCount": 5,
+      "isFollowedByMe": true
+    },
+    "following": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 2,
+        "firstName": "Fern",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/fern.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "followers": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 4,
+        "firstName": "Himmel",
+        "lastName": "The Hero",
+        "avatarUrl": "/assets/himmel.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 5,
+        "firstName": "Heiter",
+        "lastName": "The Priest",
+        "avatarUrl": "/assets/heiter.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 8,
+        "firstName": "Flamme",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/flamme.jpeg",
+        "isFollowedByMe": false
+      }
+    ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  },
+  "4": {
+    "profile": {
+      "id": 4,
+      "firstName": "Himmel",
+      "lastName": "The Hero",
+      "avatarUrl": "/assets/himmel.jpeg",
+      "publicPhotoCount": 3,
+      "publicAlbumCount": 2,
+      "followingCount": 5,
+      "followerCount": 12,
+      "isFollowedByMe": false
+    },
+    "following": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 2,
+        "firstName": "Fern",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/fern.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 5,
+        "firstName": "Heiter",
+        "lastName": "The Priest",
+        "avatarUrl": "/assets/heiter.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "followers": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 2,
+        "firstName": "Fern",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/fern.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 5,
+        "firstName": "Heiter",
+        "lastName": "The Priest",
+        "avatarUrl": "/assets/heiter.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 7,
+        "firstName": "Serie",
+        "lastName": "The Living Grimmoir",
+        "avatarUrl": "/assets/serie.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 8,
+        "firstName": "Flamme",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/flamme.jpeg",
+        "isFollowedByMe": false
+      }
+    ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  },
+  "5": {
+    "profile": {
+      "id": 5,
+      "firstName": "Heiter",
+      "lastName": "The Priest",
+      "avatarUrl": "/assets/heiter.jpeg",
+      "publicPhotoCount": 3,
+      "publicAlbumCount": 2,
+      "followingCount": 3,
+      "followerCount": 4,
+      "isFollowedByMe": false
+    },
+    "following": [
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 4,
+        "firstName": "Himmel",
+        "lastName": "The Hero",
+        "avatarUrl": "/assets/himmel.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "followers": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 4,
+        "firstName": "Himmel",
+        "lastName": "The Hero",
+        "avatarUrl": "/assets/himmel.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 7,
+        "firstName": "Serie",
+        "lastName": "The Living Grimmoir",
+        "avatarUrl": "/assets/serie.jpeg",
+        "isFollowedByMe": false
+      }
+    ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  },
+  "6": {
+    "profile": {
+      "id": 6,
+      "firstName": "Eisen",
+      "lastName": "The Warrior",
+      "avatarUrl": "/assets/eisen.jpeg",
+      "publicPhotoCount": 3,
+      "publicAlbumCount": 2,
+      "followingCount": 1,
+      "followerCount": 6,
+      "isFollowedByMe": false
+    },
+    "following": [
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "followers": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 4,
+        "firstName": "Himmel",
+        "lastName": "The Hero",
+        "avatarUrl": "/assets/himmel.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 5,
+        "firstName": "Heiter",
+        "lastName": "The Priest",
+        "avatarUrl": "/assets/heiter.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 7,
+        "firstName": "Serie",
+        "lastName": "The Living Grimmoir",
+        "avatarUrl": "/assets/serie.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 8,
+        "firstName": "Flamme",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/flamme.jpeg",
+        "isFollowedByMe": false
+      }
+    ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  },
+  "7": {
+    "profile": {
+      "id": 7,
+      "firstName": "Serie",
+      "lastName": "The Living Grimmoir",
+      "avatarUrl": "/assets/serie.jpeg",
+      "publicPhotoCount": 3,
+      "publicAlbumCount": 2,
+      "followingCount": 2,
+      "followerCount": 50,
+      "isFollowedByMe": false
+    },
+    "following": [
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "followers": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 2,
+        "firstName": "Fern",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/fern.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 4,
+        "firstName": "Himmel",
+        "lastName": "The Hero",
+        "avatarUrl": "/assets/himmel.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 5,
+        "firstName": "Heiter",
+        "lastName": "The Priest",
+        "avatarUrl": "/assets/heiter.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 8,
+        "firstName": "Flamme",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/flamme.jpeg",
+        "isFollowedByMe": false
+      }
+    ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  },
+  "8": {
+    "profile": {
+      "id": 8,
+      "firstName": "Flamme",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/flamme.jpeg",
+      "publicPhotoCount": 3,
+      "publicAlbumCount": 2,
+      "followingCount": 3,
+      "followerCount": 25,
+      "isFollowedByMe": false
+    },
+    "following": [
+      {
+        "id": 7,
+        "firstName": "Serie",
+        "lastName": "The Living Grimmoir",
+        "avatarUrl": "/assets/serie.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "followers": [
+      {
+        "id": 1,
+        "firstName": "Frieren",
+        "lastName": "The Mage",
+        "avatarUrl": "/assets/frieren.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 3,
+        "firstName": "Stark",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/stark.jpeg",
+        "isFollowedByMe": true
+      },
+      {
+        "id": 4,
+        "firstName": "Himmel",
+        "lastName": "The Hero",
+        "avatarUrl": "/assets/himmel.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 5,
+        "firstName": "Heiter",
+        "lastName": "The Priest",
+        "avatarUrl": "/assets/heiter.jpeg",
+        "isFollowedByMe": false
+      },
+      {
+        "id": 6,
+        "firstName": "Eisen",
+        "lastName": "The Warrior",
+        "avatarUrl": "/assets/eisen.jpeg",
+        "isFollowedByMe": true
+      }
+    ],
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  },
+  "1782465869652": {
+    "profile": {
+      "id": 1782465869652,
+      "firstName": "asasd",
+      "lastName": "Stileer",
+      "isFollowedByMe": false,
+      "followerCount": 0,
+      "followingCount": 0
+    },
+    "publicPhotos": [],
+    "publicAlbums": [],
+    "ownerPhotos": [],
+    "ownerAlbums": []
+  }
+}

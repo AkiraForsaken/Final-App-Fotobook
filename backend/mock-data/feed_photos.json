@@ -1,0 +1,194 @@
+[
+  {
+    "id": 1,
+    "title": "Magic in the Forest",
+    "description": "A serene view from our adventure in the ancient woods.",
+    "imageUrl": "/assets/fern.jpeg",
+    "sharingMode": "public",
+    "likesCount": 128,
+    "likedByMe": true,
+    "author": {
+      "id": 2,
+      "firstName": "Fern",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/fern.jpeg"
+    },
+    "createdAt": "2024-06-10T09:00:00Z"
+  },
+  {
+    "id": 2,
+    "title": "Above the Clouds",
+    "description": "Portrait at sunset after a long day of traveling.",
+    "imageUrl": "/assets/frieren.jpeg",
+    "sharingMode": "public",
+    "likesCount": 214,
+    "likedByMe": false,
+    "author": {
+      "id": 1,
+      "firstName": "Frieren",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/frieren.jpeg"
+    },
+    "createdAt": "2024-06-09T17:30:00Z"
+  },
+  {
+    "id": 3,
+    "title": "Battle Ready",
+    "description": "Stark in his finest armor, just before the big fight.",
+    "imageUrl": "/assets/stark.jpeg",
+    "sharingMode": "public",
+    "likesCount": 89,
+    "likedByMe": false,
+    "author": {
+      "id": 3,
+      "firstName": "Stark",
+      "lastName": "The Warrior",
+      "avatarUrl": "/assets/stark.jpeg"
+    },
+    "createdAt": "2024-06-08T12:00:00Z"
+  },
+  {
+    "id": 4,
+    "title": "Eternal Hero",
+    "description": "Himmel posing for what he called 'posterity'.",
+    "imageUrl": "/assets/himmel.jpeg",
+    "sharingMode": "public",
+    "likesCount": 312,
+    "likedByMe": true,
+    "author": {
+      "id": 4,
+      "firstName": "Himmel",
+      "lastName": "The Hero",
+      "avatarUrl": "/assets/himmel.jpeg"
+    },
+    "createdAt": "2024-06-07T08:15:00Z"
+  },
+  {
+    "id": 5,
+    "title": "Morning Prayer",
+    "description": "Heiter at dawn, blessing the road ahead.",
+    "imageUrl": "/assets/heiter.jpeg",
+    "sharingMode": "public",
+    "likesCount": 55,
+    "likedByMe": false,
+    "author": {
+      "id": 5,
+      "firstName": "Heiter",
+      "lastName": "The Priest",
+      "avatarUrl": "/assets/heiter.jpeg"
+    },
+    "createdAt": "2024-06-06T06:00:00Z"
+  },
+  {
+    "id": 6,
+    "title": "Iron Fist",
+    "description": "Eisen practicing his craft at the forge.",
+    "imageUrl": "/assets/eisen.jpeg",
+    "sharingMode": "public",
+    "likesCount": 73,
+    "likedByMe": false,
+    "author": {
+      "id": 6,
+      "firstName": "Eisen",
+      "lastName": "The Warrior",
+      "avatarUrl": "/assets/eisen.jpeg"
+    },
+    "createdAt": "2024-06-05T14:00:00Z"
+  },
+  {
+    "id": 7,
+    "title": "Spellweaving at Dusk",
+    "description": "An experimental spell gone beautifully wrong.",
+    "sharingMode": "public",
+    "imageUrl": "https://picsum.photos/seed/736/736",
+    "likesCount": 99,
+    "likedByMe": false,
+    "author": {
+      "id": 2,
+      "firstName": "Fern",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/fern.jpeg"
+    },
+    "createdAt": "2024-06-04T20:00:00Z"
+  },
+  {
+    "id": 8,
+    "title": "The Silent Summit",
+    "description": "After three days of climbing, silence was the reward.",
+    "imageUrl": "https://picsum.photos/736/736",
+    "sharingMode": "public",
+    "likesCount": 141,
+    "likedByMe": false,
+    "author": {
+      "id": 3,
+      "firstName": "Stark",
+      "lastName": "The Warrior",
+      "avatarUrl": "/assets/stark.jpeg"
+    },
+    "createdAt": "2024-06-03T07:45:00Z"
+  },
+  {
+    "id": 9,
+    "title": "Library of the Ancients",
+    "description": "Frieren browsing grimoires older than most civilizations.",
+    "imageUrl": "https://picsum.photos/736/736",
+    "sharingMode": "public",
+    "likesCount": 280,
+    "likedByMe": true,
+    "author": {
+      "id": 1,
+      "firstName": "Frieren",
+      "lastName": "The Mage",
+      "avatarUrl": "/assets/frieren.jpeg"
+    },
+    "createdAt": "2024-06-02T11:20:00Z"
+  },
+  {
+    "id": 10,
+    "title": "Campfire Tales",
+    "description": "Heiter's stories always lasted until sunrise.",
+    "imageUrl": "https://picsum.photos/736/736",
+    "sharingMode": "public",
+    "likesCount": 66,
+    "likedByMe": false,
+    "author": {
+      "id": 5,
+      "firstName": "Heiter",
+      "lastName": "The Priest",
+      "avatarUrl": "/assets/heiter.jpeg"
+    },
+    "createdAt": "2024-06-01T22:00:00Z"
+  },
+  {
+    "id": 11,
+    "title": "Forge Fire",
+    "description": "The glow of molten metal at midnight.",
+    "imageUrl": "https://picsum.photos/736/736",
+    "sharingMode": "public",
+    "likesCount": 48,
+    "likedByMe": false,
+    "author": {
+      "id": 6,
+      "firstName": "Eisen",
+      "lastName": "The Warrior",
+      "avatarUrl": "/assets/eisen.jpeg"
+    },
+    "createdAt": "2024-05-31T23:30:00Z"
+  },
+  {
+    "id": 12,
+    "title": "Hero's Rest",
+    "description": "Even heroes need a nap.",
+    "imageUrl": "https://picsum.photos/736/736",
+    "sharingMode": "public",
+    "likesCount": 195,
+    "likedByMe": false,
+    "author": {
+      "id": 4,
+      "firstName": "Himmel",
+      "lastName": "The Hero",
+      "avatarUrl": "/assets/himmel.jpeg"
+    },
+    "createdAt": "2024-05-30T15:00:00Z"
+  }
+]
