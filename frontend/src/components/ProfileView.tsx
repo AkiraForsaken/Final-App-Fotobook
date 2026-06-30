@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
+import { Button } from './myUI/Button';
 import { ProfileHeader } from './ProfileHeader';
 import { ProfileTabs } from './ProfileTabs';
 import { PhotoThumb } from './PhotoThumb';
@@ -7,7 +8,15 @@ import { AlbumThumb } from './AlbumThumb';
 import { FollowCard } from './FollowCard';
 import { PhotoModal } from './PhotoModal';
 import { AlbumModal } from './AlbumModal';
-import type { UserProfile, Photo, Album, FollowRelation, ProfileTab, User, UserProfileData } from '../types/index';
+import type {
+	UserProfile,
+	Photo,
+	Album,
+	FollowRelation,
+	ProfileTab,
+	User,
+	UserProfileData,
+} from '../types/index';
 
 interface ProfileViewProps {
 	profile: UserProfile;
@@ -24,7 +33,7 @@ interface ProfileViewProps {
 const EmptyState = ({ message, action }: { message: string; action?: React.ReactNode }) => (
 	<div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
 		<i className="fa-regular fa-folder-open text-4xl" />
-		<p className="text-sm">{message}</p>
+		<p className="text-lg">{message}</p>
 		{action}
 	</div>
 );
@@ -56,13 +65,10 @@ export const ProfileView = ({
 		<>
 			{isOwner && (
 				<div className="mb-4 flex justify-end">
-					<button
-						onClick={() => navigate('/photos/new')}
-						className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-blue-800 text-white hover:bg-blue-700 transition-colors"
-					>
+					<Button onClick={() => navigate('/photos/add')}>
 						<i className="fa-solid fa-plus" />
 						Add Photo
-					</button>
+					</Button>
 				</div>
 			)}
 			{photos.length === 0 ? (
@@ -70,12 +76,9 @@ export const ProfileView = ({
 					message="No photos yet."
 					action={
 						isOwner ? (
-							<button
-								onClick={() => navigate('/photos/new')}
-								className="text-sm text-blue-700 hover:underline"
-							>
+							<Button onClick={() => navigate('/photos/add')} className="hover:underline">
 								Upload your first photo
-							</button>
+							</Button>
 						) : undefined
 					}
 				/>
@@ -99,13 +102,10 @@ export const ProfileView = ({
 		<>
 			{isOwner && (
 				<div className="mb-4 flex justify-end">
-					<button
-						onClick={() => navigate('/albums/new')}
-						className="flex items-center gap-2 text-sm font-medium px-4 py-2 rounded-lg bg-blue-800 text-white hover:bg-blue-700 transition-colors"
-					>
+					<Button onClick={() => navigate('/albums/new')}>
 						<i className="fa-solid fa-plus" />
 						Add Album
-					</button>
+					</Button>
 				</div>
 			)}
 			{albums.length === 0 ? (
@@ -113,12 +113,9 @@ export const ProfileView = ({
 					message="No albums yet."
 					action={
 						isOwner ? (
-							<button
-								onClick={() => navigate('/albums/new')}
-								className="text-sm text-blue-700 hover:underline"
-							>
-								Create your first album →
-							</button>
+							<Button onClick={() => navigate('/albums/new')} className="hover:underline">
+								Create your first album
+							</Button>
 						) : undefined
 					}
 				/>

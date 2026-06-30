@@ -91,5 +91,6 @@ export const useProfile = (userId: number | null, currentUser: User | null) => {
 		loading,
 		error,
 		toggleFollowUser,
+		refetch: loadProfileData, // pages can trigger refetch after create / edit / delete
 	};
 };

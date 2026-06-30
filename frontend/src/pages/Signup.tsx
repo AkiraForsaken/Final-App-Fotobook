@@ -4,7 +4,7 @@ import type { User } from '../types/index.ts';
 import { validateSignup } from '../utils/validation.ts';
 import { cn } from '../utils/cn.ts';
 
-export const SignupPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
+export const Signup = ({ onLogin }: { onLogin: (user: User) => void }) => {
 	const navigate = useNavigate();
 
 	const [formData, setFormData] = useState({

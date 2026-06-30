@@ -43,7 +43,8 @@ export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThum
 
 			{/* Likes overlay on hover */}
 			<div
-				className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 text-white text-sm font-semibold pointer-events-none"
+				className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 
+				transition-opacity flex items-center justify-center gap-2 text-white text-sm font-semibold pointer-events-none"
 				onClick={() => onOpen(photo)}
 			>
 				<i className="fa-solid fa-heart" />
@@ -57,7 +58,8 @@ export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThum
 						e.stopPropagation();
 						onEdit(photo);
 					}}
-					className="absolute top-2 right-2 bg-white/90 text-gray-700 rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+					className="absolute bottom-2 right-2 z-10 bg-white/90 text-gray-700 
+					cursor-pointer rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
 					title="Edit photo"
 				>
 					<i className="fa-solid fa-pen text-xs" />

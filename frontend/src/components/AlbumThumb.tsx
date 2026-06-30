@@ -42,7 +42,7 @@ export const AlbumThumb = ({ album, isOwner = false, onOpen, onEdit }: AlbumThum
 			)}
 
 			{/* Image count badge */}
-			<span className="absolute top-2 right-2 bg-black/60 text-white text-xs rounded-full px-2 py-0.5 font-medium">
+			<span className="absolute top-2 right-2 bg-black/60 text-white text-sm rounded-full px-2 py-0.5 font-medium">
 				<i className="fa-solid fa-images mr-1" />
 				{album.imageUrls.length}
 			</span>
