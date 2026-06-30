@@ -10,6 +10,7 @@ import { ContentLayout } from './components/layouts/ContentLayout.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 import { useAuth } from './hooks/useAuth.ts';
+import NotFound from './pages/NotFound.tsx';
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 	const { currentUser } = useAuth();
@@ -55,7 +56,7 @@ const AppContent = () => {
 							}
 						/>
 
-						<Route path="*" element={<Navigate to="/not-found" replace />} />
+						<Route path="*" element={<NotFound />} />
 					</Route>
 				</Routes>
 			</ErrorBoundary>

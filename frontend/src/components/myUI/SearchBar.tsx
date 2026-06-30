@@ -6,9 +6,9 @@ interface SearchBarProps extends React.InputHTMLAttributes<HTMLInputElement> {
 }
 
 export const SearchBar = ({ onSearch, className = '', ...props }: SearchBarProps) => {
-	const timerRef = useRef<ReturnType<typeof setTimeout>>(500);
+	const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		clearTimeout(timerRef.current);
+		if (timerRef.current) clearTimeout(timerRef.current);
 		timerRef.current = setTimeout(() => {
 			onSearch?.(e.target.value);
 		}, 500);
