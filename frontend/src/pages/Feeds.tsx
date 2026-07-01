@@ -33,8 +33,6 @@ export const Feeds = () => {
 
 	return (
 		<div className="">
-			{/* <SideBar items={NAV_ITEMS} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} /> */}
-
 			{/* Main content */}
 			<main className="flex flex-col">
 				<FeedToggle mode={feedMode} onChange={setFeedMode} />
@@ -88,9 +86,6 @@ export const Feeds = () => {
 				<PhotoModal photo={activePhoto} onClose={() => setActivePhoto(null)} />
 				<AlbumModal album={activeAlbum} onClose={() => setActiveAlbum(null)} />
 			</main>
-
-			{/* Right spacer
-				<div className="hidden xl:block min-w-[13%] shrink-0 bg-gray-100" /> */}
 		</div>
 	);
 };

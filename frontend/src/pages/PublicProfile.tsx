@@ -10,10 +10,10 @@ interface PublicProfileProps {
 const ProfileNotFound = ({ userId }: { userId: string }) => (
 	<div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
 		<i className="fa-solid fa-user-slash text-5xl text-gray-300" />
-		<h2 className="text-xl font-semibold text-gray-700">User not found</h2>
-		<p className="text-sm text-gray-400 max-w-xs">
-			There's no account at <span className="font-mono text-gray-500">/profile/{userId}</span>. The
-			user may have been deleted or the link may be incorrect.
+		<h2 className="text-xl font-semibold text-text-secondary">User not found</h2>
+		<p className="text-sm text-text-muted max-w-xs">
+			There's no account at <span className="font-mono text-text-secondary">/profile/{userId}</span>
+			. The user may have been deleted or the link may be incorrect.
 		</p>
 	</div>
 );
@@ -33,7 +33,7 @@ export const PublicProfile = ({ currentUser }: PublicProfileProps) => {
 	}
 
 	if (loading) {
-		return <div className="text-center py-20 text-gray-400">Loading profile...</div>;
+		return <div className="text-center py-20 text-text-muted">Loading profile...</div>;
 	}
 
 	return (

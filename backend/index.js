@@ -208,7 +208,7 @@ app.put("/api/photos/:id", (req, res) => {
 
   // Find the photo in ownerPhotos
   const photoIndex = (profileEntry.ownerPhotos || []).findIndex(
-    (p) => p.id === photoId,
+    (p) => p.id == photoId,
   );
   if (photoIndex === -1) {
     return res.status(404).json({ error: "Photo not found." });
@@ -243,7 +243,7 @@ app.put("/api/photos/:id", (req, res) => {
   // Sync feed & discovery
   for (const file of ["feed_photos.json", "discovery_photos.json"]) {
     const list = readJson(file) || [];
-    const idx = list.findIndex((p) => p.id === photoId);
+    const idx = list.findIndex((p) => p.id == photoId);
     if (nowPublic) {
       if (idx !== -1) list[idx] = updatedPhoto;
       else list.unshift(updatedPhoto);
@@ -274,7 +274,7 @@ app.delete("/api/photos/:id", (req, res) => {
     return res.status(404).json({ error: "Author profile not found." });
   }
 
-  const before = (profileEntry.ownerPhotos || []).find((p) => p.id === photoId);
+  const before = (profileEntry.ownerPhotos || []).find((p) => p.id == photoId);
   if (!before) {
     return res.status(404).json({ error: "Photo not found." });
   }

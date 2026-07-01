@@ -28,7 +28,7 @@ export const FollowButton = ({
 				'text-xs font-semibold px-3 py-1 rounded-full border transition-colors',
 				isFollowing
 					? 'bg-blue-800 text-white border-blue-800 hover:bg-blue-700 hover:border-blue-700'
-					: 'bg-white text-blue-800 border-blue-800 hover:bg-blue-50'
+					: 'bg-surface text-nav-active-text border-blue-800 hover:bg-blue-50'
 			)}
 		>
 			{isFollowing ? (

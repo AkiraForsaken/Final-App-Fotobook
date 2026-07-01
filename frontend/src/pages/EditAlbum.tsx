@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useAuth } from '../hooks/useAuth.ts';
 import { useProfile } from '../hooks/useProfile.ts';
@@ -32,13 +32,10 @@ export const EditAlbum = () => {
 			contentService.updateAlbum(albumId, payload),
 		[albumId]
 	);
-
-	const { values, errors, submitting, handleChange, handleFileError, handleSubmit } = useMediaForm(
-		submitFn,
-		currentUser!.id, // non-null assertion (by force - High risk)
-		{
-			mode: 'album',
-			requireFile: false, // existing cover image is already saved
+	const formOptions = useMemo(
+		() => ({
+			mode: 'album' as const,
+			requireFile: false,
 			initialValues: album
 				? {
 						title: album.title,
@@ -48,7 +45,14 @@ export const EditAlbum = () => {
 						files: [],
 					}
 				: undefined,
-		}
+		}),
+		[album]
+	); // Only recreates if the underlying album data actually changes
+
+	const { values, errors, submitting, handleChange, handleFileError, handleSubmit } = useMediaForm(
+		submitFn,
+		currentUser!.id, // non-null assertion (by force - High risk)
+		formOptions
 	);
 
 	// ── Submit (save changes) ──────────────────────────────────────────────
@@ -84,7 +88,7 @@ export const EditAlbum = () => {
 
 	if (loading) {
 		return (
-			<div className="flex items-center justify-center py-32 text-gray-400">Loading album…</div>
+			<div className="flex items-center justify-center py-32 text-text-muted">Loading album…</div>
 		);
 	}
 
@@ -92,7 +96,7 @@ export const EditAlbum = () => {
 		return (
 			<div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
 				<i className="fa-solid fa-images text-4xl text-gray-300" />
-				<p className="text-gray-500">Album not found.</p>
+				<p className="text-text-secondary">Album not found.</p>
 				<Button variant="ghost" onClick={() => navigate('/my-profile?tab=albums')}>
 					Back to my albums
 				</Button>
@@ -107,24 +111,24 @@ export const EditAlbum = () => {
 				<button
 					aria-label="Go back"
 					onClick={() => navigate(-1)}
-					className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+					className="p-2 rounded-lg text-text-secondary hover:bg-bg-page hover:text-text-secondary transition-colors"
 				>
 					<i className="fa-solid fa-arrow-left" />
 				</button>
 				<div>
-					<h1 className="text-xl font-semibold text-gray-900">Edit album</h1>
-					<p className="text-sm text-gray-500 mt-0.5">Update your album's details</p>
+					<h1 className="text-xl font-semibold text-text-primary">Edit album</h1>
+					<p className="text-sm text-text-secondary mt-0.5">Update your album's details</p>
 				</div>
 			</div>
 
 			<form onSubmit={onSubmit} noValidate>
-				<div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+				<div className="bg-surface rounded-xl border border-border shadow-sm p-6">
 					<MediaFormFields
 						mode="album"
 						values={values}
 						errors={errors}
-						existingTitle={album.title}
-						existingDesc={album.description}
+						// existingTitle={album.title}
+						// existingDesc={album.description}
 						existingImageUrls={album.imageUrls}
 						imageLabel="Album"
 						onChange={handleChange}

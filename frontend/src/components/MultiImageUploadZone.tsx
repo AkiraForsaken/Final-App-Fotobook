@@ -67,11 +67,11 @@ export const MultiImageUploadZone = ({
 		<div className="flex flex-col gap-3">
 			{/* Label row */}
 			<div className="flex items-center justify-between">
-				<label className="block text-sm font-medium text-gray-700">
+				<label className="block text-sm font-medium text-text-secondary">
 					{label}
 					<span className="text-red-500 ml-0.5">*</span>
 				</label>
-				<span className="text-xs text-gray-400 tabular-nums">
+				<span className="text-xs text-text-muted tabular-nums">
 					{totalCount}/{MAX_FILES}
 				</span>
 			</div>
@@ -86,10 +86,10 @@ export const MultiImageUploadZone = ({
 				{existingImageUrls.map((url, i) => (
 					<div
 						key={`existing-${i}`}
-						className={cn(sharedTileClasses, 'bg-gray-100 ring-1 ring-gray-200 group')}
+						className={cn(sharedTileClasses, 'bg-bg-page ring-1 ring-gray-200 group')}
 					>
 						<img src={url} alt={`Image ${i + 1}`} className="w-full h-full object-cover" />
-						<span className="absolute bottom-1 left-1 rounded bg-black/50 px-1.5 py-0.5 text-[10px] text-white font-medium leading-none pointer-events-none">
+						<span className="absolute bottom-1 left-1 rounded bg-black/60 px-1.5 py-0.5 text-white text-sm font-medium leading-none pointer-events-none">
 							Saved
 						</span>
 					</div>
@@ -101,7 +101,7 @@ export const MultiImageUploadZone = ({
 					return (
 						<div
 							key={`new-${i}`}
-							className={cn(sharedTileClasses, 'bg-gray-100 ring-1 ring-blue-200 group')}
+							className={cn(sharedTileClasses, 'bg-bg-page ring-1 ring-blue-200 group')}
 						>
 							<img src={previewUrl} alt={file.name} className="w-full h-full object-cover" />
 							{/* × remove button — top-right, appears on hover */}
@@ -129,9 +129,9 @@ export const MultiImageUploadZone = ({
 						onClick={() => inputRef.current?.click()}
 						className={cn(
 							sharedTileClasses,
-							'border-2 border-dashed border-gray-300 bg-gray-50',
+							'border-2 border-dashed border-border-strong bg-surface-secondary',
 							'flex items-center justify-center cursor-pointer',
-							'text-gray-400 hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-500',
+							'text-text-muted hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-500',
 							'transition-colors'
 						)}
 					>
@@ -146,7 +146,7 @@ export const MultiImageUploadZone = ({
 				</p>
 			)}
 
-			<p className="text-xs text-gray-400">JPEG, PNG, GIF · max 5 MB each</p>
+			<p className="text-xs text-text-muted">JPEG, PNG, GIF · max 5 MB each</p>
 
 			<input
 				ref={inputRef}

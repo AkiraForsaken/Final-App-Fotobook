@@ -14,7 +14,7 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, State> {
 	render() {
 		if (this.state.hasError) {
 			return (
-				<div className="flex h-screen items-center justify-center text-gray-500">
+				<div className="flex h-screen items-center justify-center text-text-secondary">
 					<p>Something went wrong. Please refresh the page.</p>
 				</div>
 			);

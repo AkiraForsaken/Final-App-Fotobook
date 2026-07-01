@@ -31,7 +31,7 @@ interface ProfileViewProps {
 }
 
 const EmptyState = ({ message, action }: { message: string; action?: React.ReactNode }) => (
-	<div className="flex flex-col items-center justify-center py-20 gap-3 text-gray-400">
+	<div className="flex flex-col items-center justify-center py-20 gap-3 text-text-muted">
 		<i className="fa-regular fa-folder-open text-4xl" />
 		<p className="text-lg">{message}</p>
 		{action}

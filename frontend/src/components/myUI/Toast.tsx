@@ -27,7 +27,7 @@ export const Toast = ({ message, type, onDismiss, duration = 5000 }: ToastProps)
 			className={cn(
 				'fixed bottom-6 right-6 z-50 flex items-center gap-3 rounded-lg px-4 py-3 shadow-lg',
 				'font-medium text-white max-w-md animate-in fade-in slide-in-from-bottom-2',
-				type === 'success' ? 'bg-green-600' : 'bg-red-600'
+				type === 'success' ? 'bg-toast-success-bg' : 'bg-toast-error-bg'
 			)}
 		>
 			<i

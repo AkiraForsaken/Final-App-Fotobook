@@ -18,11 +18,11 @@ export const MyProfile = ({ currentUser }: MyProfileProps) => {
 		useProfile(currentUser.id, currentUser);
 
 	if (!profile) {
-		return <div className="text-center py-20 text-gray-400">Profile data unavailable.</div>;
+		return <div className="text-center py-20 text-text-muted">Profile data unavailable.</div>;
 	}
 
 	if (loading) {
-		return <div className="text-center py-20 text-gray-400">Loading profile...</div>;
+		return <div className="text-center py-20 text-text-muted">Loading profile...</div>;
 	}
 
 	return (

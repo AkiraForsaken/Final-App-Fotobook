@@ -72,7 +72,7 @@ export const Modal = ({
 				aria-label={ariaLabel}
 				tabIndex={-1}
 				className={cn(
-					'relative bg-white rounded-xl shadow-2xl outline-none flex flex-col',
+					'relative bg-surface rounded-xl shadow-2xl outline-none flex flex-col',
 					panelClassName
 				)}
 				onClick={(e) => e.stopPropagation()}

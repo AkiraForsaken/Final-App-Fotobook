@@ -24,7 +24,7 @@ export const FollowCard = ({
 	const fullName = `${user.firstName} ${user.lastName}`;
 
 	return (
-		<div className="flex flex-col items-center gap-3 p-4 bg-white rounded-xl border border-gray-100 shadow-sm">
+		<div className="flex flex-col items-center gap-3 p-4 bg-surface rounded-xl border border-border shadow-sm">
 			<button
 				onClick={() => navigate(`/profile/${user.id}`)}
 				className="shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-full"
@@ -36,7 +36,7 @@ export const FollowCard = ({
 					src={user.avatarUrl}
 					size="w-36 h-36"
 				/>
-				<p className="font-medium text-gray-900 mt-4 truncate hover:underline">{fullName}</p>
+				<p className="font-medium text-text-primary mt-4 truncate hover:underline">{fullName}</p>
 			</button>
 
 			<FollowButton

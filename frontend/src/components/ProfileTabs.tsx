@@ -25,7 +25,7 @@ export const ProfileTabs = ({ activeTab }: ProfileTabsProps) => {
 	};
 
 	return (
-		<div className="border-b border-gray-200">
+		<div className="border-b border-border">
 			<nav className="flex" aria-label="Profile sections">
 				{TABS.map(({ value, label, icon }) => {
 					const isActive = activeTab === value;
@@ -36,8 +36,8 @@ export const ProfileTabs = ({ activeTab }: ProfileTabsProps) => {
 							className={cn(
 								'flex items-center gap-2 px-4 py-3 text-sm font-medium cursor-pointer border-b-2 transition-colors',
 								isActive
-									? 'border-blue-800 text-blue-800'
-									: 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+									? 'border-blue-800 text-nav-active-text'
+									: 'border-transparent text-text-secondary hover:text-text-secondary hover:border-border-strong'
 							)}
 							aria-current={isActive ? 'page' : undefined}
 						>

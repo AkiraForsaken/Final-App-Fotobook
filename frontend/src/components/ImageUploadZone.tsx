@@ -48,7 +48,7 @@ export const ImageUploadZone = ({
 	return (
 		<div className="flex flex-col gap-2">
 			{/* Label row */}
-			<label className="block text-sm font-medium text-gray-700">
+			<label className="block text-sm font-medium text-text-secondary">
 				{label}
 				<span className="text-red-500 ml-0.5">*</span>
 			</label>
@@ -57,7 +57,7 @@ export const ImageUploadZone = ({
 			<div className="grid grid-cols-4 gap-2">
 				{previewUrl ? (
 					/* Filled tile */
-					<div className="relative aspect-square rounded-xl overflow-hidden bg-gray-100 ring-1 ring-gray-200 group">
+					<div className="relative aspect-square rounded-xl overflow-hidden bg-bg-page ring-1 ring-gray-200 group">
 						<img src={previewUrl} alt="Preview" className="w-full h-full object-cover" />
 						{/* Replace button (×) — top-right, always visible on hover */}
 						<button
@@ -90,9 +90,9 @@ export const ImageUploadZone = ({
 						onDragOver={(e) => e.preventDefault()}
 						onDrop={() => handleDrop}
 						className={cn(
-							'aspect-square rounded-xl border-2 border-dashed border-gray-300 bg-gray-50',
+							'aspect-square rounded-xl border-2 border-dashed border-border-strong bg-surface-secondary',
 							'flex items-center justify-center cursor-pointer select-none',
-							'text-gray-400 hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-500',
+							'text-text-muted hover:border-blue-400 hover:bg-blue-50/50 hover:text-blue-500',
 							'transition-colors'
 						)}
 					>
@@ -101,7 +101,7 @@ export const ImageUploadZone = ({
 				)}
 			</div>
 
-			<p className="text-xs text-gray-400">JPEG, PNG, GIF - max 5 MB</p>
+			<p className="text-xs text-text-muted">JPEG, PNG, GIF - max 5 MB</p>
 
 			<input
 				ref={inputRef}

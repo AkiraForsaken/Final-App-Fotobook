@@ -17,7 +17,7 @@ export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThum
 	const [imgError, setImgError] = useState(false);
 
 	return (
-		<div className="relative group aspect-square bg-gray-100 rounded-md overflow-hidden cursor-pointer">
+		<div className="relative group aspect-square bg-bg-page rounded-md overflow-hidden cursor-pointer">
 			{photo.imageUrl && !imgError ? (
 				<img
 					src={photo.imageUrl}
@@ -58,8 +58,8 @@ export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThum
 						e.stopPropagation();
 						onEdit(photo);
 					}}
-					className="absolute bottom-2 right-2 z-10 bg-white/90 text-gray-700 
-					cursor-pointer rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white"
+					className="absolute bottom-2 right-2 z-10 bg-white/90 text-text-secondary 
+					cursor-pointer rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface"
 					title="Edit photo"
 				>
 					<i className="fa-solid fa-pen text-xs" />

@@ -49,18 +49,18 @@ export const AddPhoto = () => {
 				<button
 					aria-label="Go back"
 					onClick={() => navigate(-1)}
-					className="p-2 rounded-lg text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+					className="p-2 rounded-lg text-text-secondary hover:bg-bg-page hover:text-text-secondary transition-colors"
 				>
 					<i className="fa-solid fa-arrow-left" />
 				</button>
 				<div>
-					<h1 className="text-xl font-semibold text-gray-900">Add a photo</h1>
-					<p className="text-sm text-gray-500 mt-0.5">Share a moment with your followers</p>
+					<h1 className="text-xl font-semibold text-text-primary">Add a photo</h1>
+					<p className="text-sm text-text-secondary mt-0.5">Share a moment with your followers</p>
 				</div>
 			</div>
 
 			<form onSubmit={onSubmit} noValidate>
-				<div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+				<div className="bg-surface rounded-xl border border-border shadow-sm p-6">
 					<MediaFormFields
 						values={values}
 						errors={errors}

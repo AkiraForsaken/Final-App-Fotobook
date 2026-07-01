@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MediaFormState, MediaFormErrors } from '../components/MediaFormFields.tsx';
 import type { SharingMode } from '../types/index.ts';
 
@@ -79,6 +79,23 @@ export function useMediaForm<T>(
 	const [submitting, setSubmitting] = useState(false);
 	const [submitError, setSubmitError] = useState<string | null>(null);
 	const [submitSuccess, setSubmitSuccess] = useState(false);
+
+	const initialized = useRef<boolean>(false);
+
+	useEffect(() => {
+		if (!initialValues || initialized.current) {
+			return;
+		}
+
+		setValues({
+			title: initialValues.title ?? '',
+			description: initialValues.description ?? '',
+			sharingMode: (initialValues.sharingMode as SharingMode) ?? 'public',
+			file: initialValues.file ?? null,
+			files: initialValues.files ?? [],
+		});
+		initialized.current = true;
+	}, [initialValues]);
 
 	const handleChange = useCallback((patch: Partial<MediaFormState>) => {
 		setValues((prev) => ({ ...prev, ...patch }));

@@ -110,8 +110,6 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 				<PhotoModal photo={activePhoto} onClose={() => setActivePhoto(null)} />
 				<AlbumModal album={activeAlbum} onClose={() => setActiveAlbum(null)} />
 			</main>
-
-			{/* <div className="hidden xl:block min-w-[13%] shrink-0 bg-gray-100" /> */}
 		</div>
 	);
 };

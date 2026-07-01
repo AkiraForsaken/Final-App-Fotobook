@@ -14,8 +14,8 @@ interface ProfileHeaderProps {
 
 const Stat = ({ value, label }: { value: number; label: string }) => (
 	<div className="flex flex-col items-center sm:items-start">
-		<span className="text-lg font-bold text-gray-900">{value.toLocaleString()}</span>
-		<span className="text-sm text-gray-500">{label}</span>
+		<span className="text-lg font-bold text-text-primary">{value.toLocaleString()}</span>
+		<span className="text-sm text-text-secondary">{label}</span>
 	</div>
 );
 
@@ -30,7 +30,7 @@ export const ProfileHeader = ({
 	const fullName = `${profile.firstName} ${profile.lastName}`;
 
 	return (
-		<div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-8 border-b border-gray-200">
+		<div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 pb-8 border-b border-border">
 			{/* Avatar */}
 			<Avatar
 				firstName={profile.firstName}
@@ -44,15 +44,10 @@ export const ProfileHeader = ({
 			<div className="flex flex-col items-center sm:items-start gap-3 flex-1">
 				{/* Name + action buttons */}
 				<div className="flex flex-wrap items-center gap-3 sm:gap-6">
-					<h1 className="text-3xl font-semibold text-gray-900">{fullName}</h1>
+					<h1 className="text-3xl font-semibold text-text-primary">{fullName}</h1>
 
 					{isOwner ? (
-						<Button
-							onClick={onEditProfile}
-							variant="primary"
-							size="md"
-							className="border border-gray-300 bg-blue-400 hover:bg-blue-600 transition-colors"
-						>
+						<Button onClick={onEditProfile} variant="primary" size="md">
 							Edit profile
 						</Button>
 					) : (

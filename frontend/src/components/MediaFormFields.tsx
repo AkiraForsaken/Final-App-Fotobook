@@ -42,8 +42,8 @@ export const MediaFormFields = ({
 	mode = 'photo',
 	values,
 	errors,
-	existingTitle = '',
-	existingDesc = '',
+	// existingTitle = '',
+	// existingDesc = '',
 	existingImageUrl,
 	existingImageUrls,
 	imageLabel = 'Photo',
@@ -55,13 +55,13 @@ export const MediaFormFields = ({
 			{/* Title */}
 			<div>
 				<div className="flex items-center justify-between mb-1">
-					<label htmlFor="media-title" className="block text-sm font-medium text-gray-700">
+					<label htmlFor="media-title" className="block text-sm font-medium text-text-secondary">
 						Title <span className="text-red-500">*</span>
 					</label>
 					<span
 						className={cn(
 							'text-xs tabular-nums',
-							values.title.length >= TITLE_MAX ? 'text-red-500 font-medium' : 'text-gray-400'
+							values.title.length >= TITLE_MAX ? 'text-red-500 font-medium' : 'text-text-muted'
 						)}
 					>
 						{values.title.length}/{TITLE_MAX}
@@ -71,16 +71,15 @@ export const MediaFormFields = ({
 					id="media-title"
 					type="text"
 					placeholder="Give your photo a title"
-					defaultValue={existingTitle ?? ''}
 					maxLength={TITLE_MAX}
 					value={values.title}
 					onChange={(e) => onChange({ title: e.target.value })}
 					className={cn(
-						'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400',
+						'w-full rounded-lg border bg-input-bg px-3 py-2 text-sm text-text-primary placeholder:text-input-placeholder',
 						'focus:outline-none focus:ring-1',
 						errors.title
-							? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-							: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600'
+							? 'border-input-border-error focus:border-red-500 focus:ring-red-400'
+							: 'border-input-border focus:border-blue-600 focus:ring-blue-600'
 					)}
 				/>
 				{errors.title && <p className="mt-1 text-xs text-red-600">{errors.title}</p>}
@@ -89,13 +88,16 @@ export const MediaFormFields = ({
 			{/* Description */}
 			<div>
 				<div className="flex items-center justify-between mb-1">
-					<label htmlFor="media-description" className="block text-sm font-medium text-gray-700">
+					<label
+						htmlFor="media-description"
+						className="block text-sm font-medium text-text-secondary"
+					>
 						Description <span className="text-red-500">*</span>
 					</label>
 					<span
 						className={cn(
 							'text-xs tabular-nums',
-							values.description.length >= DESC_MAX ? 'text-red-500 font-medium' : 'text-gray-400'
+							values.description.length >= DESC_MAX ? 'text-red-500 font-medium' : 'text-text-muted'
 						)}
 					>
 						{values.description.length}/{DESC_MAX}
@@ -104,17 +106,16 @@ export const MediaFormFields = ({
 				<textarea
 					id="media-description"
 					placeholder="Tell the story behind this photo"
-					defaultValue={existingDesc}
 					maxLength={DESC_MAX}
 					rows={4}
 					value={values.description}
 					onChange={(e) => onChange({ description: e.target.value })}
 					className={cn(
-						'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400 resize-none',
+						'w-full rounded-lg bg-input-bg border px-3 py-2 text-sm text-text-primary placeholder:text-input-placeholder resize-none',
 						'focus:outline-none focus:ring-1',
 						errors.description
-							? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-							: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600'
+							? 'border-input-border-error focus:border-red-500 focus:ring-red-400'
+							: 'border-input-border focus:border-blue-600 focus:ring-blue-600'
 					)}
 				/>
 				{errors.description && <p className="mt-1 text-xs text-red-600">{errors.description}</p>}
@@ -122,7 +123,7 @@ export const MediaFormFields = ({
 
 			{/* Sharing mode */}
 			<fieldset>
-				<legend className="block text-sm font-medium text-gray-700 mb-2">
+				<legend className="block text-sm font-medium text-text-secondary mb-2">
 					Sharing mode <span className="text-red-500">*</span>
 				</legend>
 				<div className="flex gap-4">
@@ -134,7 +135,7 @@ export const MediaFormFields = ({
 								'text-sm font-medium transition-colors',
 								values.sharingMode === mode
 									? 'border-blue-600 bg-blue-50 text-blue-700'
-									: 'border-gray-300 text-gray-600 hover:border-gray-400'
+									: 'border-border-strong text-text-secondary hover:border-gray-400'
 							)}
 						>
 							<input
