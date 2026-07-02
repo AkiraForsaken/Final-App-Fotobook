@@ -9,12 +9,14 @@ import { AddPhoto } from './pages/AddPhoto.tsx';
 import { EditPhoto } from './pages/EditPhoto.tsx';
 import { AddAlbum } from './pages/AddAlbum.tsx';
 import { EditAlbum } from './pages/EditAlbum.tsx';
+import { EditProfile } from './pages/EditProfile.tsx';
+import { Home } from './pages/Home.tsx';
+import { NotFound } from './pages/NotFound.tsx';
 import { AuthLayout } from './components/layouts/AuthLayout.tsx';
 import { ContentLayout } from './components/layouts/ContentLayout.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 import { useAuth } from './hooks/useAuth.ts';
-import NotFound from './pages/NotFound.tsx';
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 	const { currentUser } = useAuth();
@@ -41,6 +43,7 @@ const AppContent = () => {
 
 					<Route element={<ContentLayout />}>
 						{/* Public / guest-accessible */}
+						<Route path="/" element={<Home currentUser={currentUser} />} />
 						<Route path="/discover" element={<Discovery currentUser={currentUser} />} />
 						<Route path="/profile/:userId" element={<PublicProfile currentUser={currentUser} />} />
 
@@ -58,6 +61,14 @@ const AppContent = () => {
 							element={
 								<RequireAuth>
 									<MyProfile currentUser={currentUser!} />
+								</RequireAuth>
+							}
+						/>
+						<Route
+							path="/my-profile/edit"
+							element={
+								<RequireAuth>
+									<EditProfile />
 								</RequireAuth>
 							}
 						/>

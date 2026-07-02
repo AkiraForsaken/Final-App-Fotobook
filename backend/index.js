@@ -472,6 +472,106 @@ app.delete("/api/albums/:id", (req, res) => {
   res.status(204).send();
 });
 
+// PUT /api/users/:id — update basic info (first name, last name, email)
+app.put("/api/users/:id", (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const { firstName, lastName, email } = req.body;
+
+  if (!firstName?.trim() || !lastName?.trim() || !email?.trim()) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+
+  const trimmedFirstName = firstName.trim();
+  const trimmedLastName = lastName.trim();
+  const normalizedEmail = email.trim().toLowerCase();
+
+  if (trimmedFirstName.length > 25 || trimmedLastName.length > 25) {
+    return res
+      .status(400)
+      .json({ error: "First and last name must be 25 characters or fewer." });
+  }
+  if (
+    normalizedEmail.length > 255 ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)
+  ) {
+    return res.status(400).json({ error: "Enter a valid email address." });
+  }
+
+  const users = readJson("users.json") || [];
+  const userIndex = users.findIndex((u) => u.id === userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  const emailTaken = users.some(
+    (u) => u.id !== userId && u.email === normalizedEmail,
+  );
+  if (emailTaken) {
+    return res.status(400).json({ error: "Email already in use." });
+  }
+
+  users[userIndex] = { ...users[userIndex], email: normalizedEmail };
+  writeJson("users.json", users);
+
+  const profiles = readJson("profiles.json") || {};
+  const profileEntry = profiles[userId];
+  if (!profileEntry) {
+    return res.status(404).json({ error: "Profile not found." });
+  }
+
+  profileEntry.profile = {
+    ...profileEntry.profile,
+    firstName: trimmedFirstName,
+    lastName: trimmedLastName,
+  };
+  profiles[userId] = profileEntry;
+
+  writeJson("profiles.json", profiles);
+
+  const updatedUser = {
+    id: userId,
+    email: normalizedEmail,
+    firstName: trimmedFirstName,
+    lastName: trimmedLastName,
+    avatarUrl: profileEntry.profile.avatarUrl,
+    isActive: true,
+    isAdmin: false,
+    createdAt: profileEntry.profile.createdAt || new Date().toISOString(),
+  };
+
+  res.json(updatedUser);
+});
+
+// POST /api/users/:id/password — change password
+app.post("/api/users/:id/password", (req, res) => {
+  const userId = parseInt(req.params.id, 10);
+  const { currentPassword, newPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: "Missing required fields." });
+  }
+  if (newPassword.length > 64) {
+    return res
+      .status(400)
+      .json({ error: "New password must be 64 characters or fewer." });
+  }
+
+  const users = readJson("users.json") || [];
+  const userIndex = users.findIndex((u) => u.id === userId);
+  if (userIndex === -1) {
+    return res.status(404).json({ error: "User not found." });
+  }
+
+  if (users[userIndex].password !== currentPassword) {
+    return res.status(401).json({ error: "Current password is incorrect." });
+  }
+
+  users[userIndex] = { ...users[userIndex], password: newPassword };
+  writeJson("users.json", users);
+
+  res.status(204).send();
+});
+
 const PORT = process.env.PORT || 4000;
 app.listen(PORT, () => {
   console.log(`Mock API server running on http://localhost:${PORT}`);
