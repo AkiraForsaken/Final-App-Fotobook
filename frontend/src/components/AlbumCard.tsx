@@ -21,7 +21,7 @@ export const AlbumCard = ({ album, onLike, onClickAlbum, onClickAuthor }: AlbumC
 	const [imgError, setImgError] = useState(false);
 
 	return (
-		<article className="flex items-stretch overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-shadow duration-150">
+		<article className="flex items-stretch overflow-hidden rounded-lg bg-surface shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-shadow duration-150">
 			{/* Cover thumbnail with image count badge */}
 			<button
 				className="relative w-64 shrink-0 cursor-pointer
@@ -64,19 +64,19 @@ export const AlbumCard = ({ album, onLike, onClickAlbum, onClickAuthor }: AlbumC
 						lastName={author.lastName}
 						size="w-10 h-10"
 					/>
-					<span className="text-sm font-medium text-gray-900 hover:underline">
+					<span className="text-sm font-medium text-text-primary hover:underline">
 						{author.firstName} {author.lastName}
 					</span>
 				</button>
 
 				{/* Title */}
-				<p className="font-semibold text-gray-900 truncate">{album.title}</p>
+				<p className="font-semibold text-text-primary truncate">{album.title}</p>
 
 				{/* Description */}
-				<p className="text-sm text-gray-600 line-clamp-2">{album.description}</p>
+				<p className="text-sm text-text-secondary line-clamp-2">{album.description}</p>
 
 				{/* Date */}
-				<p className="text-xs text-gray-400">{formattedDate}</p>
+				<p className="text-xs text-text-muted">{formattedDate}</p>
 
 				{/* Like */}
 				<div className="mt-auto flex items-center gap-1.5">
@@ -85,7 +85,7 @@ export const AlbumCard = ({ album, onLike, onClickAlbum, onClickAuthor }: AlbumC
 						aria-label={album.likedByMe ? `Unlike ${album.title}` : `Like ${album.title}`}
 						className={cn(
 							'flex items-center gap-1.5 transition-colors focus-visible:outline-none',
-							album.likedByMe ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
+							album.likedByMe ? 'text-red-500' : 'text-text-muted hover:text-red-400'
 						)}
 					>
 						<i className={cn(album.likedByMe ? 'fa-solid' : 'fa-regular', 'fa-heart')} />

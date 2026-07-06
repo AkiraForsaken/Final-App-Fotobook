@@ -18,7 +18,7 @@ const SideBarItem = ({ item, onClick }: { item: NavItem; onClick?: () => void })
 		onClick={onClick}
 		className={({ isActive }) =>
 			`flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium transition-colors
-      ${isActive ? 'bg-blue-100 text-blue-800' : 'text-gray-700 hover:bg-gray-300'}`
+      ${isActive ? 'bg-nav-active-bg text-nav-active-text' : 'text-text-secondary hover:bg-nav-hover-bg'}`
 		}
 	>
 		<i className={cn(item.icon, 'w-5 text-center')} />
@@ -30,7 +30,7 @@ export const SideBar = ({ items, mobileOpen, onClose }: SideBarProps) => {
 	return (
 		<>
 			{/* Desktop sidebar */}
-			<aside className="hidden sm:flex flex-col min-w-[13%] min-h-screen shrink-0 bg-gray-200 py-4">
+			<aside className="hidden sm:flex flex-col min-w-[13%] min-h-screen shrink-0 bg-bg-page py-4">
 				<nav className="flex flex-col space-y-1 px-1">
 					{items.map((item) => (
 						<SideBarItem key={item.to} item={item} />
@@ -50,7 +50,7 @@ export const SideBar = ({ items, mobileOpen, onClose }: SideBarProps) => {
 			{/* Mobile drawer */}
 			<aside
 				className={cn(
-					'fixed inset-y-0 left-0 z-40 w-56 bg-white shadow-lg transform transition-transform duration-200 ease-in-out sm:hidden',
+					'fixed inset-y-0 left-0 z-40 w-56 bg-surface shadow-lg transform transition-transform duration-200 ease-in-out sm:hidden',
 					mobileOpen ? 'translate-x-0' : '-translate-x-full'
 				)}
 			>
@@ -58,7 +58,7 @@ export const SideBar = ({ items, mobileOpen, onClose }: SideBarProps) => {
 					<button
 						aria-label="Close menu"
 						onClick={onClose}
-						className="p-2 text-gray-700 hover:bg-gray-100 rounded-md"
+						className="p-2 text-text-secondary hover:bg-bg-page rounded-md"
 					>
 						<i className="fa-solid fa-xmark" />
 					</button>

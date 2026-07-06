@@ -1,1 +1,99 @@
-@import "tailwindcss";
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+	/* ── Surfaces ── */
+	--color-bg-page: #f3f4f6; /* cool light gray — page canvas */
+	/* --color-bg-sidebar: #e5e7eb; medium gray — sidebar rail */
+	--color-surface: #ffffff; /* white — cards, modals, form panels */
+	--color-surface-secondary: #f9fafb; /* off-white — image areas, inset sections */
+	--color-surface-hover: #f3f4f6; /* light gray — hover states  */
+
+	/* ── Text ── */
+	--color-text-primary: #111827; /* near-black — headings, body copy  */
+	--color-text-secondary: #4b5563; /* medium gray — descriptions, meta  */
+	--color-text-muted: #9ca3af; /* soft gray — dates, placeholders */
+
+	/* ── Borders ── */
+	--color-border: #e5e7eb; /* light gray — card / input borders */
+	--color-border-strong: #d1d5db; /* slightly darker — focused / emphasized */
+
+	/* ── Navigation ── */
+	--color-nav-active-bg: #dbeafe; /* light blue — active sidebar fill*/
+	--color-nav-active-text: #1e40af; /* dark blue — active sidebar label*/
+	--color-nav-hover-bg: #d1d5db; /* gray — sidebar item hover  */
+
+	/* ── Status: error banner ── */
+	--color-error-bg: #fef2f2; /* pale red fill  */
+	--color-error-border: #fecaca; /* soft red border*/
+	--color-error-text: #991b1b; /* dark red message*/
+
+	/* ── Status: toast ── */
+	--color-toast-success-bg: #16a34a; /* strong green */
+	--color-toast-error-bg: #dc2626; /* strong red   */
+
+	/* ── Form inputs ── */
+	--color-input-bg: #ffffff; /* white   */
+	--color-input-border: #d1d5db; /* light gray   */
+	--color-input-border-error: #f87171; /* soft red*/
+	--color-input-placeholder: #9ca3af; /* soft gray*/
+
+	/* ── Secondary button (inside blue TopBar) ── */
+	--color-btn-secondary-bg: #ffffff;
+	--color-btn-secondary-text: #1e40af;
+	--color-btn-secondary-border: #1e40af;
+	--color-btn-secondary-hover: #eff6ff;
+
+	/* ── Ghost button ── */
+	--color-btn-ghost-text: #374151;
+	--color-btn-ghost-hover: #f3f4f6;
+}
+
+.dark {
+	/* Surfaces */
+	--color-bg-page: #111827; /* near-black blue-gray */
+	/* --color-bg-sidebar: #1f2937; dark slate */
+	--color-surface: #1f2937; /* dark slate — cards etc */
+	--color-surface-secondary: #374151; /* medium dark — image areas */
+	--color-surface-hover: #374151; /* medium dark — hover */
+
+	/* Text */
+	--color-text-primary: #f3f4f6; /* off-white */
+	--color-text-secondary: #9ca3af; /* light gray */
+	--color-text-muted: #6b7280; /* mid gray */
+
+	/* Borders */
+	--color-border: #374151; /* dark gray */
+	--color-border-strong: #4b5563; /* medium dark*/
+
+	/* Navigation */
+	--color-nav-active-bg: #1e3a5f; /* deep navy*/
+	--color-nav-active-text: #93c5fd; /* soft sky blue*/
+	--color-nav-hover-bg: #374151; /* dark gray*/
+
+	/* Status: error banner */
+	--color-error-bg: #450a0a; /* very dark red*/
+	--color-error-border: #7f1d1d; /* deep red */
+	--color-error-text: #fca5a5; /* light salmon */
+
+	/* Status: toast — slightly deeper for dark bg contrast */
+	--color-toast-success-bg: #15803d;
+	--color-toast-error-bg: #b91c1c;
+
+	/* Form inputs — slightly lighter than surface so they feel inset */
+	--color-input-bg: #4b5563; /* medium-dark gray, lighter than surface */
+	--color-input-border: #6b7280; /* visible but not harsh  */
+	--color-input-border-error: #ef4444;
+	--color-input-placeholder: #9ca3af;
+
+	/* Secondary button — desaturated gray-on-gray inside the constant blue TopBar */
+	--color-btn-secondary-bg: #374151;
+	--color-btn-secondary-text: #e5e7eb;
+	--color-btn-secondary-border: #6b7280;
+	--color-btn-secondary-hover: #4b5563;
+
+	/* Ghost button */
+	--color-btn-ghost-text: #d1d5db;
+	--color-btn-ghost-hover: #374151;
+}

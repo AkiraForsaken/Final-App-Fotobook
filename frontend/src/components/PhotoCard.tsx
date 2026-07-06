@@ -20,7 +20,7 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 	});
 
 	return (
-		<article className="flex items-stretch overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-shadow duration-150">
+		<article className="flex items-stretch overflow-hidden rounded-lg bg-surface shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-shadow duration-150">
 			{/* Thumbnail */}
 			<button
 				className="w-64 shrink-0 cursor-pointer
@@ -59,19 +59,19 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 						lastName={author.lastName}
 						size="w-10 h-10"
 					/>
-					<span className="text-sm font-medium text-gray-900 hover:underline">
+					<span className="text-sm font-medium text-text-primary hover:underline">
 						{author.firstName} {author.lastName}
 					</span>
 				</button>
 
 				{/* Title */}
-				<p className="font-semibold text-gray-900 truncate">{photo.title}</p>
+				<p className="font-semibold text-text-primary truncate">{photo.title}</p>
 
 				{/* Description */}
-				<p className="text-sm text-gray-600 line-clamp-2">{photo.description}</p>
+				<p className="text-sm text-text-secondary line-clamp-2">{photo.description}</p>
 
 				{/* Date */}
-				<p className="text-xs text-gray-400">{formattedDate}</p>
+				<p className="text-xs text-text-muted">{formattedDate}</p>
 
 				{/* Like */}
 				<div className="mt-auto flex items-center gap-1.5">
@@ -80,7 +80,7 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 						aria-label={photo.likedByMe ? `Unlike ${photo.title}` : `Like ${photo.title}`}
 						className={cn(
 							'flex items-center gap-1.5 transition-colors focus-visible:outline-none',
-							photo.likedByMe ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
+							photo.likedByMe ? 'text-red-500' : 'text-text-muted hover:text-red-400'
 						)}
 					>
 						<i className={cn(photo.likedByMe ? 'fa-solid' : 'fa-regular', 'fa-heart')} />

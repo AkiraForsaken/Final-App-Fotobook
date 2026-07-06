@@ -9,6 +9,7 @@ import { FeedToggle } from '../components/FeedToggle.tsx';
 import { ScrollFooter } from '../components/ScrollFooter.tsx';
 import { PhotoModal } from '../components/PhotoModal.tsx';
 import { AlbumModal } from '../components/AlbumModal.tsx';
+import { routeUtils } from '../utils/routes.ts';
 
 const PAGE_SIZE = 6;
 
@@ -33,8 +34,6 @@ export const Feeds = () => {
 
 	return (
 		<div className="">
-			{/* <SideBar items={NAV_ITEMS} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} /> */}
-
 			{/* Main content */}
 			<main className="flex flex-col">
 				<FeedToggle mode={feedMode} onChange={setFeedMode} />
@@ -49,7 +48,7 @@ export const Feeds = () => {
 									photo={photo}
 									onLike={toggleLikePhoto}
 									onClickPhoto={(p) => setActivePhoto(p)}
-									onClickAuthor={(id) => navigate(`/profile/${id}`)}
+									onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 								/>
 							))}
 						</div>
@@ -71,7 +70,7 @@ export const Feeds = () => {
 									album={album}
 									onLike={toggleLikeAlbum}
 									onClickAlbum={(a) => setActiveAlbum(a)}
-									onClickAuthor={(id) => navigate(`/profile/${id}`)}
+									onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 								/>
 							))}
 						</div>
@@ -88,9 +87,6 @@ export const Feeds = () => {
 				<PhotoModal photo={activePhoto} onClose={() => setActivePhoto(null)} />
 				<AlbumModal album={activeAlbum} onClose={() => setActiveAlbum(null)} />
 			</main>
-
-			{/* Right spacer
-				<div className="hidden xl:block min-w-[13%] shrink-0 bg-gray-100" /> */}
 		</div>
 	);
 };

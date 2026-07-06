@@ -3,8 +3,10 @@ import { useNavigate, Link } from 'react-router';
 import type { User } from '../types/index.ts';
 import { validateLogin } from '../utils/validation.ts';
 import { cn } from '../utils/cn.ts';
+import { Button } from '../components/myUI/Button.tsx';
+import { APP_ROUTE } from '../utils/routes.ts';
 
-export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
+export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 	const navigate = useNavigate();
 
 	const [formData, setFormData] = useState({ email: '', password: '' });
@@ -38,7 +40,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				setAuthError(data.error || 'An error occurred during login.');
 			} else {
 				onLogin(data.user);
-				navigate('/feeds');
+				navigate(APP_ROUTE.FEEDS);
 			}
 		} catch (error) {
 			console.log('/auth/login error: ', error);
@@ -58,7 +60,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 		opts?: { placeholder?: string; autoComplete?: string; autoFocus?: boolean }
 	) => (
 		<div>
-			<label htmlFor={id} className="block font-medium text-gray-700 mb-1">
+			<label htmlFor={id} className="block font-medium text-text-secondary mb-1">
 				{label}
 			</label>
 			<input
@@ -71,11 +73,11 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				value={value}
 				onChange={(ev) => onChange(ev.target.value)}
 				className={cn(
-					'w-full rounded-lg border px-3 py-2 text-sm text-gray-900 placeholder-gray-400',
+					'w-full rounded-lg bg-input-bg border px-3 py-2 text-sm text-text-primary placeholder:text-input-placeholder',
 					'focus:outline-none focus:ring-1',
 					errors[id.replace('login-', '')]
 						? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-						: 'border-gray-300 focus:border-blue-600 focus:ring-blue-600'
+						: 'border-input-border focus:border-blue-600 focus:ring-blue-600'
 				)}
 			/>
 			{errors[id.replace('login-', '')] && (
@@ -85,17 +87,17 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 	);
 
 	return (
-		<div className="min-h-screen bg-gray-100 flex flex-col items-center justify-center px-4">
+		<div className="min-h-screen bg-bg-page flex flex-col items-center justify-center px-4">
 			{/* Login Card */}
-			<div className="w-full max-w-lg bg-white rounded-xl shadow-md p-8">
+			<div className="w-full max-w-lg bg-surface rounded-xl shadow-md p-8">
 				<div className="mb-8 text-center">
-					<span className="text-5xl font-bold text-blue-800 tracking-tight">FotoBook</span>
-					<p className="mt-1 text-sm text-gray-500">Sign in to your account</p>
+					<span className="text-5xl font-bold text-nav-active-text tracking-tight">FotoBook</span>
+					<p className="mt-1 text-sm text-text-secondary">Sign in to your account</p>
 				</div>
 
 				{/* Error banner */}
 				{authError && (
-					<div className="mb-4 rounded-lg bg-red-50 border border-red-200 p-4 text-sm text-red-800 flex items-start gap-2">
+					<div className="mb-4 rounded-lg bg-error-bg border border-red-200 p-4 text-sm text-red-800 flex items-start gap-2">
 						<i className="fa-solid fa-circle-exclamation mt-0.5 shrink-0" />
 						<span>{authError}</span>
 					</div>
@@ -136,22 +138,17 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 					</div>
 
 					{/* Submit button */}
-					<button
-						type="submit"
-						disabled={loading}
-						className="w-full rounded-lg bg-blue-800 py-3 font-semibold text-white hover:bg-blue-700 transition-colors 
-            disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-					>
+					<Button type="submit" disabled={loading} className="w-full py-3">
 						{loading && <i className="fa-solid fa-spinner fa-spin" />}
 						{loading ? 'Signing in…' : 'Sign in'}
-					</button>
+					</Button>
 				</form>
 
 				{/* Divider */}
 				<div className="my-6 flex items-center gap-3">
-					<div className="flex-1 border-t border-gray-200" />
-					<span className="text-sm text-gray-400">or continue with</span>
-					<div className="flex-1 border-t border-gray-200" />
+					<div className="flex-1 border-t border-border" />
+					<span className="text-sm text-text-muted">or continue with</span>
+					<div className="flex-1 border-t border-border" />
 				</div>
 
 				{/* Social login placeholders */}
@@ -168,7 +165,7 @@ export const LoginPage = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				</div>
 
 				{/* Sign up link */}
-				<p className="mt-8 text-center text-gray-500">
+				<p className="mt-8 text-center text-text-secondary">
 					Don't have an account?{' '}
 					<Link to="/signup" className="font-medium text-blue-700 hover:underline">
 						Sign up

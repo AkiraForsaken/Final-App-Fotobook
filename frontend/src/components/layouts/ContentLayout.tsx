@@ -18,20 +18,16 @@ export const ContentLayout = () => {
 	return (
 		<div>
 			<TopBar onMenuToggle={() => setMobileOpen(true)} />
-				<div className="min-h-screen bg-gray-100">
-					<div className="mx-auto flex max-w-screen gap-6">
-						<SideBar
-							items={NAV_ITEMS}
-							mobileOpen={mobileOpen}
-							onClose={() => setMobileOpen(false)}
-						/>
-						<main className="flex flex-col flex-1 px-4 sm:px-6 py-6 min-w-0">
-							<Outlet />
-						</main>
-						{/* Right spacer — keeps content centred on wide screens */}
-						<div className="hidden xl:block min-w-[13%] min-h-screen shrink-0 bg-gray-200" />
-					</div>
+			<div className="min-h-screen bg-bg-page">
+				<div className="mx-auto flex max-w-screen gap-6">
+					<SideBar items={NAV_ITEMS} mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+					<main className="flex flex-col flex-1 px-4 sm:px-6 py-6 min-w-0">
+						<Outlet />
+					</main>
+					{/* Right spacer — keeps content centred on wide screens */}
+					<div className="hidden xl:block min-w-[13%] min-h-screen shrink-0 bg-bg-page" />
 				</div>
 			</div>
+		</div>
 	);
 };
