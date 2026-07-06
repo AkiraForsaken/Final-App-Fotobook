@@ -11,6 +11,7 @@ import { FollowButton } from '../components/FollowButton.tsx';
 import { ScrollFooter } from '../components/ScrollFooter.tsx';
 import { PhotoModal } from '../components/PhotoModal.tsx';
 import { AlbumModal } from '../components/AlbumModal.tsx';
+import { routeUtils } from '../utils/routes.ts';
 
 // 6 cards per load
 const PAGE_SIZE = 6;
@@ -67,7 +68,7 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 										photo={photo}
 										onLike={toggleLikePhoto}
 										onClickPhoto={(p) => setActivePhoto(p)}
-										onClickAuthor={(id) => navigate(`/profile/${id}`)}
+										onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 									/>
 									<div className="absolute top-3 right-3">{followBtn(photo.author.id)}</div>
 								</div>
@@ -91,7 +92,7 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 										album={album}
 										onLike={toggleLikeAlbum}
 										onClickAlbum={(a) => setActiveAlbum(a)}
-										onClickAuthor={(id) => navigate(`/profile/${id}`)}
+										onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 									/>
 									<div className="absolute top-3 right-3">{followBtn(album.author.id)}</div>
 								</div>

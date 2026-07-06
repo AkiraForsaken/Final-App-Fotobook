@@ -1,3 +1,4 @@
+import { APP_ROUTE } from './utils/routes.ts';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
 import { Feeds } from './pages/Feeds.tsx';
 import { Discovery } from './pages/Discovery.tsx';
@@ -37,19 +38,22 @@ const AppContent = () => {
 			<ErrorBoundary>
 				<Routes>
 					<Route element={<AuthLayout />}>
-						<Route path="/login" element={<Login onLogin={login} />} />
-						<Route path="/signup" element={<Signup onLogin={login} />} />
+						<Route path={APP_ROUTE.LOGIN} element={<Login onLogin={login} />} />
+						<Route path={APP_ROUTE.SIGNUP} element={<Signup onLogin={login} />} />
 					</Route>
 
 					<Route element={<ContentLayout />}>
 						{/* Public / guest-accessible */}
-						<Route path="/" element={<Home currentUser={currentUser} />} />
-						<Route path="/discover" element={<Discovery currentUser={currentUser} />} />
-						<Route path="/profile/:userId" element={<PublicProfile currentUser={currentUser} />} />
+						<Route path={APP_ROUTE.HOME} element={<Home currentUser={currentUser} />} />
+						<Route path={APP_ROUTE.DISCOVER} element={<Discovery currentUser={currentUser} />} />
+						<Route
+							path={APP_ROUTE.PUBLIC_PROFILE}
+							element={<PublicProfile currentUser={currentUser} />}
+						/>
 
 						{/* Authenticated only */}
 						<Route
-							path="/feeds"
+							path={APP_ROUTE.FEEDS}
 							element={
 								<RequireAuth>
 									<Feeds />
@@ -57,7 +61,7 @@ const AppContent = () => {
 							}
 						/>
 						<Route
-							path="/my-profile"
+							path={APP_ROUTE.MY_PROFILE}
 							element={
 								<RequireAuth>
 									<MyProfile currentUser={currentUser!} />
@@ -65,7 +69,7 @@ const AppContent = () => {
 							}
 						/>
 						<Route
-							path="/my-profile/edit"
+							path={APP_ROUTE.EDIT_PROFILE}
 							element={
 								<RequireAuth>
 									<EditProfile />
@@ -75,7 +79,7 @@ const AppContent = () => {
 
 						{/* Photo create / edit */}
 						<Route
-							path="/photos/add"
+							path={APP_ROUTE.ADD_PHOTO}
 							element={
 								<RequireAuth>
 									<AddPhoto />
@@ -83,7 +87,7 @@ const AppContent = () => {
 							}
 						/>
 						<Route
-							path="/photos/:id/edit"
+							path={APP_ROUTE.EDIT_PHOTO}
 							element={
 								<RequireAuth>
 									<EditPhoto />
@@ -93,7 +97,7 @@ const AppContent = () => {
 
 						{/* Album create / edit */}
 						<Route
-							path="/albums/new"
+							path={APP_ROUTE.ADD_ALBUM}
 							element={
 								<RequireAuth>
 									<AddAlbum />
@@ -101,43 +105,7 @@ const AppContent = () => {
 							}
 						/>
 						<Route
-							path="/albums/:id/edit"
-							element={
-								<RequireAuth>
-									<EditAlbum />
-								</RequireAuth>
-							}
-						/>
-
-						{/* Photo create / edit */}
-						<Route
-							path="/photos/add"
-							element={
-								<RequireAuth>
-									<AddPhoto />
-								</RequireAuth>
-							}
-						/>
-						<Route
-							path="/photos/:id/edit"
-							element={
-								<RequireAuth>
-									<EditPhoto />
-								</RequireAuth>
-							}
-						/>
-
-						{/* Album create / edit */}
-						<Route
-							path="/albums/new"
-							element={
-								<RequireAuth>
-									<AddAlbum />
-								</RequireAuth>
-							}
-						/>
-						<Route
-							path="/albums/:id/edit"
+							path={APP_ROUTE.EDIT_ALBUM}
 							element={
 								<RequireAuth>
 									<EditAlbum />

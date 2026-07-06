@@ -4,6 +4,7 @@ import { validatePasswordChange } from '../utils/validation.ts';
 import { userService } from '../service/userService.ts';
 import { useAuth } from './useAuth.ts';
 import type { User } from '../types/index.ts';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 export interface PasswordChangeValues {
 	currentPassword: string;
@@ -68,7 +69,7 @@ export function usePasswordChangeForm(currentUser: User) {
 
 				setValues(EMPTY_VALUES);
 				logout();
-				navigate('/login', { replace: true });
+				navigate(APP_ROUTE.LOGIN, { replace: true });
 				return true;
 			} catch (err) {
 				const message = err instanceof Error ? err.message : 'Failed to change password.';

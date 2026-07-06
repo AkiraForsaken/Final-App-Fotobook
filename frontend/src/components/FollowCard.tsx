@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router';
 import { Avatar } from './myUI/Avatar';
 import { FollowButton } from './FollowButton';
 import type { FollowRelation } from '../types/index';
+import { routeUtils } from '../utils/routes';
 
 interface FollowCardProps {
 	user: FollowRelation;
@@ -26,7 +27,7 @@ export const FollowCard = ({
 	return (
 		<div className="flex flex-col items-center gap-3 p-4 bg-surface rounded-xl border border-border shadow-sm">
 			<button
-				onClick={() => navigate(`/profile/${user.id}`)}
+				onClick={() => navigate(routeUtils.getPublicProfile(user.id))}
 				className="shrink-0 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 rounded-full"
 				aria-label={`View ${fullName}'s profile`}
 			>

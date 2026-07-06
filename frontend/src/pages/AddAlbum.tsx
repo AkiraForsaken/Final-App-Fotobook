@@ -7,6 +7,7 @@ import { contentService } from '../service/contentService.ts';
 import { MediaFormFields } from '../components/MediaFormFields.tsx';
 import { Toast } from '../components/myUI/Toast.tsx';
 import { Button } from '../components/myUI/Button.tsx';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 /**
  * AddAlbum — /albums/add
@@ -35,7 +36,7 @@ export const AddAlbum = () => {
 		if (result) {
 			setToast({ message: 'Album created successfully.', type: 'success' });
 			await refetch();
-			setTimeout(() => navigate('/my-profile?tab=albums'), 1200);
+			setTimeout(() => navigate(`${APP_ROUTE.MY_PROFILE}?tab=albums`), 1200);
 		} else {
 			setToast({ message: 'Failed to create album. Please try again.', type: 'error' });
 		}

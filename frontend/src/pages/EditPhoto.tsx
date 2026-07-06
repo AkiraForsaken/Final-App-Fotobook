@@ -7,6 +7,7 @@ import { contentService } from '../service/contentService.ts';
 import { MediaFormFields } from '../components/MediaFormFields.tsx';
 import { Toast } from '../components/myUI/Toast.tsx';
 import { Button } from '../components/myUI/Button.tsx';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 /**
  * EditPhoto — /photos/:id/edit
@@ -59,7 +60,7 @@ export const EditPhoto = () => {
 		if (result) {
 			setToast({ message: 'Changes saved.', type: 'success' });
 			await refetch();
-			setTimeout(() => navigate('/my-profile?tab=photos'), 1200);
+			setTimeout(() => navigate(`${APP_ROUTE.MY_PROFILE}?tab=photos`), 1200);
 		} else {
 			setToast({ message: 'Failed to save changes. Please try again.', type: 'error' });
 		}
@@ -75,7 +76,7 @@ export const EditPhoto = () => {
 		try {
 			await contentService.deletePhoto(photoId, currentUser!.id);
 			await refetch();
-			navigate('/my-profile?tab=photos');
+			navigate(`${APP_ROUTE.MY_PROFILE}?tab=photos`);
 		} catch {
 			setToast({ message: 'Failed to delete photo. Please try again.', type: 'error' });
 		} finally {
@@ -95,7 +96,7 @@ export const EditPhoto = () => {
 			<div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
 				<i className="fa-solid fa-image-slash text-4xl text-gray-300" />
 				<p className="text-text-secondary">Photo not found.</p>
-				<Button variant="ghost" onClick={() => navigate('/my-profile?tab=photos')}>
+				<Button variant="ghost" onClick={() => navigate(`${APP_ROUTE.MY_PROFILE}?tab=photos`)}>
 					Back to my photos
 				</Button>
 			</div>

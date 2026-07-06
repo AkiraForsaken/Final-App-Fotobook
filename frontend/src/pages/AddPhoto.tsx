@@ -7,6 +7,7 @@ import { contentService } from '../service/contentService.ts';
 import { MediaFormFields } from '../components/MediaFormFields.tsx';
 import { Toast } from '../components/myUI/Toast.tsx';
 import { Button } from '../components/myUI/Button.tsx';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 /**
  * AddPhotoPage — /photos/add
@@ -36,7 +37,7 @@ export const AddPhoto = () => {
 			setToast({ message: 'Photo uploaded successfully.', type: 'success' });
 			await refetch();
 			// Brief delay so the user sees the toast before navigating away
-			setTimeout(() => navigate('/my-profile?tab=photos'), 1200);
+			setTimeout(() => navigate(`${APP_ROUTE.MY_PROFILE}?tab=photos`), 1200);
 		} else {
 			setToast({ message: 'Failed to upload photo. Please try again.', type: 'error' });
 		}

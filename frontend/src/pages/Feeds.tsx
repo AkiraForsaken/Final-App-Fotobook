@@ -9,6 +9,7 @@ import { FeedToggle } from '../components/FeedToggle.tsx';
 import { ScrollFooter } from '../components/ScrollFooter.tsx';
 import { PhotoModal } from '../components/PhotoModal.tsx';
 import { AlbumModal } from '../components/AlbumModal.tsx';
+import { routeUtils } from '../utils/routes.ts';
 
 const PAGE_SIZE = 6;
 
@@ -47,7 +48,7 @@ export const Feeds = () => {
 									photo={photo}
 									onLike={toggleLikePhoto}
 									onClickPhoto={(p) => setActivePhoto(p)}
-									onClickAuthor={(id) => navigate(`/profile/${id}`)}
+									onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 								/>
 							))}
 						</div>
@@ -69,7 +70,7 @@ export const Feeds = () => {
 									album={album}
 									onLike={toggleLikeAlbum}
 									onClickAlbum={(a) => setActiveAlbum(a)}
-									onClickAuthor={(id) => navigate(`/profile/${id}`)}
+									onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 								/>
 							))}
 						</div>

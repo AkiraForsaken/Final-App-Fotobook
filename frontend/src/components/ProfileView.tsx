@@ -17,6 +17,7 @@ import type {
 	User,
 	UserProfileData,
 } from '../types/index';
+import { APP_ROUTE, routeUtils } from '../utils/routes';
 
 interface ProfileViewProps {
 	profile: UserProfile;
@@ -65,7 +66,7 @@ export const ProfileView = ({
 		<>
 			{isOwner && (
 				<div className="mb-4 flex justify-end">
-					<Button onClick={() => navigate('/photos/add')}>
+					<Button onClick={() => navigate(APP_ROUTE.ADD_PHOTO)}>
 						<i className="fa-solid fa-plus" />
 						Add Photo
 					</Button>
@@ -76,7 +77,7 @@ export const ProfileView = ({
 					message="No photos yet."
 					action={
 						isOwner ? (
-							<Button onClick={() => navigate('/photos/add')} className="hover:underline">
+							<Button onClick={() => navigate(APP_ROUTE.ADD_PHOTO)} className="hover:underline">
 								Upload your first photo
 							</Button>
 						) : undefined
@@ -90,7 +91,7 @@ export const ProfileView = ({
 							photo={photo}
 							isOwner={isOwner}
 							onOpen={(p) => setActivePhoto(p)}
-							onEdit={isOwner ? (p) => navigate(`/photos/${p.id}/edit`) : undefined}
+							onEdit={isOwner ? (p) => navigate(routeUtils.getEditPhoto(p.id)) : undefined}
 						/>
 					))}
 				</div>
@@ -102,7 +103,7 @@ export const ProfileView = ({
 		<>
 			{isOwner && (
 				<div className="mb-4 flex justify-end">
-					<Button onClick={() => navigate('/albums/new')}>
+					<Button onClick={() => navigate(APP_ROUTE.ADD_ALBUM)}>
 						<i className="fa-solid fa-plus" />
 						Add Album
 					</Button>
@@ -113,7 +114,7 @@ export const ProfileView = ({
 					message="No albums yet."
 					action={
 						isOwner ? (
-							<Button onClick={() => navigate('/albums/new')} className="hover:underline">
+							<Button onClick={() => navigate(APP_ROUTE.ADD_ALBUM)} className="hover:underline">
 								Create your first album
 							</Button>
 						) : undefined
@@ -127,7 +128,7 @@ export const ProfileView = ({
 							album={album}
 							isOwner={isOwner}
 							onOpen={(a) => setActiveAlbum(a)}
-							onEdit={isOwner ? (a) => navigate(`/albums/${a.id}/edit`) : undefined}
+							onEdit={isOwner ? (a) => navigate(routeUtils.getEditAlbum(a.id)) : undefined}
 						/>
 					))}
 				</div>
@@ -164,7 +165,7 @@ export const ProfileView = ({
 				currentUserId={currentUser?.id}
 				isFollowing={profile.isFollowedByMe}
 				onFollowToggle={() => onFollowToggle?.(profile.id)}
-				onEditProfile={() => navigate('/my-profile/edit')}
+				onEditProfile={() => navigate(APP_ROUTE.EDIT_PROFILE)}
 			/>
 
 			<div className="mt-6">

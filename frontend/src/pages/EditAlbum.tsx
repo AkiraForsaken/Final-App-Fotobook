@@ -7,6 +7,7 @@ import { contentService } from '../service/contentService.ts';
 import { MediaFormFields } from '../components/MediaFormFields.tsx';
 import { Toast } from '../components/myUI/Toast.tsx';
 import { Button } from '../components/myUI/Button.tsx';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 /**
  * EditAlbum — /albums/:id/edit
@@ -61,7 +62,7 @@ export const EditAlbum = () => {
 		if (result) {
 			setToast({ message: 'Changes saved.', type: 'success' });
 			await refetch();
-			setTimeout(() => navigate('/my-profile?tab=albums'), 1200);
+			setTimeout(() => navigate(`${APP_ROUTE.MY_PROFILE}?tab=albums`), 1200);
 		} else {
 			setToast({ message: 'Failed to save changes. Please try again.', type: 'error' });
 		}
@@ -97,7 +98,7 @@ export const EditAlbum = () => {
 			<div className="flex flex-col items-center justify-center py-32 gap-4 text-center">
 				<i className="fa-solid fa-images text-4xl text-gray-300" />
 				<p className="text-text-secondary">Album not found.</p>
-				<Button variant="ghost" onClick={() => navigate('/my-profile?tab=albums')}>
+				<Button variant="ghost" onClick={() => navigate(`${APP_ROUTE.MY_PROFILE}?tab=albums`)}>
 					Back to my albums
 				</Button>
 			</div>

@@ -4,6 +4,7 @@ import type { User } from '../types/index.ts';
 import { validateLogin } from '../utils/validation.ts';
 import { cn } from '../utils/cn.ts';
 import { Button } from '../components/myUI/Button.tsx';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 	const navigate = useNavigate();
@@ -39,7 +40,7 @@ export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				setAuthError(data.error || 'An error occurred during login.');
 			} else {
 				onLogin(data.user);
-				navigate('/feeds');
+				navigate(APP_ROUTE.FEEDS);
 			}
 		} catch (error) {
 			console.log('/auth/login error: ', error);

@@ -5,6 +5,7 @@ import { Button } from './myUI/Button.tsx';
 import { Link } from 'react-router';
 import { useAuth } from '../hooks/useAuth.ts';
 import { useTheme } from '../hooks/useTheme.ts';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 interface TopBarProps {
 	onMenuToggle?: () => void;
@@ -18,7 +19,7 @@ export const TopBar = ({ onMenuToggle, onSearch }: TopBarProps) => {
 	const isDark = theme === 'dark';
 	const handleLogout = () => {
 		logout();
-		navigate('/login');
+		navigate(APP_ROUTE.LOGIN);
 	};
 	return (
 		<header className="bg-blue-800 sticky top-0 z-20">
@@ -37,7 +38,7 @@ export const TopBar = ({ onMenuToggle, onSearch }: TopBarProps) => {
 
 						<span
 							className="shrink-0 text-3xl font-bold text-white tracking-tight cursor-pointer"
-							onClick={() => navigate('/')}
+							onClick={() => navigate(APP_ROUTE.HOME)}
 						>
 							FotoBook
 						</span>
@@ -63,7 +64,7 @@ export const TopBar = ({ onMenuToggle, onSearch }: TopBarProps) => {
 							<>
 								<div
 									className="flex items-center gap-2 cursor-pointer"
-									onClick={() => navigate('/my-profile')}
+									onClick={() => navigate(APP_ROUTE.MY_PROFILE)}
 								>
 									<Avatar
 										src={currentUser.avatarUrl}
