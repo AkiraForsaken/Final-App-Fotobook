@@ -63,9 +63,6 @@ export const useDiscovery = () => {
 		error,
 		toggleLikePhoto,
 		toggleLikeAlbum,
-		refetch: () => {
-			setLoading(true);
-			void loadDiscovery();
-		},
+		refetch: void loadDiscovery(),
 	};
 };

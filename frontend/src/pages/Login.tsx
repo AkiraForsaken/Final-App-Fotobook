@@ -5,6 +5,7 @@ import { validateLogin } from '../utils/validation.ts';
 import { cn } from '../utils/cn.ts';
 import { Button } from '../components/myUI/Button.tsx';
 import { APP_ROUTE } from '../utils/routes.ts';
+import { authService } from '../service/authService.ts';
 
 export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 	const navigate = useNavigate();
@@ -28,23 +29,14 @@ export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 		setLoading(true);
 
 		try {
-			const response = await fetch('http://localhost:4000/api/auth/login', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify(formData),
-			});
-
-			const data = await response.json();
-
-			if (!response.ok) {
-				setAuthError(data.error || 'An error occurred during login.');
-			} else {
-				onLogin(data.user);
-				navigate(APP_ROUTE.FEEDS);
-			}
+			const data = await authService.login(formData);
+			onLogin(data.user);
+			navigate(APP_ROUTE.FEEDS);
 		} catch (error) {
 			console.log('/auth/login error: ', error);
-			setAuthError('Network error. Please try again later.');
+			setAuthError(
+				error instanceof Error ? error.message : 'Network error. Please try again later.'
+			);
 		} finally {
 			setLoading(false);
 		}

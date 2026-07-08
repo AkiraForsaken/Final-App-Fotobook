@@ -1,3 +1,5 @@
+import axios, { type AxiosRequestConfig } from 'axios';
+
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -6,15 +8,23 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 		headers.set('Content-Type', 'application/json');
 	}
 
-	const response = await fetch(`${BASE_URL}${path}`, {
-		...init,
-		headers,
-	});
+	const config: AxiosRequestConfig = {
+		url: `${BASE_URL}${path}`,
+		method: init?.method as AxiosRequestConfig['method'] | undefined,
+		headers: Object.fromEntries(headers.entries()),
+		data:
+			init?.body === undefined
+				? undefined
+				: typeof init.body === 'string'
+					? JSON.parse(init.body)
+					: init.body,
+		validateStatus: () => true,
+	};
 
-	const text = await response.text();
-	const data = text ? JSON.parse(text) : null;
+	const response = await axios.request(config);
+	const data = response.data;
 
-	if (!response.ok) {
+	if (response.status < 200 || response.status >= 300) {
 		const message =
 			data && typeof data === 'object' && 'error' in data && typeof data.error === 'string'
 				? data.error
