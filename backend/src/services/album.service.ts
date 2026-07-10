@@ -1,0 +1,408 @@
+import { prisma } from '../prisma/client.js';
+import type { Prisma } from '@prisma/client';
+import { NotFoundError, ForbiddenError, ConflictError } from '../utils/app-error.js';
+import type { CreateAlbumRequest, UpdateAlbumRequest } from '../schemas/album.js';
+import { SharingMode } from '../schemas/common.js';
+import { storage } from './storage.service.js';
+
+const DEFAULT_COVER_URL = 'https://picsum.photos/seed/album-default/600/400';
+
+const albumWithRelations = {
+	author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
+	coverPhoto: { select: { id: true, imageUrl: true } },
+	// Ordered by `position` so `imageUrls` reflects the intended display
+	// order (append-on-add for now — no manual reordering UI yet).
+	photoLinks: {
+		orderBy: { position: 'asc' },
+		include: { photo: { select: { id: true, imageUrl: true } } },
+	},
+	_count: { select: { likes: true } },
+} satisfies Prisma.AlbumInclude;
+
+type AlbumRow = Prisma.AlbumGetPayload<{ include: typeof albumWithRelations }>;
+
+// Shapes a DB row into the wire-format Album DTO (matches frontend Album interface).
+function toAlbumDto(row: AlbumRow, likedAlbumIds: Set<number>, followedAuthorIds: Set<number>) {
+	return {
+		id: row.id,
+		title: row.title,
+		description: row.description,
+		coverImageUrl:
+			row.coverPhoto?.imageUrl ?? row.photoLinks[0]?.photo.imageUrl ?? DEFAULT_COVER_URL,
+		imageUrls: [], // Will be populated later if photos are requested
+		sharingMode: row.sharingMode,
+		likesCount: row._count.likes,
+		likedByMe: likedAlbumIds.has(row.id),
+		author: {
+			...row.author,
+			isFollowedByMe: followedAuthorIds.has(row.author.id),
+		},
+		createdAt: row.createdAt.toISOString(),
+	};
+}
+
+// Find which albums the current user has liked.
+async function findLikedAlbumIds(
+	currentUserId: number | null,
+	albumIds: number[]
+): Promise<Set<number>> {
+	if (!currentUserId || albumIds.length === 0) return new Set();
+	const likes = await prisma.albumLike.findMany({
+		where: { userId: currentUserId, albumId: { in: albumIds } },
+		select: { albumId: true },
+	});
+	return new Set(likes.map((l) => l.albumId));
+}
+
+async function findFollowedAuthorIds(
+	currentUserId: number | null,
+	authorIds: number[]
+): Promise<Set<number>> {
+	if (!currentUserId || authorIds.length === 0) return new Set();
+	const follows = await prisma.follow.findMany({
+		where: { followerId: currentUserId, followingId: { in: authorIds } },
+		select: { followingId: true },
+	});
+	return new Set(follows.map((follow) => follow.followingId));
+}
+
+// Re-fetches a single album with relations and shapes it as a DTO. Accepts
+// either the global `prisma` client or an active transaction client, so
+// mutation flows can return fresh state from inside their own transaction.
+async function getAlbumDtoById(
+	client: Prisma.TransactionClient | typeof prisma,
+	albumId: number,
+	currentUserId: number | null
+) {
+	const row = await client.album.findUnique({
+		where: { id: albumId },
+		include: albumWithRelations,
+	});
+	if (!row) throw new NotFoundError('Album not found.');
+	const likedAlbumIds = await findLikedAlbumIds(currentUserId, [albumId]);
+	const followedAuthorIds = await findFollowedAuthorIds(currentUserId, [row.author.id]);
+	return toAlbumDto(row, likedAlbumIds, followedAuthorIds);
+}
+
+// Next `position` value for a new album_photos row — simple append-at-end.
+async function getNextPosition(tx: Prisma.TransactionClient, albumId: number): Promise<number> {
+	const last = await tx.albumPhoto.findFirst({
+		where: { albumId },
+		orderBy: { position: 'desc' },
+		select: { position: true },
+	});
+	return (last?.position ?? -1) + 1;
+}
+
+// If the album has no cover yet, make this the cover.
+async function assignCoverIfNeeded(
+	tx: Prisma.TransactionClient,
+	albumId: number,
+	photoId: number
+): Promise<void> {
+	const album = await tx.album.findUnique({
+		where: { id: albumId },
+		select: { coverPhotoId: true },
+	});
+	if (!album?.coverPhotoId) {
+		await tx.album.update({ where: { id: albumId }, data: { coverPhotoId: photoId } });
+	}
+}
+
+interface ListPublicAlbumsOptions {
+	authorIds?: number[]; // restrict to these authors (Feed); omit for Discovery
+	currentUserId: number | null;
+	cursor?: number; // keyset pagination — album id to start after
+	take?: number;
+}
+
+export async function listPublicAlbums({
+	authorIds,
+	currentUserId,
+	cursor,
+	take = 20,
+}: ListPublicAlbumsOptions) {
+	const rows = await prisma.album.findMany({
+		where: {
+			sharingMode: 'public',
+			...(authorIds ? { authorId: { in: authorIds } } : {}),
+		},
+		include: albumWithRelations,
+		orderBy: { createdAt: 'desc' },
+		take,
+		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+	});
+
+	const likedAlbumIds = await findLikedAlbumIds(
+		currentUserId,
+		rows.map((r) => r.id)
+	);
+	const followedAuthorIds = await findFollowedAuthorIds(
+		currentUserId,
+		rows.map((row) => row.author.id)
+	);
+	return rows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds));
+}
+
+export async function listAlbumsAdmin({
+	currentUserId,
+	cursor,
+	take = 40,
+}: {
+	currentUserId: number | null;
+	cursor?: number;
+	take?: number;
+}) {
+	const rows = await prisma.album.findMany({
+		include: albumWithRelations,
+		orderBy: { createdAt: 'desc' },
+		take,
+		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+	});
+
+	const likedAlbumIds = await findLikedAlbumIds(
+		currentUserId,
+		rows.map((row) => row.id)
+	);
+	const followedAuthorIds = await findFollowedAuthorIds(
+		currentUserId,
+		rows.map((row) => row.author.id)
+	);
+	return rows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds));
+}
+
+export async function createAlbum(authorId: number, input: CreateAlbumRequest) {
+	// Albums are created empty — photos are attached afterward via
+	// addExistingPhotoToAlbum / addNewPhotoToAlbum, one at a time
+	const row = await prisma.album.create({
+		data: {
+			authorId,
+			title: input.title,
+			description: input.description,
+			sharingMode: input.sharingMode,
+		},
+		include: albumWithRelations,
+	});
+	return toAlbumDto(row, new Set(), new Set());
+}
+
+export async function updateAlbum(albumId: number, requesterId: number, input: UpdateAlbumRequest) {
+	const existing = await prisma.album.findUnique({ where: { id: albumId } });
+	if (!existing) throw new NotFoundError('Album not found.');
+	if (existing.authorId !== requesterId) {
+		throw new ForbiddenError('You can only edit your own albums.');
+	}
+
+	const row = await prisma.album.update({
+		where: { id: albumId },
+		data: {
+			title: input.title,
+			description: input.description,
+			sharingMode: input.sharingMode,
+		},
+		include: albumWithRelations,
+	});
+	const likedAlbumIds = await findLikedAlbumIds(requesterId, [albumId]);
+	const followedAuthorIds = await findFollowedAuthorIds(requesterId, [row.author.id]);
+	return toAlbumDto(row, likedAlbumIds, followedAuthorIds);
+}
+
+export async function deleteAlbum(
+	albumId: number,
+	requesterId: number,
+	requesterRole: 'user' | 'admin'
+) {
+	// Files are only actually removed from storage after the DB transaction commits successfully
+	const orphanedImageUrls = await prisma.$transaction(async (tx) => {
+		const existing = await tx.album.findUnique({
+			where: { id: albumId },
+			include: { photoLinks: { select: { photoId: true } } },
+		});
+		if (!existing) throw new NotFoundError('Album not found.');
+		if (existing.authorId !== requesterId && requesterRole !== 'admin') {
+			throw new ForbiddenError('You can only delete your own albums.');
+		}
+
+		const linkedPhotoIds = existing.photoLinks.map((link) => link.photoId);
+
+		// Deleting the album cascades its album_photos link rows
+		await tx.album.delete({ where: { id: albumId } });
+
+		if (linkedPhotoIds.length === 0) return [];
+
+		// Delete photos that don't belong to other albums or not standalone
+		const stillLinked = await tx.albumPhoto.findMany({
+			where: { photoId: { in: linkedPhotoIds } },
+			select: { photoId: true },
+		});
+		const stillLinkedIds = new Set(stillLinked.map((l) => l.photoId));
+		const orphanCandidateIds = linkedPhotoIds.filter((id) => !stillLinkedIds.has(id));
+
+		if (orphanCandidateIds.length === 0) return [];
+
+		const orphans = await tx.photo.findMany({
+			where: { id: { in: orphanCandidateIds }, isStandalone: false },
+			select: { id: true, imageUrl: true },
+		});
+		if (orphans.length === 0) return [];
+
+		await tx.photo.deleteMany({ where: { id: { in: orphans.map((p) => p.id) } } });
+
+		return orphans.map((p) => p.imageUrl);
+	});
+
+	await Promise.all(orphanedImageUrls.map((url) => storage.remove(url)));
+}
+
+// Link an existing photo to an Album. Sets album cover if no cover
+export async function addExistingPhotoToAlbum(
+	albumId: number,
+	photoId: number,
+	requesterId: number
+) {
+	return prisma.$transaction(async (tx) => {
+		const album = await tx.album.findUnique({ where: { id: albumId } });
+		if (!album) throw new NotFoundError('Album not found.');
+		if (album.authorId !== requesterId) {
+			throw new ForbiddenError('You can only add photos to your own albums.');
+		}
+
+		const photo = await tx.photo.findUnique({ where: { id: photoId } });
+		if (!photo) throw new NotFoundError('Photo not found.');
+		if (photo.authorId !== requesterId) {
+			throw new ForbiddenError('You can only add your own photos to an album.');
+		}
+
+		const existingLink = await tx.albumPhoto.findUnique({
+			where: { albumId_photoId: { albumId, photoId } },
+		});
+		if (existingLink) {
+			throw new ConflictError('This photo is already in the album.');
+		}
+
+		const position = await getNextPosition(tx, albumId);
+		await tx.albumPhoto.create({ data: { albumId, photoId, position } });
+		await assignCoverIfNeeded(tx, albumId, photoId);
+
+		return getAlbumDtoById(tx, albumId, requesterId);
+	});
+}
+
+// Create new photo and Link it to an album.
+// NOTE: this function is intentionally NOT wired to a route yet. It expects
+// input.imageUrl` / `imageMimeType` / `imageSizeBytes` to already be
+// resolved — i.e. the actual file has already been processed by Multer + the storage adapter
+export interface AddNewPhotoToAlbumInput {
+	title: string;
+	description: string;
+	sharingMode: SharingMode;
+	imageUrl: string;
+	imageMimeType: string;
+	imageSizeBytes: number;
+}
+
+export async function addNewPhotoToAlbum(
+	albumId: number,
+	requesterId: number,
+	input: AddNewPhotoToAlbumInput,
+	file: Express.Multer.File
+) {
+	const album = await prisma.album.findUnique({ where: { id: albumId } });
+	if (!album) throw new NotFoundError('Album not found.');
+	if (album.authorId !== requesterId) {
+		throw new ForbiddenError('You can only add photos to your own albums.');
+	}
+
+	const { url, sizeBytes } = await storage.resolve(file);
+
+	return prisma.$transaction(async (tx) => {
+		const photo = await tx.photo.create({
+			data: {
+				authorId: requesterId,
+				title: input.title,
+				description: input.description,
+				sharingMode: input.sharingMode,
+				imageUrl: url,
+				imageMimeType: file.mimetype,
+				imageSizeBytes: sizeBytes,
+				isStandalone: false,
+			},
+		});
+
+		const position = await getNextPosition(tx, albumId);
+		await tx.albumPhoto.create({ data: { albumId, photoId: photo.id, position } });
+		await assignCoverIfNeeded(tx, albumId, photo.id);
+
+		return getAlbumDtoById(tx, albumId, requesterId);
+	});
+}
+
+// Unlink photos from an Album, delete if it is not standalone or linked to another album
+export async function removePhotoFromAlbum(albumId: number, photoId: number, requesterId: number) {
+	let imageUrlToRemove: string | null = null;
+
+	const result = await prisma.$transaction(async (tx) => {
+		const album = await tx.album.findUnique({ where: { id: albumId } });
+		if (!album) throw new NotFoundError('Album not found.');
+		if (album.authorId !== requesterId) {
+			throw new ForbiddenError('You can only remove photos from your own albums.');
+		}
+
+		const link = await tx.albumPhoto.findUnique({
+			where: { albumId_photoId: { albumId, photoId } },
+		});
+		if (!link) throw new NotFoundError('This photo is not in the album.');
+
+		await tx.albumPhoto.delete({ where: { albumId_photoId: { albumId, photoId } } });
+
+		if (album.coverPhotoId === photoId) {
+			const nextCoverLink = await tx.albumPhoto.findFirst({
+				where: { albumId },
+				orderBy: { position: 'asc' },
+				select: { photoId: true },
+			});
+			await tx.album.update({
+				where: { id: albumId },
+				data: { coverPhotoId: nextCoverLink?.photoId ?? null },
+			});
+		}
+
+		const photo = await tx.photo.findUnique({
+			where: { id: photoId },
+			select: { isStandalone: true, imageUrl: true },
+		});
+		if (photo && !photo.isStandalone) {
+			const remainingLinks = await tx.albumPhoto.count({ where: { photoId } });
+			if (remainingLinks === 0) {
+				await tx.photo.delete({ where: { id: photoId } });
+				imageUrlToRemove = photo.imageUrl;
+			}
+		}
+
+		return getAlbumDtoById(tx, albumId, requesterId);
+	});
+
+	// Only touch the filesystem after the transaction has committed.
+	if (imageUrlToRemove) {
+		await storage.remove(imageUrlToRemove);
+	}
+
+	return result;
+}
+
+export async function toggleLikeAlbum(
+	albumId: number,
+	userId: number
+): Promise<{ likedByMe: boolean }> {
+	const existing = await prisma.albumLike.findUnique({
+		where: { userId_albumId: { userId, albumId } },
+	});
+
+	if (existing) {
+		await prisma.albumLike.delete({ where: { userId_albumId: { userId, albumId } } });
+		return { likedByMe: false };
+	}
+
+	await prisma.albumLike.create({ data: { userId, albumId } });
+	return { likedByMe: true };
+}
