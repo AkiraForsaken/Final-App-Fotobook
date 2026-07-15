@@ -13,7 +13,11 @@ export function validate(schema: z.ZodType, target: ValidationTarget = 'body') {
 			res.status(400).json({ error: result.error.issues[0]?.message ?? 'Invalid request.' });
 			return;
 		}
-		req[target] = result.data;
+		if (target === 'query') {
+			Object.assign(req.query, result.data);
+		} else {
+			req[target] = result.data;
+		}
 		next();
 	};
 }

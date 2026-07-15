@@ -7,20 +7,30 @@ import { paginationQuerySchema } from '../schemas/common.js';
 
 export const feedRouter = Router();
 
-feedRouter.get('/photos', requireAuth, validate(paginationQuerySchema), feedController.feedPhotos);
-feedRouter.get('/albums', requireAuth, validate(paginationQuerySchema), feedController.feedAlbums);
+feedRouter.get(
+	'/photos',
+	requireAuth,
+	validate(paginationQuerySchema, 'query'),
+	feedController.feedPhotos
+);
+feedRouter.get(
+	'/albums',
+	requireAuth,
+	validate(paginationQuerySchema, 'query'),
+	feedController.feedAlbums
+);
 
 export const discoveryRouter = Router();
 
 discoveryRouter.get(
 	'/photos',
 	optionalAuth,
-	validate(paginationQuerySchema),
+	validate(paginationQuerySchema, 'query'),
 	feedController.discoveryPhotos
 );
 discoveryRouter.get(
 	'/albums',
 	optionalAuth,
-	validate(paginationQuerySchema),
+	validate(paginationQuerySchema, 'query'),
 	feedController.discoveryAlbums
 );

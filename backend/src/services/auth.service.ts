@@ -227,7 +227,8 @@ async function rotateRefreshToken(tokenHash: string) {
 
 			if (dbToken.revokedAt || dbToken.replacedById) {
 				// Treat as reuse of a possibly stolen token and kill every active session for this user.
-				await tx.refreshToken.updateMany({
+				await prisma.refreshToken.updateMany({
+					// use prisma, not tx to survive the transaction
 					where: { userId: dbToken.userId, revokedAt: null },
 					data: { revokedAt: new Date() },
 				});
