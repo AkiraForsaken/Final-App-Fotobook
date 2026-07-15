@@ -19,9 +19,15 @@ export async function remove(req: Request, res: Response) {
 	res.status(204).send();
 }
 
-export async function toggleLike(req: Request, res: Response) {
+export async function like(req: Request, res: Response) {
 	const albumId = Number(req.params.id);
-	const result = await albumService.toggleLikeAlbum(albumId, req.user!.id);
+	const result = await albumService.likeAlbum(albumId, req.user!.id);
+	res.json(result);
+}
+
+export async function unlike(req: Request, res: Response) {
+	const albumId = Number(req.params.id);
+	const result = await albumService.unlikeAlbum(albumId, req.user!.id);
 	res.json(result);
 }
 

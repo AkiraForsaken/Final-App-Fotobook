@@ -29,7 +29,7 @@ function toAlbumDto(row: AlbumRow, likedAlbumIds: Set<number>, followedAuthorIds
 		description: row.description,
 		coverImageUrl:
 			row.coverPhoto?.imageUrl ?? row.photoLinks[0]?.photo.imageUrl ?? DEFAULT_COVER_URL,
-		imageUrls: [], // Will be populated later if photos are requested
+		imageUrls: row.photoLinks.map((link) => link.photo.imageUrl),
 		sharingMode: row.sharingMode,
 		likesCount: row._count.likes,
 		likedByMe: likedAlbumIds.has(row.id),
@@ -128,20 +128,27 @@ export async function listPublicAlbums({
 			...(authorIds ? { authorId: { in: authorIds } } : {}),
 		},
 		include: albumWithRelations,
-		orderBy: { createdAt: 'desc' },
-		take,
+		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+		take: take + 1,
 		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
 	});
 
+	const hasMore = rows.length > take;
+	const pageRows = hasMore ? rows.slice(0, take) : rows;
+	const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : null;
+
 	const likedAlbumIds = await findLikedAlbumIds(
 		currentUserId,
-		rows.map((r) => r.id)
+		pageRows.map((r) => r.id)
 	);
 	const followedAuthorIds = await findFollowedAuthorIds(
 		currentUserId,
-		rows.map((row) => row.author.id)
+		pageRows.map((row) => row.author.id)
 	);
-	return rows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds));
+	return {
+		items: pageRows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds)),
+		nextCursor,
+	};
 }
 
 export async function listAlbumsAdmin({
@@ -155,20 +162,27 @@ export async function listAlbumsAdmin({
 }) {
 	const rows = await prisma.album.findMany({
 		include: albumWithRelations,
-		orderBy: { createdAt: 'desc' },
-		take,
+		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+		take: take + 1,
 		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
 	});
 
+	const hasMore = rows.length > take;
+	const pageRows = hasMore ? rows.slice(0, take) : rows;
+	const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : null;
+
 	const likedAlbumIds = await findLikedAlbumIds(
 		currentUserId,
-		rows.map((row) => row.id)
+		pageRows.map((row) => row.id)
 	);
 	const followedAuthorIds = await findFollowedAuthorIds(
 		currentUserId,
-		rows.map((row) => row.author.id)
+		pageRows.map((row) => row.author.id)
 	);
-	return rows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds));
+	return {
+		items: pageRows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds)),
+		nextCursor,
+	};
 }
 
 export async function createAlbum(authorId: number, input: CreateAlbumRequest) {
@@ -315,26 +329,31 @@ export async function addNewPhotoToAlbum(
 
 	const { url, sizeBytes } = await storage.resolve(file);
 
-	return prisma.$transaction(async (tx) => {
-		const photo = await tx.photo.create({
-			data: {
-				authorId: requesterId,
-				title: input.title,
-				description: input.description,
-				sharingMode: input.sharingMode,
-				imageUrl: url,
-				imageMimeType: file.mimetype,
-				imageSizeBytes: sizeBytes,
-				isStandalone: false,
-			},
+	try {
+		return prisma.$transaction(async (tx) => {
+			const photo = await tx.photo.create({
+				data: {
+					authorId: requesterId,
+					title: input.title,
+					description: input.description,
+					sharingMode: input.sharingMode,
+					imageUrl: url,
+					imageMimeType: file.mimetype,
+					imageSizeBytes: sizeBytes,
+					isStandalone: false,
+				},
+			});
+
+			const position = await getNextPosition(tx, albumId);
+			await tx.albumPhoto.create({ data: { albumId, photoId: photo.id, position } });
+			await assignCoverIfNeeded(tx, albumId, photo.id);
+
+			return getAlbumDtoById(tx, albumId, requesterId);
 		});
-
-		const position = await getNextPosition(tx, albumId);
-		await tx.albumPhoto.create({ data: { albumId, photoId: photo.id, position } });
-		await assignCoverIfNeeded(tx, albumId, photo.id);
-
-		return getAlbumDtoById(tx, albumId, requesterId);
-	});
+	} catch (error) {
+		await storage.remove(url);
+		throw error;
+	}
 }
 
 // Unlink photos from an Album, delete if it is not standalone or linked to another album
@@ -390,19 +409,22 @@ export async function removePhotoFromAlbum(albumId: number, photoId: number, req
 	return result;
 }
 
-export async function toggleLikeAlbum(
-	albumId: number,
-	userId: number
-): Promise<{ likedByMe: boolean }> {
-	const existing = await prisma.albumLike.findUnique({
+export async function likeAlbum(albumId: number, userId: number) {
+	// Can be optimized by catching Prisma FK error (P2003) instead and translate into NotFoundError
+	const album = await prisma.album.findUnique({ where: { id: albumId }, select: { id: true } });
+	if (!album) throw new NotFoundError('Album not found.');
+	await prisma.albumLike.upsert({
 		where: { userId_albumId: { userId, albumId } },
+		create: { userId, albumId },
+		update: {},
 	});
-
-	if (existing) {
-		await prisma.albumLike.delete({ where: { userId_albumId: { userId, albumId } } });
-		return { likedByMe: false };
-	}
-
-	await prisma.albumLike.create({ data: { userId, albumId } });
 	return { likedByMe: true };
+}
+
+export async function unlikeAlbum(albumId: number, userId: number) {
+	// Not technically needed but added for consistency
+	const album = await prisma.album.findUnique({ where: { id: albumId }, select: { id: true } });
+	if (!album) throw new NotFoundError('Album not found.');
+	await prisma.albumLike.deleteMany({ where: { userId, albumId } });
+	return { likedByMe: false };
 }

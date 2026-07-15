@@ -5,10 +5,11 @@ import * as albumService from '../services/album.service.js';
 
 export async function feedPhotos(req: Request, res: Response) {
 	const currentUserId = req.user?.id ?? null;
+	const { cursor, take } = req.query as unknown as { cursor?: number; take: number };
 
 	// Feed is empty for guests
 	if (!currentUserId) {
-		res.json([]);
+		res.json({ items: [], nextCursor: null });
 		return;
 	}
 
@@ -16,12 +17,13 @@ export async function feedPhotos(req: Request, res: Response) {
 		where: { followerId: currentUserId },
 		select: { followingId: true },
 	});
-
-	const photos = await photoService.listPublicPhotos({
-		authorIds: follows.map((f: { followingId: number }) => f.followingId),
+	const result = await photoService.listPublicPhotos({
+		authorIds: follows.map((f) => f.followingId),
 		currentUserId,
+		cursor,
+		take,
 	});
-	res.json(photos);
+	res.json(result);
 }
 
 export async function discoveryPhotos(req: Request, res: Response) {
@@ -33,10 +35,11 @@ export async function discoveryPhotos(req: Request, res: Response) {
 
 export async function feedAlbums(req: Request, res: Response) {
 	const currentUserId = req.user?.id ?? null;
+	const { cursor, take } = req.query as unknown as { cursor?: number; take: number };
 
 	// Feed is empty for guests
 	if (!currentUserId) {
-		res.json([]);
+		res.json({ items: [], nextCursor: null });
 		return;
 	}
 
@@ -44,17 +47,21 @@ export async function feedAlbums(req: Request, res: Response) {
 		where: { followerId: currentUserId },
 		select: { followingId: true },
 	});
-
-	const photos = await albumService.listPublicAlbums({
-		authorIds: follows.map((f: { followingId: number }) => f.followingId),
+	const result = await albumService.listPublicAlbums({
+		authorIds: follows.map((f) => f.followingId),
 		currentUserId,
+		cursor,
+		take,
 	});
-	res.json(photos);
+	res.json(result);
 }
 
 export async function discoveryAlbums(req: Request, res: Response) {
+	const { cursor, take } = req.query as unknown as { cursor?: number; take: number };
 	const photos = await albumService.listPublicAlbums({
 		currentUserId: req.user?.id ?? null,
+		cursor,
+		take,
 	});
 	res.json(photos);
 }

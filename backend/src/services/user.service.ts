@@ -1,10 +1,16 @@
 import { prisma } from '../prisma/client.js';
-import { NotFoundError, ForbiddenError, UnauthorizedError } from '../utils/app-error.js';
-import { logout } from './auth.service.js';
+import {
+	NotFoundError,
+	ForbiddenError,
+	UnauthorizedError,
+	ConflictError,
+} from '../utils/app-error.js';
 import { storage } from './storage.service.js';
 import type { UpdateUserRequest, ChangePasswordRequest } from '../schemas/auth.js';
 import type { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { createEmailVerificationToken } from './auth.service.js';
+import { env } from '../schemas/env.js';
 
 const BCRYPT_ROUNDS = 10;
 
@@ -14,6 +20,14 @@ const userProfileSelect = {
 	lastName: true,
 	email: true,
 	avatarUrl: true,
+	_count: {
+		select: {
+			followers: true,
+			following: true,
+			photos: { where: { sharingMode: 'public' } },
+			albums: { where: { sharingMode: 'public' } },
+		},
+	},
 	// bio: true,
 	isActive: true,
 	role: true,
@@ -29,6 +43,10 @@ function toUserProfileDto(row: UserProfileRow) {
 		lastName: row.lastName,
 		email: row.email,
 		avatarUrl: row.avatarUrl,
+		followersCount: row._count.followers,
+		followingCount: row._count.following,
+		photosCount: row._count.photos,
+		albumsCount: row._count.albums,
 		// bio: row.bio,
 		isActive: row.isActive,
 		isAdmin: row.role === 'admin',
@@ -36,52 +54,71 @@ function toUserProfileDto(row: UserProfileRow) {
 	};
 }
 
-/**
- * Get a user's profile with follow stats (for profile page display).
- */
-export async function getUserProfile(userId: number, currentUserId: number | null) {
-	const user = await prisma.user.findUnique({
-		where: { id: userId },
-		include: {
-			_count: {
-				select: {
-					followers: true,
-					following: true,
-					photos: { where: { sharingMode: 'public' } },
-					albums: { where: { sharingMode: 'public' } },
-				},
+const publicProfileSelect = (currentUserId: number | null) =>
+	({
+		id: true,
+		firstName: true,
+		lastName: true,
+		avatarUrl: true,
+		_count: {
+			select: {
+				followers: true,
+				following: true,
+				photos: { where: { sharingMode: 'public' } },
+				albums: { where: { sharingMode: 'public' } },
 			},
 		},
-	});
+		followers: {
+			where: { followerId: currentUserId ?? -1 },
+			select: { followerId: true },
+			take: 1,
+		},
+		createdAt: true,
+	}) satisfies Prisma.UserSelect;
 
-	if (!user) throw new NotFoundError('User not found.');
+type PublicProfileUserPayload = Prisma.UserGetPayload<{
+	select: ReturnType<typeof publicProfileSelect>;
+}>;
 
-	// Check if current user follows this user
-	const isFollowedByMe =
-		currentUserId && currentUserId !== userId
-			? await prisma.follow
-					.findUnique({
-						where: { followerId_followingId: { followerId: currentUserId, followingId: userId } },
-					})
-					.then((f) => !!f)
-			: false;
-
+function toPublicProfileDto(user: PublicProfileUserPayload, currentUserId: number | null) {
 	return {
 		id: user.id,
 		firstName: user.firstName,
 		lastName: user.lastName,
-		email: user.email,
 		avatarUrl: user.avatarUrl,
-		// bio: user.bio,
-		isActive: user.isActive,
-		isAdmin: user.role === 'admin',
 		followerCount: user._count.followers,
 		followingCount: user._count.following,
 		publicPhotoCount: user._count.photos,
 		publicAlbumCount: user._count.albums,
-		isFollowedByMe,
+		isFollowedByMe: currentUserId ? user.followers.length > 0 : false,
 		createdAt: user.createdAt.toISOString(),
 	};
+}
+
+/**
+ * Get person user's profile. (only for authorized)
+ */
+export async function getUserProfile(userId: number, currentUserId: number | null) {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: userProfileSelect,
+	});
+
+	if (!user) throw new NotFoundError('User not found.');
+
+	return toUserProfileDto(user);
+}
+
+/**
+ * Get other user public profile data. (can be public for guests)
+ */
+export async function getPublicUserProfile(userId: number, currentUserId: number | null) {
+	const user = await prisma.user.findUnique({
+		where: { id: userId },
+		select: publicProfileSelect(currentUserId),
+	});
+	if (!user) throw new NotFoundError('User not found.');
+	return toPublicProfileDto(user, currentUserId);
 }
 
 /**
@@ -93,17 +130,42 @@ export async function updateProfile(
 	file?: Express.Multer.File
 ) {
 	let avatarFields: Partial<Prisma.UserUpdateInput> = {};
+	let emailUpdateFields: Partial<Prisma.UserUpdateInput> = {};
 	let oldAvatarUrl: string | null = null;
 
+	const existingUser = await prisma.user.findUnique({
+		where: { id: userId },
+		select: { avatarUrl: true, email: true },
+	});
+	if (!existingUser) {
+		throw new NotFoundError('User not found');
+	}
+	// Handle avatar upload
 	if (file) {
-		const existing = await prisma.user.findUnique({
-			where: { id: userId },
-			select: { avatarUrl: true },
-		});
-		oldAvatarUrl = existing?.avatarUrl ?? null;
-
+		oldAvatarUrl = existingUser?.avatarUrl ?? null;
 		const { url } = await storage.resolve(file);
 		avatarFields = { avatarUrl: url };
+	}
+	// Handle email change
+	if (input.email) {
+		const normalizedEmail = input.email.trim().toLowerCase();
+
+		if (normalizedEmail !== existingUser.email) {
+			// Ensure the new email doesn't exist
+			const emailExists = await prisma.user.findUnique({
+				where: { email: normalizedEmail },
+			});
+			if (emailExists) {
+				throw new ConflictError('Email already in use');
+			}
+			emailUpdateFields = {
+				email: normalizedEmail,
+				isEmailVerified: false,
+			};
+
+			// Optional: If you want to revoke active sessions upon email change:
+			// await revokeUserSessions(userId);
+		}
 	}
 
 	const user = await prisma.user.update({
@@ -111,15 +173,35 @@ export async function updateProfile(
 		data: {
 			firstName: input.firstName,
 			lastName: input.lastName,
-			// bio: input.bio,
+			...emailUpdateFields,
 			...avatarFields,
 		},
 		select: userProfileSelect,
 	});
+	// Create token and send verification email
+	if (emailUpdateFields.email) {
+		const token = await createEmailVerificationToken(userId);
+		const baseUrl = env.FRONTEND_URL || 'http://localhost:5173';
+		console.log(
+			`[auth] Verification link for ${user.email}: ${baseUrl}/verify-email?token=${token}`
+		);
+		// TODO: replace with real email send once the email provider is implemented.
+	}
+	// Revoke session
+	if (emailUpdateFields.email) {
+		await prisma.refreshToken.updateMany({
+			where: { userId, revokedAt: null },
+			data: { revokedAt: new Date() },
+		});
+	}
 
 	// Only remove the old avatar file after the DB write succeeds.
 	if (file && oldAvatarUrl) {
 		await storage.remove(oldAvatarUrl);
+	}
+
+	if (emailUpdateFields.email) {
+		// await sendVerificationEmail(user.email, emailUpdateFields.emailVerificationToken);
 	}
 
 	return toUserProfileDto(user);
@@ -151,32 +233,6 @@ export async function changePassword(userId: number, input: ChangePasswordReques
 		where: { userId, revokedAt: null },
 		data: { revokedAt: new Date() },
 	});
-}
-
-/**
- * Get public user profile data for discovery/feed pages.
- */
-export async function getUserPublicInfo(userId: number, currentUserId: number | null) {
-	const user = await prisma.user.findUnique({
-		where: { id: userId },
-		select: userProfileSelect,
-	});
-	if (!user) throw new NotFoundError('User not found.');
-
-	// Check if current user follows this user
-	const isFollowedByMe =
-		currentUserId && currentUserId !== userId
-			? await prisma.follow
-					.findUnique({
-						where: { followerId_followingId: { followerId: currentUserId, followingId: userId } },
-					})
-					.then((f) => !!f)
-			: false;
-
-	return {
-		...toUserProfileDto(user),
-		isFollowedByMe,
-	};
 }
 
 /**
@@ -258,9 +314,31 @@ export async function reactivateUser(userId: number) {
 
 // Admin: Delete a user (hard delete).
 export async function deleteUser(userId: number) {
-	const user = await prisma.user.findUnique({ where: { id: userId } });
-	if (!user) throw new NotFoundError('User not found.');
+	const orphanedUrls = await prisma.$transaction(async (tx) => {
+		const user = await tx.user.findUnique({
+			where: { id: userId },
+			select: {
+				avatarUrl: true,
+				photos: { select: { imageUrl: true } },
+			},
+		});
+		if (!user) throw new NotFoundError('User not found.');
 
-	// Cascade delete: remove all user's data (DB should cascade if configured)
-	await prisma.user.delete({ where: { id: userId } });
+		await tx.user.delete({ where: { id: userId } }); // cascades photos, albums, tokens, follows, likes
+
+		const urls = user.photos.map((p) => p.imageUrl);
+		if (user.avatarUrl) urls.push(user.avatarUrl);
+		return urls;
+	});
+
+	await Promise.all(
+		orphanedUrls.map((url) =>
+			storage.remove(url).catch((err) => {
+				// storage.remove() already handles its own errors internally and
+				// logs — this catch is just a defensive backstop in case that
+				// contract changes later.
+				console.error(`Failed to remove file during user deletion cleanup: ${url}`, err);
+			})
+		)
+	);
 }

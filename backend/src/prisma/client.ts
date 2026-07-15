@@ -1,5 +1,6 @@
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
+import { env } from '../schemas/env.js';
 
 /**
  * Singleton pattern. Without this, `tsx watch`'s hot-reload would create a
@@ -8,16 +9,14 @@ import { PrismaPg } from '@prisma/adapter-pg';
  */
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 const adapter = new PrismaPg({
-	connectionString: process.env.DATABASE_URL,
+	connectionString: env.DATABASE_URL,
 });
 
 export const prisma =
 	globalForPrisma.prisma ??
 	new PrismaClient({
 		adapter,
-		log: process.env.NODE_ENV === 'development' ? ['query', 'warn', 'error'] : ['warn', 'error'],
+		log: env.NODE_ENV === 'development' ? ['query', 'warn', 'error'] : ['warn', 'error'],
 	});
 
-if (process.env.NODE_ENV !== 'production') {
-	globalForPrisma.prisma = prisma;
-}
+globalForPrisma.prisma = prisma;

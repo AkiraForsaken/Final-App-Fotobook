@@ -41,3 +41,8 @@ export class ValidationError extends AppError {
 		super(400, message);
 	}
 }
+export class ExternalServiceError extends AppError {
+	constructor(message = 'An external service is temporarily unavailable. Please try again later.') {
+		super(502, message);
+	}
+}

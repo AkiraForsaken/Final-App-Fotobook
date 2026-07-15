@@ -74,20 +74,28 @@ export async function listPublicPhotos({
 			...(authorIds ? { authorId: { in: authorIds } } : {}),
 		},
 		include: photoWithRelations,
-		orderBy: { createdAt: 'desc' },
-		take,
+		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+		take: take + 1, // fetch one extra to detect "more remain"
 		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
 	});
 
+	const hasMore = rows.length > take;
+	const pageRows = hasMore ? rows.slice(0, take) : rows;
+	const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : null;
+
 	const likedPhotoIds = await findLikedPhotoIds(
 		currentUserId,
-		rows.map((r) => r.id)
+		pageRows.map((r) => r.id)
 	);
 	const followedAuthorIds = await findFollowedAuthorIds(
 		currentUserId,
-		rows.map((row) => row.author.id)
+		pageRows.map((r) => r.author.id)
 	);
-	return rows.map((row) => toPhotoDto(row, likedPhotoIds, followedAuthorIds));
+
+	return {
+		items: pageRows.map((row) => toPhotoDto(row, likedPhotoIds, followedAuthorIds)),
+		nextCursor,
+	};
 }
 
 export async function listPhotosAdmin({
@@ -101,20 +109,27 @@ export async function listPhotosAdmin({
 }) {
 	const rows = await prisma.photo.findMany({
 		include: photoWithRelations,
-		orderBy: { createdAt: 'desc' },
-		take,
+		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+		take: take + 1,
 		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
 	});
 
+	const hasMore = rows.length > take;
+	const pageRows = hasMore ? rows.slice(0, take) : rows;
+	const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : null;
+
 	const likedPhotoIds = await findLikedPhotoIds(
 		currentUserId,
-		rows.map((row) => row.id)
+		pageRows.map((row) => row.id)
 	);
 	const followedAuthorIds = await findFollowedAuthorIds(
 		currentUserId,
-		rows.map((row) => row.author.id)
+		pageRows.map((row) => row.author.id)
 	);
-	return rows.map((row) => toPhotoDto(row, likedPhotoIds, followedAuthorIds));
+	return {
+		items: pageRows.map((row) => toPhotoDto(row, likedPhotoIds, followedAuthorIds)),
+		nextCursor,
+	};
 }
 
 export async function createPhoto(
@@ -123,23 +138,25 @@ export async function createPhoto(
 	file: Express.Multer.File
 ) {
 	const { url, sizeBytes } = await storage.resolve(file);
-	// Placeholder image until real upload storage exists (multer + S3/disk —
-	// a separate piece of work per the requirements doc's "New Photo" section).
-	const row = await prisma.photo.create({
-		data: {
-			authorId,
-			title: input.title,
-			description: input.description,
-			sharingMode: input.sharingMode,
-			imageUrl: url,
-			imageMimeType: 'image/jpeg',
-			imageSizeBytes: sizeBytes,
-			// Created via POST /photos
-			isStandalone: true,
-		},
-		include: photoWithRelations,
-	});
-	return toPhotoDto(row, new Set(), new Set());
+	try {
+		const row = await prisma.photo.create({
+			data: {
+				authorId,
+				title: input.title,
+				description: input.description,
+				sharingMode: input.sharingMode,
+				imageUrl: url,
+				imageMimeType: file.mimetype,
+				imageSizeBytes: sizeBytes,
+				isStandalone: true,
+			},
+			include: photoWithRelations,
+		});
+		return toPhotoDto(row, new Set(), new Set());
+	} catch (err) {
+		await storage.remove(url);
+		throw err;
+	}
 }
 
 export async function updatePhoto(
@@ -154,25 +171,33 @@ export async function updatePhoto(
 		throw new ForbiddenError('You can only edit your own photos.');
 	}
 
+	let newUrl: string | null = null;
 	let imageFields: Partial<Prisma.PhotoUpdateInput> = {};
 	if (file) {
 		const { url, sizeBytes } = await storage.resolve(file);
+		newUrl = url;
 		imageFields = { imageUrl: url, imageMimeType: file.mimetype, imageSizeBytes: sizeBytes };
 	}
 
-	const row = await prisma.photo.update({
-		where: { id: photoId },
-		data: {
-			title: input.title,
-			description: input.description,
-			sharingMode: input.sharingMode,
-			...imageFields,
-		},
-		include: photoWithRelations,
-	});
+	let row;
+	try {
+		row = await prisma.photo.update({
+			where: { id: photoId },
+			data: {
+				title: input.title,
+				description: input.description,
+				sharingMode: input.sharingMode,
+				...imageFields,
+			},
+			include: photoWithRelations,
+		});
+	} catch (err) {
+		if (newUrl) await storage.remove(newUrl);
+		throw err;
+	}
 
 	if (file) {
-		await storage.remove(existing.imageUrl);
+		await storage.remove(existing.imageUrl); // old file — cleaned up only now that the update committed
 	}
 
 	const likedPhotoIds = await findLikedPhotoIds(requesterId, [photoId]);
@@ -194,19 +219,22 @@ export async function deletePhoto(
 	await storage.remove(existing.imageUrl);
 }
 
-export async function toggleLikePhoto(
-	photoId: number,
-	userId: number
-): Promise<{ likedByMe: boolean }> {
-	const existing = await prisma.photoLike.findUnique({
+export async function likePhoto(photoId: number, userId: number) {
+	// Can be optimized by catching Prisma FK error (P2003) instead and translate into NotFoundError
+	const photo = await prisma.photo.findUnique({ where: { id: photoId }, select: { id: true } });
+	if (!photo) throw new NotFoundError('Photo not found.');
+	await prisma.photoLike.upsert({
 		where: { userId_photoId: { userId, photoId } },
+		create: { userId, photoId },
+		update: {},
 	});
-
-	if (existing) {
-		await prisma.photoLike.delete({ where: { userId_photoId: { userId, photoId } } });
-		return { likedByMe: false };
-	}
-
-	await prisma.photoLike.create({ data: { userId, photoId } });
 	return { likedByMe: true };
+}
+
+export async function unlikePhoto(photoId: number, userId: number) {
+	// Not technically needed but added for consistency
+	const photo = await prisma.photo.findUnique({ where: { id: photoId }, select: { id: true } });
+	if (!photo) throw new NotFoundError('Photo not found.');
+	await prisma.photoLike.deleteMany({ where: { userId, photoId } });
+	return { likedByMe: false };
 }

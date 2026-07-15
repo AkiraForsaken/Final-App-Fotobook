@@ -6,15 +6,18 @@ export const userSchema = z.object({
 	lastName: z.string(),
 	email: z.email(),
 	avatarUrl: z.string().optional(),
+	followersCount: z.number(),
+	followingCount: z.number(),
+	photosCount: z.number(),
+	albumsCount: z.number(),
 	isActive: z.boolean(),
 	isAdmin: z.boolean(),
 	createdAt: z.string(),
 });
 export type User = z.infer<typeof userSchema>;
 
-// The trimmed-down author summary embedded in every Photo/Album — matches
-// `Pick<User, 'id' | 'firstName' | 'lastName' | 'avatarUrl'>` from the old
-// frontend-only types.ts, now defined once and reused by photo.ts/album.ts.
+// The trimmed-down author summary embedded in every Photo/Album
+// defined once and reused by photo.ts/album.ts.
 export const authorSummarySchema = userSchema.pick({
 	id: true,
 	firstName: true,

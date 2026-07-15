@@ -1,6 +1,7 @@
 import { prisma } from '../prisma/client.js';
+import { Prisma } from '@prisma/client';
 import { UnauthorizedError, ConflictError, NotFoundError } from '../utils/app-error.js';
-import { signAccessToken, signRefreshToken, hashToken, verifyRefreshToken } from '../utils/jwt.js';
+import { signAccessToken, hashToken, generateOpaqueToken } from '../utils/jwt.js';
 import type {
 	LoginRequest,
 	SignupRequest,
@@ -9,12 +10,13 @@ import type {
 	ResetPasswordRequest,
 } from '../schemas/auth.js';
 import bcrypt from 'bcryptjs';
+import { env } from '../schemas/env.js';
 
 const BCRYPT_ROUNDS = 10;
 const REFRESH_TOKEN_MAX_AGE_DAYS = 7;
 const EMAIL_VERIFICATION_TOKEN_TTL_HOURS = 24;
 const PASSWORD_RESET_TOKEN_TTL_HOURS = 1;
-const REQUIRE_EMAIL_VERIFICATION = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
+const REQUIRE_EMAIL_VERIFICATION = env.REQUIRE_EMAIL_VERIFICATION === 'true';
 
 function toAuthUserDto(user: {
 	id: number;
@@ -67,7 +69,7 @@ export async function signup(input: SignupRequest) {
 
 	// Create refresh token
 	await createEmailVerificationToken(user.id);
-	const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+	const baseUrl = env.FRONTEND_URL || 'http://localhost:5173';
 	console.log(`[auth] Verification link for ${user.email}: ${baseUrl}/verify-email`);
 
 	const { token: refreshToken, dbRecord } = await createRefreshToken(user.id);
@@ -166,7 +168,7 @@ export async function forgotPassword(input: ForgotPasswordRequest) {
 
 	if (user) {
 		const resetToken = await createPasswordResetToken(user.id);
-		const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+		const baseUrl = env.FRONTEND_URL || 'http://localhost:5173';
 		console.log(
 			`[auth] Password reset link for ${user.email}: ${baseUrl}/reset-password?token=${resetToken}`
 		);
@@ -179,107 +181,107 @@ export async function forgotPassword(input: ForgotPasswordRequest) {
 
 export async function resetPassword(input: ResetPasswordRequest) {
 	const tokenHash = hashToken(input.token.trim());
-	const resetToken = await prisma.passwordResetToken.findFirst({
-		where: { tokenHash },
-		include: { user: true },
-	});
+	const now = new Date();
 
-	if (!resetToken) {
-		throw new NotFoundError('Password reset token is invalid.');
-	}
-	if (resetToken.usedAt) {
-		throw new ConflictError('This password reset link has already been used.');
-	}
-	if (resetToken.expiresAt < new Date()) {
-		throw new UnauthorizedError('Password reset token has expired.');
-	}
+	return prisma.$transaction(async (tx) => {
+		const resetToken = await tx.passwordResetToken.findUnique({ where: { tokenHash } });
+		if (!resetToken) throw new NotFoundError('Password reset token is invalid.');
+		if (resetToken.usedAt)
+			throw new ConflictError('This password reset link has already been used.');
+		if (resetToken.expiresAt < now)
+			throw new UnauthorizedError('Password reset token has expired.');
 
-	const passwordHash = await bcrypt.hash(input.newPassword, BCRYPT_ROUNDS);
-
-	await prisma.$transaction(async (tx) => {
-		await tx.user.update({
-			where: { id: resetToken.userId },
-			data: { passwordHash },
+		// protect against a double-submit race.
+		const consumed = await tx.passwordResetToken.updateMany({
+			where: { id: resetToken.id, usedAt: null },
+			data: { usedAt: now },
 		});
+		if (consumed.count !== 1) {
+			throw new ConflictError('This password reset link has already been used.');
+		}
+
+		const passwordHash = await bcrypt.hash(input.newPassword, BCRYPT_ROUNDS);
+		await tx.user.update({ where: { id: resetToken.userId }, data: { passwordHash } });
 		await tx.refreshToken.updateMany({
 			where: { userId: resetToken.userId, revokedAt: null },
-			data: { revokedAt: new Date() },
+			data: { revokedAt: now },
 		});
-		await tx.passwordResetToken.update({
-			where: { id: resetToken.id },
-			data: { usedAt: new Date() },
-		});
-	});
 
-	return { message: 'Password reset successful.' };
+		return { message: 'Password reset successful.' };
+	});
 }
 
 /**
  * Refresh an access token using a valid refresh token.
  */
-export async function refreshAccessToken(refreshToken: string) {
-	// Verify refresh token signature
-	const payload = verifyRefreshToken(refreshToken);
+async function rotateRefreshToken(tokenHash: string) {
+	return prisma.$transaction(
+		async (tx) => {
+			const dbToken = await tx.refreshToken.findUnique({
+				where: { tokenHash },
+				include: { user: true },
+			});
 
-	// Find the refresh token in DB
-	const dbToken = await prisma.refreshToken.findUnique({
-		where: { id: payload.tokenId },
-		include: { user: true },
-	});
+			if (!dbToken) throw new UnauthorizedError('Refresh token not found or has been revoked.');
+			if (dbToken.expiresAt < new Date()) throw new UnauthorizedError('Refresh token has expired.');
 
-	if (!dbToken) {
-		throw new UnauthorizedError('Refresh token not found or has been revoked.');
-	}
-	// Check if token is expired or revoked
-	if (dbToken.expiresAt < new Date()) {
-		throw new UnauthorizedError('Refresh token has expired.');
-	}
-	if (dbToken.revokedAt) {
-		throw new UnauthorizedError('Refresh token has been revoked.');
-	}
-	if (dbToken.replacedById) {
-		await prisma.refreshToken.updateMany({
-			where: { userId: dbToken.userId, revokedAt: null },
-			data: { revokedAt: new Date() },
-		});
-		throw new UnauthorizedError('Refresh token has already been used. Please log in again.');
-	}
+			if (dbToken.revokedAt || dbToken.replacedById) {
+				// Treat as reuse of a possibly stolen token and kill every active session for this user.
+				await tx.refreshToken.updateMany({
+					where: { userId: dbToken.userId, revokedAt: null },
+					data: { revokedAt: new Date() },
+				});
+				throw new UnauthorizedError('Refresh token has already been used. Please log in again.');
+			}
+			if (!dbToken.user.isActive) throw new UnauthorizedError('Your account has been deactivated.');
 
-	const tokenHash = hashToken(refreshToken);
-	if (dbToken.tokenHash !== tokenHash) {
-		throw new UnauthorizedError('Refresh token is invalid.');
-	}
+			const newToken = generateOpaqueToken();
+			const newHash = hashToken(newToken);
+			const expiresAt = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_DAYS * 24 * 60 * 60 * 1000);
+			const newRecord = await tx.refreshToken.create({
+				data: { userId: dbToken.userId, tokenHash: newHash, expiresAt },
+			});
 
-	const user = dbToken.user;
+			const rotated = await tx.refreshToken.updateMany({
+				where: { id: dbToken.id, revokedAt: null, replacedById: null },
+				data: { revokedAt: new Date(), replacedById: newRecord.id },
+			});
+			if (rotated.count === 0) {
+				// Lost a race to a concurrent refresh using the same token — deny
+				// this request, but don't nuke all sessions;
+				throw new UnauthorizedError('Refresh token has already been used. Please log in again.');
+			}
 
-	// Check if user is active
-	if (!user.isActive) {
-		throw new UnauthorizedError('Your account has been deactivated.');
-	}
-
-	// Create new access token
-	const newAccessToken = signAccessToken({
-		sub: user.id,
-		role: user.role,
-	});
-	const { token: newRefreshToken, dbRecord: newRefreshTokenRecord } = await createRefreshToken(
-		user.id
-	);
-
-	await prisma.refreshToken.update({
-		where: { id: dbToken.id },
-		data: {
-			revokedAt: new Date(),
-			replacedById: newRefreshTokenRecord.id,
+			return {
+				accessToken: signAccessToken({ sub: dbToken.user.id, role: dbToken.user.role }),
+				user: dbToken.user,
+				refreshToken: newToken,
+				refreshTokenExpiresAt: expiresAt,
+			};
 		},
-	});
+		{ isolationLevel: 'Serializable' }
+	);
+}
 
-	return {
-		accessToken: newAccessToken,
-		user: toAuthUserDto(user),
-		refreshToken: newRefreshToken,
-		refreshTokenExpiresAt: newRefreshTokenRecord.expiresAt,
-	};
+export async function refreshAccessToken(refreshToken: string) {
+	const tokenHash = hashToken(refreshToken);
+	const MAX_RETRIES = 2;
+	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+		try {
+			const result = await rotateRefreshToken(tokenHash);
+			return { ...result, user: toAuthUserDto(result.user) };
+		} catch (err) {
+			if (
+				err instanceof Prisma.PrismaClientKnownRequestError &&
+				err.code === 'P2034' &&
+				attempt < MAX_RETRIES
+			) {
+				continue; // Postgres aborted for serialization conflict — safe to retry
+			}
+			throw err;
+		}
+	}
+	throw new Error('Max retries reached for token rotation');
 }
 
 /**
@@ -287,9 +289,10 @@ export async function refreshAccessToken(refreshToken: string) {
  */
 export async function logout(refreshToken: string) {
 	try {
-		const payload = verifyRefreshToken(refreshToken);
+		// const payload = verifyRefreshToken(refreshToken);
+		const tokenHash = hashToken(refreshToken);
 		await prisma.refreshToken.update({
-			where: { id: payload.tokenId },
+			where: { tokenHash, revokedAt: null },
 			data: { revokedAt: new Date() },
 		});
 	} catch {
@@ -301,37 +304,14 @@ export async function logout(refreshToken: string) {
  * Create a new refresh token in the database and return the JWT + DB record.
  */
 async function createRefreshToken(userId: number) {
-	const expiresAt = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_DAYS * 24 * 60 * 60 * 1000);
-
-	// Generate token (will be signed as JWT before returning)
-	const tokenPayload = { sub: userId };
-
-	// Create a temporary record first to get the ID, then hash and store
-	const dbRecord = await prisma.refreshToken.create({
-		data: {
-			userId,
-			tokenHash: '', // Placeholder, will update below
-			expiresAt,
-		},
-	});
-
-	// Now sign the token with the DB record ID
-	const token = signRefreshToken({
-		sub: userId,
-		tokenId: dbRecord.id,
-	});
-
-	// Hash and store the token
+	const token = generateOpaqueToken();
 	const tokenHash = hashToken(token);
-	await prisma.refreshToken.update({
-		where: { id: dbRecord.id },
-		data: { tokenHash },
-	});
-
-	return { token, dbRecord: { ...dbRecord, expiresAt } };
+	const expiresAt = new Date(Date.now() + REFRESH_TOKEN_MAX_AGE_DAYS * 24 * 60 * 60 * 1000);
+	const dbRecord = await prisma.refreshToken.create({ data: { userId, tokenHash, expiresAt } });
+	return { token, dbRecord };
 }
 
-async function createEmailVerificationToken(userId: number) {
+export async function createEmailVerificationToken(userId: number) {
 	const token = crypto.randomUUID();
 	const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_HOURS * 60 * 60 * 1000);
 	const tokenHash = hashToken(token);

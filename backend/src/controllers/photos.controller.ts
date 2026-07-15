@@ -22,8 +22,14 @@ export async function remove(req: Request, res: Response) {
 	res.status(204).send();
 }
 
-export async function toggleLike(req: Request, res: Response) {
+export async function like(req: Request, res: Response) {
 	const photoId = Number(req.params.id);
-	const result = await photoService.toggleLikePhoto(photoId, req.user!.id);
+	const result = await photoService.likePhoto(photoId, req.user!.id);
+	res.json(result);
+}
+
+export async function unlike(req: Request, res: Response) {
+	const photoId = Number(req.params.id);
+	const result = await photoService.unlikePhoto(photoId, req.user!.id);
 	res.json(result);
 }

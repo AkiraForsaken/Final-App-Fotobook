@@ -18,7 +18,7 @@ export async function changePassword(req: Request, res: Response) {
 
 export async function getPublicProfile(req: Request, res: Response) {
 	const userId = Number(req.params.id);
-	const profile = await userService.getUserProfile(userId, req.user?.id ?? null);
+	const profile = await userService.getPublicUserProfile(userId, req.user?.id ?? null);
 	res.json(profile);
 }
 
