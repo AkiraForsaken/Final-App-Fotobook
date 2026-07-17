@@ -118,7 +118,7 @@ async function main() {
 		],
 	});
 
-	// 5. Seed Photos (Feed photos + Profile 1 private photo)
+	// 5. Seed Standalone Photos (Feed photos + Profile 1 private photo)
 	console.log('Seeding photos...');
 	const photosData = [
 		{
@@ -195,8 +195,9 @@ async function main() {
 				description: p.description,
 				sharingMode: p.sharingMode,
 				imageUrl: p.imageUrl,
-				imageMimeType: 'image/jpeg', // Default schema requirement fallback
-				imageSizeBytes: 1024 * 500, // Standard 500kb placeholder size
+				imageMimeType: 'image/jpeg',
+				imageSizeBytes: 1024 * 500,
+				isStandalone: true, // Expressly standalone
 				createdAt: p.createdAt,
 			},
 		});
@@ -336,17 +337,18 @@ async function main() {
 	let inlinePhotoIdCounter = 1000;
 
 	for (const a of structuralAlbums) {
-		// Build the Cover Photo as an isolated record first to satisfy the 1:1 schema mapping context
+		// Build the Cover Photo as an inline, non-standalone, description-less record
 		const coverPhotoRecord = await prisma.photo.create({
 			data: {
 				id: inlinePhotoIdCounter++,
 				authorId: a.authorId,
-				title: `${a.title} - Cover`,
-				description: `Cover photo for ${a.title}`,
+				title: null, // Null title for inline images
+				description: null, // Null description for inline images
 				imageUrl: a.coverImageUrl,
 				imageMimeType: 'image/jpeg',
 				imageSizeBytes: 420000,
 				sharingMode: SharingMode.public,
+				isStandalone: false, // Only part of an album
 				createdAt: new Date(a.createdAt),
 			},
 		});
@@ -381,12 +383,13 @@ async function main() {
 				data: {
 					id: inlinePhotoIdCounter++,
 					authorId: a.authorId,
-					title: `${a.title} - Image content`,
-					description: `Gallery image inside album "${a.title}"`,
+					title: null, // Null title for inline images
+					description: null, // Null description for inline images
 					imageUrl: url,
 					imageMimeType: 'image/jpeg',
 					imageSizeBytes: 350000,
 					sharingMode: SharingMode.public,
+					isStandalone: false, // Only part of an album
 					createdAt: new Date(a.createdAt),
 				},
 			});
@@ -403,8 +406,6 @@ async function main() {
 	}
 
 	// 6. Reset SQL Auto-increment sequences (Crucial for Postgres)
-	// Since we forced hardcoded Int IDs, Postgres' internal counter needs to update
-	// so future app registrations or uploads don't trip on "Duplicate Key" errors.
 	console.log('Resetting database auto-increment sequences...');
 	await prisma.$executeRawUnsafe(
 		`SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE(MAX(id), 1)) FROM users;`

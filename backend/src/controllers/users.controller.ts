@@ -60,3 +60,61 @@ export async function adminDeleteUser(req: Request, res: Response) {
 	await userService.deleteUser(userId);
 	res.status(204).send();
 }
+
+export async function getUserPhotos(req: Request, res: Response) {
+	const targetUserId = Number(req.params.id);
+	const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
+	const take = req.query.take ? Number(req.query.take) : 10;
+
+	const result = await userService.listUserPhotos({
+		targetUserId,
+		currentUserId: req.user?.id ?? null,
+		currentUserRole: req.user?.role ?? 'user',
+		cursor,
+		take,
+	});
+	res.json(result);
+}
+
+export async function getUserAlbums(req: Request, res: Response) {
+	const targetUserId = Number(req.params.id);
+	const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
+	const take = req.query.take ? Number(req.query.take) : 10;
+
+	const result = await userService.listUserAlbums({
+		targetUserId,
+		currentUserId: req.user?.id ?? null,
+		currentUserRole: req.user?.role ?? 'user',
+		cursor,
+		take,
+	});
+	res.json(result);
+}
+
+export async function getUserFollowers(req: Request, res: Response) {
+	const targetUserId = Number(req.params.id);
+	const offset = req.query.offset ? Number(req.query.offset) : 0;
+	const take = req.query.take ? Number(req.query.take) : 10;
+
+	const result = await userService.listUserFollowers({
+		targetUserId,
+		currentUserId: req.user?.id ?? null,
+		offset,
+		take,
+	});
+	res.json(result);
+}
+
+export async function getUserFollowing(req: Request, res: Response) {
+	const targetUserId = Number(req.params.id);
+	const offset = req.query.offset ? Number(req.query.offset) : 0;
+	const take = req.query.take ? Number(req.query.take) : 10;
+
+	const result = await userService.listUserFollowing({
+		targetUserId,
+		currentUserId: req.user?.id ?? null,
+		offset,
+		take,
+	});
+	res.json(result);
+}

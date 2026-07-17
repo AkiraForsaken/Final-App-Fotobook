@@ -33,3 +33,13 @@ export async function unlike(req: Request, res: Response) {
 	const result = await photoService.unlikePhoto(photoId, req.user!.id);
 	res.json(result);
 }
+
+export async function getById(req: Request, res: Response) {
+	const photoId = Number(req.params.id);
+	const photo = await photoService.getPhotoById(
+		photoId,
+		req.user?.id ?? null,
+		req.user?.role ?? 'user'
+	);
+	res.json(photo);
+}

@@ -56,3 +56,13 @@ export async function removePhoto(req: Request, res: Response) {
 	const album = await albumService.removePhotoFromAlbum(albumId, photoId, req.user!.id);
 	res.json(album);
 }
+
+export async function getById(req: Request, res: Response) {
+	const albumId = Number(req.params.id);
+	const album = await albumService.getAlbumById(
+		albumId,
+		req.user?.id ?? null,
+		req.user?.role ?? 'user'
+	);
+	res.json(album);
+}

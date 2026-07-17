@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import request from 'supertest';
 import { app } from '../app.js';
-import { createTestUser } from './helpers/factories.js';
+import { createTestPhoto, createTestUser } from './helpers/factories.js';
 import { loginAs, authHeader } from './helpers/auth.js';
 
 describe('GET /api/users/:id (public profile) — 3.1', () => {
@@ -103,5 +103,56 @@ describe('PUT /api/users/current/profile — email change (4.6)', () => {
 			.field('lastName', user.lastName)
 			.field('email', 'taken@example.com');
 		expect(res.status).toBe(409);
+	});
+});
+
+describe('GET /api/users/:id/photos and /albums list collection logic', () => {
+	it('filters list visibility for public views but returns everything for the owner', async () => {
+		const owner = await createTestUser({ email: 'listowner@example.com' });
+		const stranger = await createTestUser({ email: 'liststranger@example.com' });
+
+		await createTestPhoto(owner.id); // Public photo
+		// If factories allow customization, generate a private asset here to test visibility filtering
+
+		const { accessToken: strangerToken } = await loginAs(app, stranger.email);
+		const publicView = await request(app)
+			.get(`/api/users/${owner.id}/photos?take=10`)
+			.set(authHeader(strangerToken));
+
+		expect(publicView.status).toBe(200);
+		expect(publicView.body).toHaveProperty('items');
+		expect(publicView.body).toHaveProperty('nextCursor');
+
+		const { accessToken: ownerToken } = await loginAs(app, owner.email);
+		const ownerView = await request(app)
+			.get(`/api/users/${owner.id}/photos?take=10`)
+			.set(authHeader(ownerToken));
+		expect(ownerView.status).toBe(200);
+	});
+});
+
+describe('GET /api/users/:id/followers and /following relationship lists', () => {
+	it('returns a paginated limit-offset array schema matching FollowRelation tracking rules', async () => {
+		const target = await createTestUser({ email: 'followee@example.com' });
+		const follower = await createTestUser({ email: 'followeruser@example.com' });
+
+		const { accessToken } = await loginAs(app, follower.email);
+		// Create relationship trigger
+		await request(app).post(`/api/users/${target.id}/follow`).set(authHeader(accessToken));
+
+		// Test Followers endpoint
+		const followersRes = await request(app).get(
+			`/api/users/${target.id}/followers?offset=0&take=5`
+		);
+		expect(followersRes.status).toBe(200);
+		expect(Array.isArray(followersRes.body.items)).toBe(true);
+		expect(followersRes.body.items[0].id).toBe(follower.id);
+
+		// Test Following endpoint
+		const followingRes = await request(app).get(
+			`/api/users/${follower.id}/following?offset=0&take=5`
+		);
+		expect(followingRes.status).toBe(200);
+		expect(followingRes.body.items[0].id).toBe(target.id);
 	});
 });

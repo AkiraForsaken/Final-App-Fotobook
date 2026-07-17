@@ -86,3 +86,49 @@ describe('Params validation', () => {
 		expect(res.status).toBe(400);
 	});
 });
+
+describe('GET /api/photos/:id — Single Photo Visibility Rules', () => {
+	it('allows a guest to view a public photo', async () => {
+		const owner = await createTestUser({ email: 'powner1@example.com' });
+		// assuming factory defaults or explicit field mapping sets public sharing
+		const photo = await createTestPhoto(owner.id);
+
+		const res = await request(app).get(`/api/photos/${photo.id}`);
+		expect(res.status).toBe(200);
+		expect(res.body.id).toBe(photo.id);
+	});
+
+	it('returns 403 when a guest or non-owner views a private photo', async () => {
+		const owner = await createTestUser({ email: 'powner2@example.com' });
+		// Pass the override option so the factory creates a private photo
+		const photo = await createTestPhoto(owner.id, { sharingMode: 'private' });
+
+		const other = await createTestUser({ email: 'pviewer2@example.com' });
+		const { accessToken } = await loginAs(app, other.email);
+
+		// Test as authenticated non-owner
+		const res = await request(app).get(`/api/photos/${photo.id}`).set(authHeader(accessToken));
+		expect(res.status).toBe(403);
+	});
+
+	it('allows the owner or an admin to view a private photo', async () => {
+		const owner = await createTestUser({ email: 'powner3@example.com' });
+		const admin = await createTestUser({ email: 'padmin3@example.com', role: 'admin' });
+		const photo = await createTestPhoto(owner.id);
+
+		// Owner check
+		const { accessToken: ownerToken } = await loginAs(app, owner.email);
+		const ownerRes = await request(app).get(`/api/photos/${photo.id}`).set(authHeader(ownerToken));
+		expect(ownerRes.status).toBe(200);
+
+		// Admin check
+		const { accessToken: adminToken } = await loginAs(app, admin.email);
+		const adminRes = await request(app).get(`/api/photos/${photo.id}`).set(authHeader(adminToken));
+		expect(adminRes.status).toBe(200);
+	});
+
+	it('returns 404 for a nonexistent photo id', async () => {
+		const res = await request(app).get('/api/photos/999999');
+		expect(res.status).toBe(404);
+	});
+});

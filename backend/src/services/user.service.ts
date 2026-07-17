@@ -11,8 +11,27 @@ import type { Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { createEmailVerificationToken } from './auth.service.js';
 import { env } from '../schemas/env.js';
+import {
+	findFollowedAuthorIds,
+	findLikedPhotoIds,
+	photoWithRelations,
+	toPhotoDto,
+	albumWithRelations,
+	findLikedAlbumIds,
+	DEFAULT_COVER_URL,
+	toAlbumDto,
+	paginateRows,
+} from '../utils/helpers.js';
 
 const BCRYPT_ROUNDS = 10;
+
+interface PaginatedUserListOptions {
+	targetUserId: number;
+	currentUserId: number | null;
+	currentUserRole: 'user' | 'admin';
+	cursor?: number;
+	take?: number;
+}
 
 const userProfileSelect = {
 	id: true,
@@ -341,4 +360,164 @@ export async function deleteUser(userId: number) {
 			})
 		)
 	);
+}
+
+/**
+ * Paginate and list public or all photos for a user based on permissions.
+ */
+export async function listUserPhotos({
+	targetUserId,
+	currentUserId,
+	currentUserRole,
+	cursor,
+	take = 10,
+}: PaginatedUserListOptions) {
+	const userExists = await prisma.user.findUnique({ where: { id: targetUserId } });
+	if (!userExists) throw new NotFoundError('User not found.');
+
+	const isOwnerOrAdmin = targetUserId === currentUserId || currentUserRole === 'admin';
+
+	const rows = await prisma.photo.findMany({
+		where: {
+			authorId: targetUserId,
+			...(!isOwnerOrAdmin ? { sharingMode: 'public' } : {}),
+			isStandalone: true,
+		},
+		include: photoWithRelations,
+		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+		take: take + 1,
+		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+	});
+
+	const { pageRows, nextCursor } = paginateRows(rows, take);
+
+	const likedPhotoIds = await findLikedPhotoIds(
+		currentUserId,
+		pageRows.map((row) => row.id)
+	);
+	const followedAuthorIds = await findFollowedAuthorIds(
+		currentUserId,
+		pageRows.map((row) => row.author.id)
+	);
+	return {
+		items: pageRows.map((row) => toPhotoDto(row, likedPhotoIds, followedAuthorIds)),
+		nextCursor,
+	};
+}
+
+/**
+ * Paginate and list public or all albums for a user based on permissions.
+ */
+export async function listUserAlbums({
+	targetUserId,
+	currentUserId,
+	currentUserRole,
+	cursor,
+	take = 10,
+}: PaginatedUserListOptions) {
+	const userExists = await prisma.user.findUnique({ where: { id: targetUserId } });
+	if (!userExists) throw new NotFoundError('User not found.');
+
+	const isOwnerOrAdmin = targetUserId === currentUserId || currentUserRole === 'admin';
+
+	const rows = await prisma.album.findMany({
+		where: {
+			authorId: targetUserId,
+			...(!isOwnerOrAdmin ? { sharingMode: 'public' } : {}),
+		},
+		include: albumWithRelations,
+		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+		take: take + 1,
+		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+	});
+
+	const { pageRows, nextCursor } = paginateRows(rows, take);
+
+	const likedAlbumIds = await findLikedAlbumIds(
+		currentUserId,
+		pageRows.map((r) => r.id)
+	);
+	const followedAuthorIds = await findFollowedAuthorIds(
+		currentUserId,
+		pageRows.map((row) => row.author.id)
+	);
+	return {
+		items: pageRows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds)),
+		nextCursor,
+	};
+}
+
+interface OffsetFollowListOptions {
+	targetUserId: number;
+	currentUserId: number | null;
+	offset?: number;
+	take?: number;
+}
+
+/**
+ * Paginate and list followers of target user (Limit-Offset style).
+ */
+export async function listUserFollowers({
+	targetUserId,
+	currentUserId,
+	offset = 0,
+	take = 10,
+}: OffsetFollowListOptions) {
+	const userExists = await prisma.user.findUnique({ where: { id: targetUserId } });
+	if (!userExists) throw new NotFoundError('User not found.');
+
+	const rows = await prisma.follow.findMany({
+		where: { followingId: targetUserId },
+		include: {
+			follower: {
+				select: publicProfileSelect(currentUserId),
+			},
+		},
+		orderBy: { createdAt: 'desc' },
+		take: take + 1, // Fetch one extra to check if there is a next page
+		skip: offset,
+	});
+
+	const hasMore = rows.length > take;
+	const pageRows = hasMore ? rows.slice(0, take) : rows;
+	const nextCursor = hasMore ? offset + take : null;
+
+	return {
+		items: pageRows.map((row) => toPublicProfileDto(row.follower, currentUserId)),
+		nextCursor, // Returns the next offset (number) to fetch, or null
+	};
+}
+
+/**
+ * Paginate and list whom target user is following (Limit-Offset style).
+ */
+export async function listUserFollowing({
+	targetUserId,
+	currentUserId,
+	offset = 0,
+	take = 10,
+}: OffsetFollowListOptions) {
+	const userExists = await prisma.user.findUnique({ where: { id: targetUserId } });
+	if (!userExists) throw new NotFoundError('User not found.');
+
+	const rows = await prisma.follow.findMany({
+		where: { followerId: targetUserId },
+		include: {
+			following: {
+				select: publicProfileSelect(currentUserId),
+			},
+		},
+		orderBy: { createdAt: 'desc' },
+		take: take + 1,
+		skip: offset,
+	});
+
+	const hasMore = rows.length > take;
+	const pageRows = hasMore ? rows.slice(0, take) : rows;
+	const nextCursor = hasMore ? offset + take : null;
+
+	return {
+		items: pageRows.map((row) => toPublicProfileDto(row.following, currentUserId)),
+		nextCursor, // Returns the next offset (number) to fetch, or null
+	};
 }

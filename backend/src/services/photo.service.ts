@@ -3,57 +3,13 @@ import { NotFoundError, ForbiddenError } from '../utils/app-error.js';
 import { storage } from './storage.service.js';
 import type { CreatePhotoRequest, UpdatePhotoRequest } from '../schemas/photo.js';
 import type { Prisma } from '@prisma/client';
-
-const photoWithRelations = {
-	author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
-	_count: { select: { likes: true } },
-} satisfies Prisma.PhotoInclude;
-
-type PhotoRow = Prisma.PhotoGetPayload<{ include: typeof photoWithRelations }>;
-
-// Shapes a DB row into the wire-format Photo DTO (matches frontend/src/types
-// Photo interface — nested author, derived likesCount/likedByMe).
-function toPhotoDto(row: PhotoRow, likedPhotoIds: Set<number>, followedAuthorIds: Set<number>) {
-	return {
-		id: row.id,
-		title: row.title,
-		description: row.description,
-		imageUrl: row.imageUrl,
-		sharingMode: row.sharingMode,
-		likesCount: row._count.likes,
-		likedByMe: likedPhotoIds.has(row.id),
-		author: {
-			...row.author,
-			isFollowedByMe: followedAuthorIds.has(row.author.id),
-		},
-		createdAt: row.createdAt.toISOString(),
-	};
-}
-
-// One query to find which of a batch of photos the current viewer has liked
-async function findLikedPhotoIds(
-	currentUserId: number | null,
-	photoIds: number[]
-): Promise<Set<number>> {
-	if (!currentUserId || photoIds.length === 0) return new Set();
-	const likes = await prisma.photoLike.findMany({
-		where: { userId: currentUserId, photoId: { in: photoIds } },
-		select: { photoId: true },
-	});
-	return new Set(likes.map((l) => l.photoId));
-}
-
-async function findFollowedAuthorIds(
-	currentUserId: number | null,
-	authorIds: number[]
-): Promise<Set<number>> {
-	if (!currentUserId || authorIds.length === 0) return new Set();
-	const follows = await prisma.follow.findMany({
-		where: { followerId: currentUserId, followingId: { in: authorIds } },
-		select: { followingId: true },
-	});
-	return new Set(follows.map((follow) => follow.followingId));
-}
+import {
+	findFollowedAuthorIds,
+	findLikedPhotoIds,
+	paginateRows,
+	photoWithRelations,
+	toPhotoDto,
+} from '../utils/helpers.js';
 
 interface ListPublicPhotosOptions {
 	authorIds?: number[]; // restrict to these authors (Feed); omit for Discovery
@@ -72,6 +28,7 @@ export async function listPublicPhotos({
 		where: {
 			sharingMode: 'public',
 			...(authorIds ? { authorId: { in: authorIds } } : {}),
+			isStandalone: true,
 		},
 		include: photoWithRelations,
 		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
@@ -79,9 +36,7 @@ export async function listPublicPhotos({
 		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
 	});
 
-	const hasMore = rows.length > take;
-	const pageRows = hasMore ? rows.slice(0, take) : rows;
-	const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : null;
+	const { pageRows, nextCursor } = paginateRows(rows, take);
 
 	const likedPhotoIds = await findLikedPhotoIds(
 		currentUserId,
@@ -114,9 +69,7 @@ export async function listPhotosAdmin({
 		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
 	});
 
-	const hasMore = rows.length > take;
-	const pageRows = hasMore ? rows.slice(0, take) : rows;
-	const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : null;
+	const { pageRows, nextCursor } = paginateRows(rows, take);
 
 	const likedPhotoIds = await findLikedPhotoIds(
 		currentUserId,
@@ -237,4 +190,31 @@ export async function unlikePhoto(photoId: number, userId: number) {
 	if (!photo) throw new NotFoundError('Photo not found.');
 	await prisma.photoLike.deleteMany({ where: { userId, photoId } });
 	return { likedByMe: false };
+}
+
+export async function getPhotoById(
+	photoId: number,
+	currentUserId: number | null,
+	currentUserRole: 'user' | 'admin'
+) {
+	const row = await prisma.photo.findUnique({
+		where: { id: photoId },
+		include: photoWithRelations,
+	});
+
+	if (!row) throw new NotFoundError('Photo not found.');
+
+	// Strict visibility check: 403 Forbidden if private and requester is not the owner or an admin
+	if (
+		row.sharingMode === 'private' &&
+		row.authorId !== currentUserId &&
+		currentUserRole !== 'admin'
+	) {
+		throw new ForbiddenError('You do not have permission to view this photo.');
+	}
+
+	const likedPhotoIds = await findLikedPhotoIds(currentUserId, [photoId]);
+	const followedAuthorIds = await findFollowedAuthorIds(currentUserId, [row.author.id]);
+
+	return toPhotoDto(row, likedPhotoIds, followedAuthorIds);
 }

@@ -60,3 +60,26 @@ describe('Like / unlike — idempotent (4.8)', () => {
 		expect(res.status).toBe(200);
 	});
 });
+
+describe('GET /api/albums/:id — Single Album Visibility Rules', () => {
+	it('allows a guest to view a public album', async () => {
+		const owner = await createTestUser({ email: 'aowner1@example.com' });
+		const album = await createTestAlbum(owner.id);
+
+		const res = await request(app).get(`/api/albums/${album.id}`);
+		expect(res.status).toBe(200);
+		expect(res.body.id).toBe(album.id);
+	});
+
+	it('forbids a foreign user from viewing a private album', async () => {
+		const owner = await createTestUser({ email: 'aowner2@example.com' });
+		const other = await createTestUser({ email: 'aviewer2@example.com' });
+
+		// Pass the override option so the factory creates a private album
+		const album = await createTestAlbum(owner.id, { sharingMode: 'private' });
+		const { accessToken } = await loginAs(app, other.email);
+
+		const res = await request(app).get(`/api/albums/${album.id}`).set(authHeader(accessToken));
+		expect(res.status).toBe(403);
+	});
+});

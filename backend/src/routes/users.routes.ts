@@ -35,3 +35,31 @@ usersRouter
 	.all(requireAuth, validate(idParamsSchema, 'params'))
 	.post(usersController.followUser)
 	.delete(usersController.unfollowUser);
+
+usersRouter.get(
+	'/:id/photos',
+	optionalAuth,
+	validate(idParamsSchema, 'params'),
+	usersController.getUserPhotos
+);
+
+usersRouter.get(
+	'/:id/albums',
+	optionalAuth,
+	validate(idParamsSchema, 'params'),
+	usersController.getUserAlbums
+);
+
+usersRouter.get(
+	'/:id/followers',
+	optionalAuth,
+	validate(idParamsSchema, 'params'),
+	usersController.getUserFollowers
+);
+
+usersRouter.get(
+	'/:id/following',
+	optionalAuth,
+	validate(idParamsSchema, 'params'),
+	usersController.getUserFollowing
+);

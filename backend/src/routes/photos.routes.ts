@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { requireAuth } from '../middlewares/auth.middleware.js';
+import { optionalAuth, requireAuth } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
 import { createPhotoRequestSchema, updatePhotoRequestSchema } from '../schemas/photo.js';
 import * as photosController from '../controllers/photos.controller.js';
@@ -14,6 +14,13 @@ photosRouter.post(
 	uploadPhotoImage,
 	validate(createPhotoRequestSchema),
 	photosController.create
+);
+
+photosRouter.get(
+	'/:id',
+	optionalAuth,
+	validate(idParamsSchema, 'params'),
+	photosController.getById
 );
 
 photosRouter
