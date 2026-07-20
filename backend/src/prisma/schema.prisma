@@ -1,0 +1,263 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Enums ─────────────────────────────────────────────────────────────────
+
+enum SharingMode {
+  public
+  private
+
+  @@map("sharing_mode")
+}
+
+enum UserRole {
+  user
+  admin
+
+  @@map("user_role")
+}
+
+enum SocialProvider {
+  google
+  facebook
+  twitter
+
+  @@map("social_provider")
+}
+
+// enum NotificationType {
+//   photo_like
+//   album_like
+//   new_follower
+//   account_deactivated
+//   account_deleted
+
+//   @@map("notification_type")
+// }
+
+// ── Users & auth ─────────────────────────────────────────────────────────
+
+model User {
+  id              Int      @id @default(autoincrement())
+  firstName       String   @map("first_name") @db.VarChar(25)
+  lastName        String   @map("last_name") @db.VarChar(25)
+  email           String   @unique @db.VarChar(255)
+  passwordHash    String   @map("password_hash") @db.VarChar(255)
+  avatarUrl       String?  @map("avatar_url")
+  role            UserRole @default(user)
+  isActive        Boolean  @default(true) @map("is_active")
+  isEmailVerified Boolean  @default(false) @map("is_email_verified")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  photos                  Photo[]
+  albums                  Album[]
+  socialAccounts          SocialAccount[]
+  emailVerificationTokens EmailVerificationToken[]
+  passwordResetTokens     PasswordResetToken[]
+  refreshTokens           RefreshToken[]
+  photoLikes              PhotoLike[]
+  albumLikes              AlbumLike[]
+
+  // NOTE: `follower_id != following_id` is enforced in the service layer —
+  // Prisma has no first-class CHECK constraint support for this.
+  following Follow[] @relation("Follower")
+  followers Follow[] @relation("Following")
+
+  // notificationsReceived  Notification[] @relation("Recipient")
+  // notificationsTriggered Notification[] @relation("Actor")
+
+  @@map("users")
+}
+
+model SocialAccount {
+  id             Int            @id @default(autoincrement())
+  userId         Int            @map("user_id")
+  user           User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider       SocialProvider
+  providerUserId String         @map("provider_user_id")
+  createdAt      DateTime       @default(now()) @map("created_at")
+
+  @@unique([provider, providerUserId])
+  @@map("social_accounts")
+}
+
+model EmailVerificationToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("email_verification_tokens")
+}
+
+model PasswordResetToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@map("password_reset_tokens")
+}
+
+model RefreshToken {
+  id        Int       @id @default(autoincrement())
+  userId    Int       @map("user_id")
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique @map("token_hash")
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  // Rotation: this row's replacement, if it's been rotated already.
+  replacedById Int?          @unique @map("replaced_by_id")
+  replacedBy   RefreshToken? @relation("TokenRotation", fields: [replacedById], references: [id])
+  rotatedFrom  RefreshToken? @relation("TokenRotation")
+
+  @@index([userId, revokedAt])
+  @@map("refresh_tokens")
+}
+
+// ── Follows ───────────────────────────────────────────────────────────────
+
+model Follow {
+  followerId  Int      @map("follower_id")
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId Int      @map("following_id")
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+// ── Photos & Albums (many-to-many via album_photos) ────────────────────────
+
+model Photo {
+  id             Int         @id @default(autoincrement())
+  authorId       Int         @map("author_id")
+  author         User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title          String?     @db.VarChar(140)
+  description    String?     @db.VarChar(300)
+  sharingMode    SharingMode @default(public) @map("sharing_mode")
+  imageUrl       String      @map("image_url")
+  imageMimeType  String      @map("image_mime_type") @db.VarChar(50)
+  imageSizeBytes Int         @map("image_size_bytes")
+  isStandalone   Boolean     @default(true) @map("is_standalone")
+  createdAt      DateTime    @default(now()) @map("created_at")
+  updatedAt      DateTime    @updatedAt @map("updated_at")
+
+  albumLinks    AlbumPhoto[]
+  coverOfAlbums Album[]      @relation("AlbumCover")
+  likes         PhotoLike[]
+  // notifications Notification[]
+
+  @@index([authorId])
+  @@index([sharingMode, createdAt])
+  @@map("photos")
+}
+
+model Album {
+  id           Int         @id @default(autoincrement())
+  authorId     Int         @map("author_id")
+  author       User        @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  title        String      @db.VarChar(140)
+  description  String      @db.VarChar(300)
+  sharingMode  SharingMode @default(public) @map("sharing_mode")
+  coverPhotoId Int?        @map("cover_photo_id")
+  coverPhoto   Photo?      @relation("AlbumCover", fields: [coverPhotoId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  // NOTE: deleting an Album cascades its `album_photos` link rows (below),
+  // but NOT the Photos themselves — a Photo may stand alone or belong to
+  // another Album. The "delete an album's images" requirement is handled
+  // in the service layer: after removing the links, delete any Photo that's
+  // now orphaned (no remaining album_photos rows) AND wasn't a standalone
+  // post. See fotobook-db-requirements.md §2 (album_photos) for the rationale.
+  photoLinks AlbumPhoto[]
+  likes      AlbumLike[]
+  // notifications Notification[]
+
+  @@index([authorId])
+  @@index([sharingMode, createdAt])
+  @@map("albums")
+}
+
+model AlbumPhoto {
+  albumId  Int      @map("album_id")
+  album    Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  photoId  Int      @map("photo_id")
+  photo    Photo    @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  position Int      @default(0)
+  addedAt  DateTime @default(now()) @map("added_at")
+
+  @@id([albumId, photoId])
+  @@index([photoId])
+  @@map("album_photos")
+}
+
+// ── Likes ───────────────────────────────────────────────────────────────
+
+model PhotoLike {
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photoId   Int      @map("photo_id")
+  photo     Photo    @relation(fields: [photoId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, photoId])
+  @@index([photoId])
+  @@map("photo_likes")
+}
+
+model AlbumLike {
+  userId    Int      @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  albumId   Int      @map("album_id")
+  album     Album    @relation(fields: [albumId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@id([userId, albumId])
+  @@index([albumId])
+  @@map("album_likes")
+}
+
+// ── Notifications (future implementation) ───────────────────────────────────────────
+
+// model Notification {
+//   id          Int              @id @default(autoincrement())
+//   recipientId Int              @map("recipient_id")
+//   recipient   User             @relation("Recipient", fields: [recipientId], references: [id], onDelete: Cascade)
+//   actorId     Int?             @map("actor_id")
+//   actor       User?            @relation("Actor", fields: [actorId], references: [id], onDelete: SetNull)
+//   type        NotificationType
+//   photoId     Int?             @map("photo_id")
+//   photo       Photo?           @relation(fields: [photoId], references: [id], onDelete: Cascade)
+//   albumId     Int?             @map("album_id")
+//   album       Album?           @relation(fields: [albumId], references: [id], onDelete: Cascade)
+//   isRead      Boolean          @default(false) @map("is_read")
+//   createdAt   DateTime         @default(now()) @map("created_at")
+
+//   @@index([recipientId, isRead, createdAt])
+//   @@map("notifications")
+// }

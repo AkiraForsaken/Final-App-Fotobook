@@ -1,16 +1,58 @@
 {
-  "name": "backend",
-  "version": "1.0.0",
-  "description": "",
-  "license": "ISC",
-  "author": "",
-  "type": "commonjs",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "dependencies": {
-    "cors": "^2.8.6",
-    "express": "^5.2.1"
-  }
+	"name": "backend",
+	"version": "1.0.0",
+	"private": true,
+	"type": "module",
+	"main": "dist/index.js",
+	"scripts": {
+		"dev": "tsx watch src/index.ts",
+		"build": "tsc",
+		"start": "node dist/index.js",
+		"test": "dotenv -e .env.test -- vitest run",
+		"test:watch": "dotenv -e .env.test -- vitest",
+		"prisma:generate": "prisma generate",
+		"prisma:migrate": "prisma migrate dev",
+		"prisma:studio": "prisma studio",
+		"format": "prettier --write \"src/**/*.{js,ts,tsx,css,html,json,md}\""
+	},
+	"dependencies": {
+		"@prisma/adapter-pg": "^7.8.0",
+		"@prisma/client": "^7.8.0",
+		"bcryptjs": "^3.0.3",
+		"cloudinary": "^2.10.0",
+		"cookie-parser": "^1.4.7",
+		"cors": "^2.8.6",
+		"express": "^5.2.1",
+		"helmet": "^8.3.0",
+		"jsonwebtoken": "^9.0.3",
+		"morgan": "^1.11.0",
+		"multer": "^2.2.0",
+		"pg": "^8.22.0",
+		"zod": "^4.4.3"
+	},
+	"devDependencies": {
+		"@types/bcryptjs": "^2.4.6",
+		"@types/cookie-parser": "^1.4.10",
+		"@types/cors": "^2.8.17",
+		"@types/express": "^5.0.6",
+		"@types/jsonwebtoken": "^9.0.10",
+		"@types/morgan": "^1.9.10",
+		"@types/multer": "^2.2.0",
+		"@types/node": "^24.13.2",
+		"@types/pg": "^8.20.0",
+		"@types/supertest": "^7.2.0",
+		"dotenv": "^17.4.2",
+		"dotenv-cli": "^11.0.0",
+		"prettier": "^3.9.4",
+		"prettier-plugin-prisma": "^5.0.0",
+		"prisma": "^7.8.0",
+		"supertest": "^7.2.2",
+		"ts-node": "^10.9.2",
+		"tsx": "^4.23.0",
+		"typescript": "^6.0.3",
+		"vitest": "^4.1.10"
+	},
+	"overrides": {
+		"@hono/node-server": "^1.19.13"
+	}
 }

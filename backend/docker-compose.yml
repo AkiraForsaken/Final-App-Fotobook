@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: fotobook-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: fotobook
+      POSTGRES_PASSWORD: fotobook
+      POSTGRES_DB: fotobook
+    ports:
+      - '5432:5432'
+    volumes:
+      - fotobook-postgres-data:/var/lib/postgresql/data
+
+volumes:
+  fotobook-postgres-data:

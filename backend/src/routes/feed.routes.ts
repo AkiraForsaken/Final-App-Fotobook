@@ -1,0 +1,36 @@
+import { Router } from 'express';
+import { requireAuth } from '../middlewares/auth.middleware.js';
+import { optionalAuth } from '../middlewares/auth.middleware.js';
+import * as feedController from '../controllers/feed.controller.js';
+import { validate } from '../middlewares/validate.js';
+import { paginationQuerySchema } from '../schemas/common.js';
+
+export const feedRouter = Router();
+
+feedRouter.get(
+	'/photos',
+	requireAuth,
+	validate(paginationQuerySchema, 'query'),
+	feedController.feedPhotos
+);
+feedRouter.get(
+	'/albums',
+	requireAuth,
+	validate(paginationQuerySchema, 'query'),
+	feedController.feedAlbums
+);
+
+export const discoveryRouter = Router();
+
+discoveryRouter.get(
+	'/photos',
+	optionalAuth,
+	validate(paginationQuerySchema, 'query'),
+	feedController.discoveryPhotos
+);
+discoveryRouter.get(
+	'/albums',
+	optionalAuth,
+	validate(paginationQuerySchema, 'query'),
+	feedController.discoveryAlbums
+);
