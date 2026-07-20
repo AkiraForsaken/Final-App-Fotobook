@@ -3,19 +3,18 @@ import { requireAuth } from '../middlewares/auth.middleware.js';
 import { requireAdmin } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
 import * as adminController from '../controllers/admin.controller.js';
-import * as usersController from '../controllers/users.controller.js';
 import { idParamsSchema, paginationQuerySchema } from '../schemas/common.js';
 
 export const adminRouter = Router();
 
-adminRouter.get('/users', requireAuth, requireAdmin, usersController.listUsers);
+adminRouter.get('/users', requireAuth, requireAdmin, adminController.listUsers);
 
 adminRouter.post(
 	'/:id/deactivate',
 	requireAuth,
 	requireAdmin,
 	validate(idParamsSchema, 'params'),
-	usersController.adminDeactivateUser
+	adminController.adminDeactivateUser
 );
 
 adminRouter.post(
@@ -23,7 +22,7 @@ adminRouter.post(
 	requireAuth,
 	requireAdmin,
 	validate(idParamsSchema, 'params'),
-	usersController.adminReactivateUser
+	adminController.adminReactivateUser
 );
 
 adminRouter.delete(
@@ -31,7 +30,7 @@ adminRouter.delete(
 	requireAuth,
 	requireAdmin,
 	validate(idParamsSchema, 'params'),
-	usersController.adminDeleteUser
+	adminController.adminDeleteUser
 );
 
 adminRouter.get(

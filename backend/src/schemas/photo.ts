@@ -30,3 +30,14 @@ export type CreatePhotoRequest = z.infer<typeof createPhotoRequestSchema>;
 
 export const updatePhotoRequestSchema = createPhotoRequestSchema;
 export type UpdatePhotoRequest = CreatePhotoRequest;
+
+// Body for POST /api/albums/:id/photos — attaching a NEW photo directly into
+// an album. Unlike a standalone photo post: title/description are optional
+// (matches the now-nullable Prisma columns for non-standalone photos), and
+// there's no sharingMode — the photo inherits its parent album's sharingMode
+// instead of asking the client to specify one per photo.
+export const addPhotoToAlbumRequestSchema = z.object({
+	title: z.string().max(140, 'Title must be 140 characters or fewer.').optional(),
+	description: z.string().max(300, 'Description must be 300 characters or fewer.').optional(),
+});
+export type AddPhotoToAlbumRequest = z.infer<typeof addPhotoToAlbumRequestSchema>;

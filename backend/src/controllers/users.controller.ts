@@ -22,13 +22,6 @@ export async function getPublicProfile(req: Request, res: Response) {
 	res.json(profile);
 }
 
-export async function listUsers(req: Request, res: Response) {
-	const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
-	const take = req.query.take ? Number(req.query.take) : 20;
-	const users = await userService.listUsers(req.user!.id, cursor, take);
-	res.json(users);
-}
-
 export async function followUser(req: Request, res: Response) {
 	const userId = Number(req.params.id);
 	const result = await userService.followUser(req.user!.id, userId);
@@ -39,26 +32,6 @@ export async function unfollowUser(req: Request, res: Response) {
 	const userId = Number(req.params.id);
 	await userService.unfollowUser(req.user!.id, userId);
 	res.json({ message: 'Unfollowed successfully.' });
-}
-
-// Admin endpoints
-
-export async function adminDeactivateUser(req: Request, res: Response) {
-	const userId = Number(req.params.id);
-	await userService.deactivateUser(userId);
-	res.json({ message: 'User deactivated.' });
-}
-
-export async function adminReactivateUser(req: Request, res: Response) {
-	const userId = Number(req.params.id);
-	await userService.reactivateUser(userId);
-	res.json({ message: 'User reactivated.' });
-}
-
-export async function adminDeleteUser(req: Request, res: Response) {
-	const userId = Number(req.params.id);
-	await userService.deleteUser(userId);
-	res.status(204).send();
 }
 
 export async function getUserPhotos(req: Request, res: Response) {

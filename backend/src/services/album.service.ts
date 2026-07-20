@@ -1,8 +1,12 @@
 import { prisma } from '../prisma/client.js';
 import type { Prisma } from '@prisma/client';
-import { NotFoundError, ForbiddenError, ConflictError } from '../utils/app-error.js';
+import {
+	NotFoundError,
+	ForbiddenError,
+	ConflictError,
+	ValidationError,
+} from '../utils/app-error.js';
 import type { CreateAlbumRequest, UpdateAlbumRequest } from '../schemas/album.js';
-import { SharingMode } from '../schemas/common.js';
 import { storage } from './storage.service.js';
 import {
 	albumWithRelations,
@@ -28,6 +32,20 @@ async function getAlbumDtoById(
 	const likedAlbumIds = await findLikedAlbumIds(currentUserId, [albumId]);
 	const followedAuthorIds = await findFollowedAuthorIds(currentUserId, [row.author.id]);
 	return toAlbumDto(row, likedAlbumIds, followedAuthorIds);
+}
+
+// Matches the requirements doc's "maximum 25 images" per-album cap.
+// This is the backend's lifetime ceiling
+const MAX_ALBUM_PHOTOS = 25;
+
+async function assertAlbumNotFull(
+	client: Prisma.TransactionClient | typeof prisma,
+	albumId: number
+): Promise<void> {
+	const count = await client.albumPhoto.count({ where: { albumId } });
+	if (count >= MAX_ALBUM_PHOTOS) {
+		throw new ValidationError(`Albums can contain at most ${MAX_ALBUM_PHOTOS} photos.`);
+	}
 }
 
 // Next `position` value for a new album_photos row — simple append-at-end.
@@ -236,6 +254,8 @@ export async function addExistingPhotoToAlbum(
 			throw new ConflictError('This photo is already in the album.');
 		}
 
+		await assertAlbumNotFull(tx, albumId);
+
 		const position = await getNextPosition(tx, albumId);
 		await tx.albumPhoto.create({ data: { albumId, photoId, position } });
 		await assignCoverIfNeeded(tx, albumId, photoId);
@@ -244,17 +264,12 @@ export async function addExistingPhotoToAlbum(
 	});
 }
 
-// Create new photo and Link it to an album.
-// NOTE: this function is intentionally NOT wired to a route yet. It expects
-// input.imageUrl` / `imageMimeType` / `imageSizeBytes` to already be
-// resolved — i.e. the actual file has already been processed by Multer + the storage adapter
+// Upload a NEW photo directly into an album. title/description are optional
+// (matches the nullable Prisma columns for non-standalone photos) — there's
+// no sharingMode input at all; the photo inherits the album's sharingMode.
 export interface AddNewPhotoToAlbumInput {
-	title: string;
-	description: string;
-	sharingMode: SharingMode;
-	imageUrl: string;
-	imageMimeType: string;
-	imageSizeBytes: number;
+	title?: string;
+	description?: string;
 }
 
 export async function addNewPhotoToAlbum(
@@ -269,16 +284,21 @@ export async function addNewPhotoToAlbum(
 		throw new ForbiddenError('You can only add photos to your own albums.');
 	}
 
+	// Check before the (potentially slow) upload so we don't burn storage on
+	// a file we're about to reject.
+	await assertAlbumNotFull(prisma, albumId);
+
 	const { url, sizeBytes } = await storage.resolve(file);
 
 	try {
 		return prisma.$transaction(async (tx) => {
+			await assertAlbumNotFull(tx, albumId); // re-check inside the transaction
 			const photo = await tx.photo.create({
 				data: {
 					authorId: requesterId,
-					title: input.title,
-					description: input.description,
-					sharingMode: input.sharingMode,
+					title: input.title ?? null,
+					description: input.description ?? null,
+					sharingMode: album.sharingMode,
 					imageUrl: url,
 					imageMimeType: file.mimetype,
 					imageSizeBytes: sizeBytes,

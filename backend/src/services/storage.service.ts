@@ -13,6 +13,13 @@ const PUBLIC_UPLOAD_PATH = '/uploads'; // must match the express.static mount in
 const STORAGE_PROVIDER = env.STORAGE_PROVIDER ?? 'local';
 const CLOUDINARY_FOLDER = env.CLOUDINARY_FOLDER ?? 'fotobook';
 
+cloudinary.config({
+	cloud_name: env.CLOUDINARY_CLOUD_NAME,
+	api_key: env.CLOUDINARY_API_KEY,
+	api_secret: env.CLOUDINARY_API_SECRET,
+	secure: true,
+});
+
 // Cloudinary public_ids can include a folder path (e.g. "fotobook/abc123") and never include the file extension
 function extractPublicId(url: string): string | null {
 	const match = url.match(/\/upload\/(?:[^/]+\/)*?(?:v\d+\/)?(.+)\.[a-zA-Z0-9]+$/);

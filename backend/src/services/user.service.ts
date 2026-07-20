@@ -43,8 +43,8 @@ const userProfileSelect = {
 		select: {
 			followers: true,
 			following: true,
-			photos: { where: { sharingMode: 'public' } },
-			albums: { where: { sharingMode: 'public' } },
+			photos: true,
+			albums: true,
 		},
 	},
 	// bio: true,
