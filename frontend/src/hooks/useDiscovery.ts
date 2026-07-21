@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router';
+import { useAuth } from './useAuth.ts';
 import { contentService } from '../service/contentService.ts';
 import { userService } from '../service/userService.ts';
 import { usePaginatedContent } from '../hooks/usePaginatedContent.ts';
 import type { Album, Photo } from '../types/index.ts';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 const PAGE_SIZE = 6;
 
 export const useDiscovery = (enabled = true) => {
+	const { currentUser } = useAuth();
+	const navigate = useNavigate();
 	const photoFeed = usePaginatedContent<Photo>(
 		contentService.getDiscoveryPhotos,
 		PAGE_SIZE,
@@ -64,6 +69,11 @@ export const useDiscovery = (enabled = true) => {
 	};
 
 	const toggleFollow = (authorId: number, currentlyFollowing: boolean) => {
+		if (!currentUser) {
+			navigate(APP_ROUTE.LOGIN);
+			return;
+		}
+
 		setAuthorFollowed(authorId, !currentlyFollowing);
 		const call = currentlyFollowing
 			? userService.unfollowUser(authorId)

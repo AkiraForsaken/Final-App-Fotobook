@@ -3,6 +3,8 @@ import { userService } from '../service/userService.ts';
 import { usePaginatedContent } from './usePaginatedContent.ts';
 import { useAuth } from './useAuth.ts';
 import type { User, UserProfile, Photo, Album, FollowRelation } from '../types/index.ts';
+import { useNavigate } from 'react-router';
+import { APP_ROUTE } from '../utils/routes.ts';
 
 const TAB_PAGE_SIZE = 12;
 
@@ -32,6 +34,7 @@ function ownerToProfileHeader(user: User): UserProfile {
 
 export const useProfile = (userId: number | null, currentUser: User | null) => {
 	const { updateCurrentUser } = useAuth();
+	const navigate = useNavigate();
 	const isOwner =
 		currentUser !== null && userId !== null && String(currentUser.id) === String(userId);
 
@@ -104,11 +107,21 @@ export const useProfile = (userId: number | null, currentUser: User | null) => {
 				: userService.getUserFollowing(userId, cursor, take),
 		[userId]
 	);
-
-	const photos = usePaginatedContent<Photo>(fetchPhotos, TAB_PAGE_SIZE);
-	const albums = usePaginatedContent<Album>(fetchAlbums, TAB_PAGE_SIZE);
-	const followers = usePaginatedContent<FollowRelation>(fetchFollowers, TAB_PAGE_SIZE);
-	const following = usePaginatedContent<FollowRelation>(fetchFollowing, TAB_PAGE_SIZE);
+	const resetKey = `${userId}-${currentUser?.id ?? 'guest'}`;
+	const photos = usePaginatedContent<Photo>(fetchPhotos, TAB_PAGE_SIZE, true, resetKey);
+	const albums = usePaginatedContent<Album>(fetchAlbums, TAB_PAGE_SIZE, true, resetKey);
+	const followers = usePaginatedContent<FollowRelation>(
+		fetchFollowers,
+		TAB_PAGE_SIZE,
+		true,
+		resetKey
+	);
+	const following = usePaginatedContent<FollowRelation>(
+		fetchFollowing,
+		TAB_PAGE_SIZE,
+		true,
+		resetKey
+	);
 
 	// Follow / unfollow ANY user currently visible on this page — the
 	// profile subject itself, or a card in the followers/following lists.
@@ -126,6 +139,10 @@ export const useProfile = (userId: number | null, currentUser: User | null) => {
 
 	const toggleFollow = useCallback(
 		(targetUserId: number) => {
+			if (!currentUser) {
+				navigate(APP_ROUTE.LOGIN);
+				return;
+			}
 			const currentlyFollowing = findCurrentlyFollowing(targetUserId);
 			if (currentlyFollowing === undefined) return;
 			const willFollow = !currentlyFollowing;
@@ -171,7 +188,15 @@ export const useProfile = (userId: number | null, currentUser: User | null) => {
 				applyLists(currentlyFollowing);
 			});
 		},
-		[profile, followers, following, findCurrentlyFollowing, updateCurrentUser]
+		[
+			currentUser,
+			navigate,
+			profile,
+			followers,
+			following,
+			findCurrentlyFollowing,
+			updateCurrentUser,
+		]
 	);
 
 	return {

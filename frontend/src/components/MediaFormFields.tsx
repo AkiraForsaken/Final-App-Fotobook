@@ -1,7 +1,6 @@
 import { cn } from '../utils/cn.ts';
 import { ImageUploadZone } from './ImageUploadZone.tsx';
 import type { SharingMode } from '../types/index.ts';
-import { MultiImageUploadZone } from './MultiImageUploadZone.tsx';
 
 export interface MediaFormState {
 	title: string;
@@ -42,10 +41,7 @@ export const MediaFormFields = ({
 	mode = 'photo',
 	values,
 	errors,
-	// existingTitle = '',
-	// existingDesc = '',
 	existingImageUrl,
-	existingImageUrls,
 	imageLabel = 'Photo',
 	onChange,
 	onFileError,
@@ -161,24 +157,18 @@ export const MediaFormFields = ({
 
 			{/* Image upload */}
 			<div>
-				{mode === 'album' ? (
-					<MultiImageUploadZone
-						files={values.files}
-						existingImageUrls={existingImageUrls}
-						onChange={(files) => onChange({ files })}
-						onError={onFileError}
-						label={imageLabel}
-					/>
-				) : (
-					<ImageUploadZone
-						file={values.file}
-						existingImageUrl={existingImageUrl}
-						onChange={(file) => onChange({ file })}
-						onError={onFileError}
-						label={imageLabel}
-					/>
+				{mode === 'photo' && (
+					<div>
+						<ImageUploadZone
+							file={values.file}
+							existingImageUrl={existingImageUrl}
+							onChange={(file) => onChange({ file })}
+							onError={onFileError}
+							label={imageLabel}
+						/>
+						{errors.file && <p className="mt-1 text-xs text-red-600">{errors.file}</p>}
+					</div>
 				)}
-				{errors.file && <p className="mt-1 text-xs text-red-600">{errors.file}</p>}
 			</div>
 		</div>
 	);

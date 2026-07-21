@@ -69,7 +69,7 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 										onClickPhoto={(p) => setActivePhoto(p)}
 										onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 									/>
-									<div className="absolute top-3 right-3">{followBtn(photo.author)}</div>
+									<div className="absolute top-4 right-1">{followBtn(photo.author)}</div>
 								</div>
 							))}
 						</div>

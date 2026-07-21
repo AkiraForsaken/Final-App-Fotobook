@@ -25,7 +25,7 @@ export const EditProfile = () => {
 
 	// currentUser is guaranteed by RequireAuth, but guard below keeps hooks safe.
 	const profileForm = useProfileInfoForm(currentUser!);
-	const passwordForm = usePasswordChangeForm(currentUser!);
+	const passwordForm = usePasswordChangeForm();
 
 	if (!currentUser) {
 		return null;
@@ -58,7 +58,7 @@ export const EditProfile = () => {
 				<button
 					aria-label="Go back"
 					onClick={() => navigate(-1)}
-					className="p-2 rounded-lg text-text-secondary hover:bg-bg-page hover:text-text-secondary transition-colors"
+					className="p-2 rounded-lg text-text-secondary cursor-pointer hover:bg-bg-page hover:text-text-secondary transition-colors"
 				>
 					<i className="fa-solid fa-arrow-left" />
 				</button>

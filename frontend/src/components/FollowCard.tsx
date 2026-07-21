@@ -7,7 +7,6 @@ import { routeUtils } from '../utils/routes';
 interface FollowCardProps {
 	user: FollowRelation;
 	currentUserId?: number;
-	isFollowing: boolean;
 	onFollowToggle: (userId: number) => void;
 }
 
@@ -15,14 +14,10 @@ interface FollowCardProps {
  * FollowCard — compact user card shown in Following / Followers tabs.
  * Clicking the name/avatar navigates to that user's public profile.
  */
-export const FollowCard = ({
-	user,
-	currentUserId,
-	isFollowing,
-	onFollowToggle,
-}: FollowCardProps) => {
+export const FollowCard = ({ user, currentUserId, onFollowToggle }: FollowCardProps) => {
 	const navigate = useNavigate();
 	const fullName = `${user.firstName} ${user.lastName}`;
+	const isFollowing = currentUserId ? Boolean(user.isFollowedByMe) : false;
 
 	return (
 		<div className="flex flex-col items-center gap-3 p-4 bg-surface rounded-xl border border-border shadow-sm">

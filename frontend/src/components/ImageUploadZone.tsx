@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { cn } from '../utils/cn.ts';
 import { ACCEPTED_EXT, validateImageFile } from '../utils/imageValidation.ts';
 
@@ -23,6 +23,15 @@ export const ImageUploadZone = ({
 	const inputRef = useRef<HTMLInputElement>(null);
 
 	const previewUrl = file ? URL.createObjectURL(file) : (existingImageUrl ?? null);
+
+	useEffect(() => {
+		if (!file) return;
+
+		// Clean up the generated Object URL when `file` changes or on unmount
+		return () => {
+			URL.revokeObjectURL(previewUrl!);
+		};
+	}, [file, previewUrl]);
 
 	const handleFile = (candidate: File) => {
 		const err = validateImageFile(candidate);

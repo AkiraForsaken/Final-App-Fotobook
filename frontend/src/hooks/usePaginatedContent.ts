@@ -20,7 +20,8 @@ type Fetcher<T> = (cursor: number | undefined, take: number) => Promise<Page<T>>
 export function usePaginatedContent<T extends { id: number }>(
 	fetchPage: Fetcher<T>,
 	pageSize = 6,
-	enabled = true
+	enabled = true,
+	resetKey?: unknown
 ) {
 	const [items, setItems] = useState<T[]>([]);
 	const [nextCursor, setNextCursor] = useState<number | null>(null);
@@ -56,7 +57,8 @@ export function usePaginatedContent<T extends { id: number }>(
 		let active = true;
 
 		const fetchInitialData = async () => {
-			// Prevents updating state on unmounted components
+			setItems([]);
+			setNextCursor(null);
 			if (active) {
 				await loadFirstPage();
 			}
@@ -67,7 +69,7 @@ export function usePaginatedContent<T extends { id: number }>(
 		return () => {
 			active = false;
 		};
-	}, [loadFirstPage]);
+	}, [loadFirstPage, resetKey]);
 
 	const hasMore = nextCursor !== null;
 

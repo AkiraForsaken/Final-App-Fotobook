@@ -12,12 +12,16 @@ interface ProfileHeaderProps {
 	onEditProfile?: () => void;
 }
 
-const Stat = ({ value, label }: { value: number; label: string }) => (
-	<div className="flex flex-col items-center sm:items-start">
-		<span className="text-lg font-bold text-text-primary">{value.toLocaleString()}</span>
-		<span className="text-sm text-text-secondary">{label}</span>
-	</div>
-);
+const Stat = ({ value, label }: { value?: number | null; label: string }) => {
+	// Safe number extraction: default to 0 if value is null or undefined
+	const numericValue = typeof value === 'number' && !isNaN(value) ? value : 0;
+	return (
+		<div className="flex flex-col items-center sm:items-start">
+			<span className="text-lg font-bold text-text-primary">{numericValue.toLocaleString()}</span>
+			<span className="text-sm text-text-secondary">{label}</span>
+		</div>
+	);
+};
 
 export const ProfileHeader = ({
 	profile,

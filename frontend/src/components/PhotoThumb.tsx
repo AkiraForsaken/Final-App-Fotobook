@@ -41,14 +41,16 @@ export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThum
 				</span>
 			)}
 
-			{/* Likes overlay on hover */}
+			{/* Likes + Title overlay on hover */}
 			<div
-				className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 
-				transition-opacity flex items-center justify-center gap-2 text-white text-sm font-semibold pointer-events-none"
+				className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 text-white pointer-events-none"
 				onClick={() => onOpen(photo)}
 			>
-				<i className="fa-solid fa-heart" />
-				{photo.likesCount}
+				<span className="text-sm font-semibold px-2 text-center line-clamp-2">{photo.title}</span>
+				<span className="text-xs flex items-center gap-1">
+					<i className="fa-solid fa-heart" />
+					{photo.likesCount}
+				</span>
 			</div>
 
 			{/* Owner edit button */}
@@ -58,8 +60,8 @@ export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThum
 						e.stopPropagation();
 						onEdit(photo);
 					}}
-					className="absolute bottom-2 right-2 z-10 bg-white/90 text-text-secondary 
-					cursor-pointer rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface"
+					className="absolute bottom-2 right-2 z-10 bg-white/90 text-text-secondary cursor-pointer
+					rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface"
 					title="Edit photo"
 				>
 					<i className="fa-solid fa-pen text-xs" />
