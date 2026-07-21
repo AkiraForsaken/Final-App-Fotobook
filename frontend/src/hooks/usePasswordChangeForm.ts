@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router';
 import { validatePasswordChange } from '../utils/validation.ts';
 import { userService } from '../service/userService.ts';
 import { useAuth } from './useAuth.ts';
-import type { User } from '../types/index.ts';
 import { APP_ROUTE } from '../utils/routes.ts';
 
 export interface PasswordChangeValues {
@@ -29,7 +28,7 @@ const EMPTY_VALUES: PasswordChangeValues = {
  * On success, logs the user out and redirects to /login — changing a
  * credential invalidates the current session as a security precaution.
  */
-export function usePasswordChangeForm(currentUser: User) {
+export function usePasswordChangeForm() {
 	const { logout } = useAuth();
 	const navigate = useNavigate();
 
@@ -62,13 +61,16 @@ export function usePasswordChangeForm(currentUser: User) {
 			setSubmitting(true);
 			setSubmitError(null);
 			try {
-				await userService.changePassword(currentUser.id, {
+				// currentUser param no longer needed server-side — the backend
+				// identifies the user from the session cookie (req.user.id),
+				// same as every other /users/current/* call.
+				await userService.changePassword({
 					currentPassword: values.currentPassword,
 					newPassword: values.newPassword,
 				});
 
 				setValues(EMPTY_VALUES);
-				logout();
+				await logout(); // now async — clears the cookie server-side too
 				navigate(APP_ROUTE.LOGIN, { replace: true });
 				return true;
 			} catch (err) {
@@ -79,7 +81,7 @@ export function usePasswordChangeForm(currentUser: User) {
 				setSubmitting(false);
 			}
 		},
-		[values, currentUser, logout, navigate]
+		[values, logout, navigate]
 	);
 
 	return { values, errors, submitting, submitError, handleChange, handleSubmit };

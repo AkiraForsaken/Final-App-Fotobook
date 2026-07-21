@@ -1,68 +1,59 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useState } from 'react';
 import { contentService } from '../service/contentService.ts';
+import { usePaginatedContent } from '../hooks/usePaginatedContent.ts';
 import type { Album, Photo } from '../types/index.ts';
 
-export const useFeed = () => {
-	const [feedPhotos, setFeedPhotos] = useState<Photo[]>([]);
-	const [feedAlbums, setFeedAlbums] = useState<Album[]>([]);
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+const PAGE_SIZE = 6;
 
-	const loadFeed = useCallback(async () => {
-		try {
-			setLoading(true);
-			const [photos, albums] = await Promise.all([
-				contentService.getFeedPhotos(),
-				contentService.getFeedAlbums(),
-			]);
-			setFeedPhotos(photos);
-			setFeedAlbums(albums);
-			setError(null);
-		} catch (err) {
-			console.error('Failed to load feed content:', err);
-			setError('Could not load feed content.');
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+export const useFeed = (enabled = true) => {
+	const photoFeed = usePaginatedContent<Photo>(contentService.getFeedPhotos, PAGE_SIZE, enabled);
+	const albumFeed = usePaginatedContent<Album>(contentService.getFeedAlbums, PAGE_SIZE, enabled);
 
-	useEffect(() => {
-		void loadFeed();
-	}, [loadFeed]);
+	// Modal states managed within the hook's domain
+	const [activePhoto, setActivePhoto] = useState<Photo | null>(null);
+	const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
 
-	const toggleLikePhoto = useCallback((photoId: number) => {
-		setFeedPhotos((prev) =>
-			prev.map((photo) => {
-				if (photo.id !== photoId) return photo;
-				return {
-					...photo,
-					likedByMe: !photo.likedByMe,
-					likesCount: photo.likedByMe ? photo.likesCount - 1 : photo.likesCount + 1,
-				};
-			})
-		);
-	}, []);
+	const toggleLikePhoto = (photoId: number) => {
+		const photo = photoFeed.items.find((p) => p.id === photoId);
+		if (!photo) return;
+		const willLike = !photo.likedByMe;
 
-	const toggleLikeAlbum = useCallback((albumId: number) => {
-		setFeedAlbums((prev) =>
-			prev.map((album) => {
-				if (album.id !== albumId) return album;
-				return {
-					...album,
-					likedByMe: !album.likedByMe,
-					likesCount: album.likedByMe ? album.likesCount - 1 : album.likesCount + 1,
-				};
-			})
-		);
-	}, []);
+		const apply = (liked: boolean) => (p: Photo) => ({
+			...p,
+			likedByMe: liked,
+			likesCount: liked ? p.likesCount + 1 : p.likesCount - 1,
+		});
+
+		photoFeed.updateItem(photoId, apply(willLike));
+		const call = willLike ? contentService.likePhoto(photoId) : contentService.unlikePhoto(photoId);
+		call.catch(() => photoFeed.updateItem(photoId, apply(!willLike)));
+	};
+
+	const toggleLikeAlbum = (albumId: number) => {
+		const album = albumFeed.items.find((a) => a.id === albumId);
+		if (!album) return;
+		const willLike = !album.likedByMe;
+
+		const apply = (liked: boolean) => (a: Album) => ({
+			...a,
+			likedByMe: liked,
+			likesCount: liked ? a.likesCount + 1 : a.likesCount - 1,
+		});
+
+		albumFeed.updateItem(albumId, apply(willLike));
+		const call = willLike ? contentService.likeAlbum(albumId) : contentService.unlikeAlbum(albumId);
+		call.catch(() => albumFeed.updateItem(albumId, apply(!willLike)));
+	};
 
 	return {
-		feedPhotos,
-		feedAlbums,
-		loading,
-		error,
+		photoFeed,
+		albumFeed,
+		activePhoto,
+		setActivePhoto,
+		activeAlbum,
+		setActiveAlbum,
 		toggleLikePhoto,
 		toggleLikeAlbum,
-		refetch: loadFeed,
+		loading: photoFeed.loading && albumFeed.loading,
 	};
 };

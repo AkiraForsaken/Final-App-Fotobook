@@ -59,7 +59,7 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 						lastName={author.lastName}
 						size="w-10 h-10"
 					/>
-					<span className="text-sm font-medium text-text-primary hover:underline">
+					<span className="text-sm font-medium truncate text-text-primary hover:underline">
 						{author.firstName} {author.lastName}
 					</span>
 				</button>

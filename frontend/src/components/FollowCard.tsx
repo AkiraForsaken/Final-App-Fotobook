@@ -37,7 +37,9 @@ export const FollowCard = ({
 					src={user.avatarUrl}
 					size="w-36 h-36"
 				/>
-				<p className="font-medium text-text-primary mt-4 truncate hover:underline">{fullName}</p>
+				<p className="font-medium text-text-primary mt-4 truncate max-w-36 hover:underline">
+					{fullName}
+				</p>
 			</button>
 
 			<FollowButton

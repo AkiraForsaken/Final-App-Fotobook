@@ -1,8 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useInfiniteScroll } from '../hooks/useInfiniteScroll.ts';
-import type { FeedMode, Photo, Album } from '../types/index.ts';
-import { useFeed } from '../hooks/useFeed.ts';
+import type { FeedMode } from '../types/index.ts';
 import { PhotoCard } from '../components/PhotoCard.tsx';
 import { AlbumCard } from '../components/AlbumCard.tsx';
 import { FeedToggle } from '../components/FeedToggle.tsx';
@@ -10,21 +8,29 @@ import { ScrollFooter } from '../components/ScrollFooter.tsx';
 import { PhotoModal } from '../components/PhotoModal.tsx';
 import { AlbumModal } from '../components/AlbumModal.tsx';
 import { routeUtils } from '../utils/routes.ts';
-
-const PAGE_SIZE = 6;
+import { useFeed } from '../hooks/useFeed.ts';
+import { useAuth } from '../hooks/useAuth.ts';
 
 export const Feeds = () => {
-	const { feedPhotos, feedAlbums, loading, toggleLikePhoto, toggleLikeAlbum } = useFeed();
+	const { checkingSession } = useAuth();
+	const {
+		photoFeed,
+		albumFeed,
+		activePhoto,
+		setActivePhoto,
+		activeAlbum,
+		setActiveAlbum,
+		toggleLikePhoto,
+		toggleLikeAlbum,
+		loading,
+	} = useFeed(!checkingSession);
+
 	const [feedMode, setFeedMode] = useState<FeedMode>('photos');
 	const navigate = useNavigate();
 
-	// Separate infinite-scroll instances for each mode
-	const photoScroll = useInfiniteScroll(feedPhotos, PAGE_SIZE);
-	const albumScroll = useInfiniteScroll(feedAlbums, PAGE_SIZE);
-
-	// Modal states
-	const [activePhoto, setActivePhoto] = useState<Photo | null>(null);
-	const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
+	if (checkingSession) {
+		return <div className="flex h-screen items-center justify-center">Verifying session...</div>;
+	}
 
 	if (loading) {
 		return (
@@ -34,7 +40,6 @@ export const Feeds = () => {
 
 	return (
 		<div className="">
-			{/* Main content */}
 			<main className="flex flex-col">
 				<FeedToggle mode={feedMode} onChange={setFeedMode} />
 
@@ -42,7 +47,7 @@ export const Feeds = () => {
 					{/* Photos grid  */}
 					<div className={feedMode === 'photos' ? '' : 'hidden'}>
 						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-							{(photoScroll.visibleItems as Photo[]).map((photo) => (
+							{photoFeed.items.map((photo) => (
 								<PhotoCard
 									key={photo.id}
 									photo={photo}
@@ -52,19 +57,18 @@ export const Feeds = () => {
 								/>
 							))}
 						</div>
-						{/* Photo sentinel */}
 						<div
-							ref={(node) => photoScroll.sentinelRef(node)}
+							ref={(node) => photoFeed.sentinelRef(node)}
 							className="mt-4 flex justify-center py-6"
 						>
-							<ScrollFooter hasMore={photoScroll.hasMore || photoScroll.loading} mode="photo" />
+							<ScrollFooter hasMore={photoFeed.hasMore || photoFeed.loadingMore} mode="photo" />
 						</div>
 					</div>
 
 					{/* Albums grid */}
 					<div className={feedMode === 'albums' ? '' : 'hidden'}>
 						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-							{(albumScroll.visibleItems as Album[]).map((album) => (
+							{albumFeed.items.map((album) => (
 								<AlbumCard
 									key={album.id}
 									album={album}
@@ -74,12 +78,11 @@ export const Feeds = () => {
 								/>
 							))}
 						</div>
-						{/* Album sentinel */}
 						<div
-							ref={(node) => albumScroll.sentinelRef(node)}
+							ref={(node) => albumFeed.sentinelRef(node)}
 							className="mt-4 flex justify-center py-6"
 						>
-							<ScrollFooter hasMore={albumScroll.hasMore || albumScroll.loading} mode="album" />
+							<ScrollFooter hasMore={albumFeed.hasMore || albumFeed.loadingMore} mode="album" />
 						</div>
 					</div>
 				</div>

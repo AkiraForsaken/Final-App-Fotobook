@@ -56,7 +56,9 @@ const Carousel = ({ album, onClose }: CarouselProps) => {
 					onClick={goBack}
 					disabled={currentIndex === 0}
 					aria-label="Previous image"
-					className="absolute left-3 z-10 rounded-full bg-white/80 p-2 shadow hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+					className="absolute left-3 z-10 rounded-full bg-white/80 p-2 shadow hover:bg-surface cursor-pointer
+					disabled:opacity-30 disabled:cursor-not-allowed transition-opacity focus-visible:outline-none 
+					focus-visible:ring-2 focus-visible:ring-blue-500"
 				>
 					<i className="fa-solid fa-chevron-left text-text-secondary" />
 				</button>
@@ -71,7 +73,9 @@ const Carousel = ({ album, onClose }: CarouselProps) => {
 					onClick={goForward}
 					disabled={currentIndex === total - 1}
 					aria-label="Next image"
-					className="absolute right-3 z-10 rounded-full bg-white/80 p-2 shadow hover:bg-surface disabled:opacity-30 disabled:cursor-not-allowed transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+					className="absolute right-3 z-10 rounded-full bg-white/80 p-2 shadow hover:bg-surface cursor-pointer
+					disabled:opacity-30 disabled:cursor-not-allowed transition-opacity focus-visible:outline-none 
+					focus-visible:ring-2 focus-visible:ring-blue-500"
 				>
 					<i className="fa-solid fa-chevron-right text-text-secondary" />
 				</button>

@@ -20,8 +20,12 @@ import { AuthProvider } from './contexts/AuthContext.tsx';
 import { useAuth } from './hooks/useAuth.ts';
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-	const { currentUser } = useAuth();
+	const { currentUser, checkingSession } = useAuth();
 	const location = useLocation();
+
+	if (checkingSession) {
+		return <div className="text-center py-20 text-text-muted">Loading...</div>;
+	}
 
 	if (!currentUser) {
 		return <Navigate to="/login" state={{ from: location }} replace />;

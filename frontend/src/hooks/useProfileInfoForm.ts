@@ -63,31 +63,23 @@ export function useProfileInfoForm(currentUser: User) {
 
 			setSubmitting(true);
 			try {
-				// avatarFile is validated + previewed locally but not yet sent to the
-				// backend (see userService — mock API only accepts JSON for now).
-				const updatedUser = await userService.updateProfile(currentUser.id, {
+				// User identified server-side from session cookie.
+				const updatedUser = await userService.updateProfile({
 					firstName: values.firstName.trim(),
 					lastName: values.lastName.trim(),
 					email: values.email.trim(),
+					avatarFile: values.avatarFile,
 				});
 
-				const mergedUser: User = {
-					...currentUser,
-					...updatedUser,
-					avatarUrl: values.avatarFile
-						? URL.createObjectURL(values.avatarFile)
-						: (updatedUser.avatarUrl ?? currentUser.avatarUrl),
-				};
-
-				login(mergedUser); // refreshes AuthContext + localStorage (TopBar, etc. update immediately)
-				return mergedUser;
+				login(updatedUser); // refreshes AuthContext + localStorage (TopBar, etc. update immediately)
+				return updatedUser;
 			} catch {
 				return null;
 			} finally {
 				setSubmitting(false);
 			}
 		},
-		[values, currentUser, login]
+		[values, login]
 	);
 
 	return { values, errors, submitting, handleChange, handleAvatarError, handleSubmit };

@@ -62,9 +62,8 @@ export const Modal = ({
 		<div
 			className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
 			onClick={onClose}
-			aria-hidden="true"
 		>
-			{/* Panel — stop click propagation so clicking inside doesn't close */}
+			/{/* Panel — stop click propagation so clicking inside doesn't close */}
 			<div
 				ref={panelRef}
 				role="dialog"

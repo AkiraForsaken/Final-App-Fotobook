@@ -54,7 +54,8 @@ export const AlbumCard = ({ album, onLike, onClickAlbum, onClickAuthor }: AlbumC
 			<div className="flex flex-col gap-2 px-4 py-3 min-w-0 flex-1">
 				{/* Author */}
 				<button
-					className="flex items-center gap-2 w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+					className="flex items-center gap-2 w-fit cursor-pointer
+					focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
 					onClick={() => onClickAuthor?.(author.id)}
 					aria-label={`View ${author.firstName} ${author.lastName}'s profile`}
 				>
@@ -64,7 +65,7 @@ export const AlbumCard = ({ album, onLike, onClickAlbum, onClickAuthor }: AlbumC
 						lastName={author.lastName}
 						size="w-10 h-10"
 					/>
-					<span className="text-sm font-medium text-text-primary hover:underline">
+					<span className="text-sm font-medium truncate max-w-36 text-text-primary hover:underline">
 						{author.firstName} {author.lastName}
 					</span>
 				</button>
