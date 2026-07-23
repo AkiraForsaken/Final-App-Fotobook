@@ -46,7 +46,7 @@ export const Feeds = () => {
 				<div className="mt-6">
 					{/* Photos grid  */}
 					<div className={feedMode === 'photos' ? '' : 'hidden'}>
-						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+						<div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
 							{photoFeed.items.map((photo) => (
 								<PhotoCard
 									key={photo.id}
@@ -67,7 +67,7 @@ export const Feeds = () => {
 
 					{/* Albums grid */}
 					<div className={feedMode === 'albums' ? '' : 'hidden'}>
-						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+						<div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
 							{albumFeed.items.map((album) => (
 								<AlbumCard
 									key={album.id}

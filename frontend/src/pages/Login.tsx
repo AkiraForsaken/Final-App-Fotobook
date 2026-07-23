@@ -1,19 +1,47 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router';
+import { useNavigate, useLocation, Link } from 'react-router';
 import type { User } from '../types/index.ts';
 import { validateLogin } from '../utils/validation.ts';
 import { cn } from '../utils/cn.ts';
 import { Button } from '../components/myUI/Button.tsx';
+import { Toast } from '../components/myUI/Toast.tsx';
 import { APP_ROUTE } from '../utils/routes.ts';
 import { authService } from '../service/authService.ts';
 
+const REDIRECT_TOAST_KEY = 'fotobook.redirectToast';
+
+const consumeRedirectToast = () => {
+	if (typeof window === 'undefined') return null;
+
+	const raw = window.sessionStorage.getItem(REDIRECT_TOAST_KEY);
+	if (!raw) return null;
+
+	window.sessionStorage.removeItem(REDIRECT_TOAST_KEY);
+	try {
+		return JSON.parse(raw) as { message: string; type: 'success' | 'error' };
+	} catch {
+		return null;
+	}
+};
+
+type LoginLocationState = {
+	toast?: {
+		message: string;
+		type: 'success' | 'error';
+	};
+};
+
 export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 	const navigate = useNavigate();
+	const location = useLocation();
 
 	const [formData, setFormData] = useState({ email: '', password: '' });
 	const [authError, setAuthError] = useState<string | null>(null);
 	const [errors, setErrors] = useState<Record<string, string>>({});
 	const [loading, setLoading] = useState(false);
+	const [toast, setToast] = useState<LoginLocationState['toast'] | null>(() => {
+		return (location.state as LoginLocationState)?.toast ?? consumeRedirectToast() ?? null;
+	});
 
 	const handleSubmit = async (e: React.SubmitEvent) => {
 		e.preventDefault();
@@ -86,6 +114,11 @@ export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 					<span className="text-5xl font-bold text-nav-active-text tracking-tight">FotoBook</span>
 					<p className="mt-1 text-sm text-text-secondary">Sign in to your account</p>
 				</div>
+
+				{/* Toast notification from redirects */}
+				{toast && (
+					<Toast message={toast.message} type={toast.type} onDismiss={() => setToast(null)} />
+				)}
 
 				{/* Error banner */}
 				{authError && (

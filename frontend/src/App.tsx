@@ -163,6 +163,14 @@ const AppContent = () => {
 							}
 						/>
 						<Route
+							path={APP_ROUTE.ADMIN_EDIT_USER}
+							element={
+								<RequireAdmin>
+									<EditProfile />
+								</RequireAdmin>
+							}
+						/>
+						<Route
 							path={APP_ROUTE.ADMIN_PHOTOS}
 							element={
 								<RequireAdmin>

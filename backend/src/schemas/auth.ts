@@ -50,3 +50,8 @@ export const changePasswordRequestSchema = z.object({
 	newPassword: z.string().min(10).max(64),
 });
 export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;
+
+export const adminResetPasswordRequestSchema = z.object({
+	newPassword: z.string().min(10).max(64),
+});
+export type AdminResetPasswordRequest = z.infer<typeof adminResetPasswordRequestSchema>;

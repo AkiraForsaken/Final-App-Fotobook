@@ -10,9 +10,10 @@ import { APP_ROUTE } from '../utils/routes.ts';
 interface TopBarProps {
 	onMenuToggle?: () => void;
 	onSearch?: (query: string) => void;
+	adminLayout?: boolean;
 }
 
-export const TopBar = ({ onMenuToggle, onSearch }: TopBarProps) => {
+export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => {
 	const navigate = useNavigate();
 	const { currentUser, logout } = useAuth();
 	const { theme, setTheme } = useTheme();
@@ -40,7 +41,7 @@ export const TopBar = ({ onMenuToggle, onSearch }: TopBarProps) => {
 							className="shrink-0 text-3xl font-bold text-white tracking-tight cursor-pointer"
 							onClick={() => navigate(APP_ROUTE.HOME)}
 						>
-							FotoBook
+							{adminLayout ? 'FotoBookAdmin' : 'FotoBook'}
 						</span>
 
 						{/* Desktop search */}
@@ -71,7 +72,7 @@ export const TopBar = ({ onMenuToggle, onSearch }: TopBarProps) => {
 										firstName={currentUser.firstName}
 										lastName={currentUser.lastName}
 									/>
-									<span className="hidden md:block text-md font-medium text-white">
+									<span className="hidden md:block text-md font-medium text-white truncate max-w-56">
 										{currentUser.firstName} {currentUser.lastName}
 									</span>
 								</div>

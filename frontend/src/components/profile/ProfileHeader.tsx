@@ -45,10 +45,10 @@ export const ProfileHeader = ({
 			/>
 
 			{/* Info */}
-			<div className="flex flex-col items-center sm:items-start gap-3 flex-1">
+			<div className="flex flex-col items-center sm:items-start gap-2 flex-1">
 				{/* Name + action buttons */}
-				<div className="flex flex-wrap items-center gap-3 sm:gap-6">
-					<h1 className="text-3xl font-semibold text-text-primary">{fullName}</h1>
+				<div className="flex flex-col sm:flex-row flex-wrap items-center gap-2 sm:gap-6">
+					<h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">{fullName}</h1>
 
 					{isOwner ? (
 						<Button onClick={onEditProfile} variant="primary" size="md">

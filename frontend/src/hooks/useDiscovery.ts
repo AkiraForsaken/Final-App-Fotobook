@@ -10,7 +10,7 @@ import { APP_ROUTE } from '../utils/routes.ts';
 const PAGE_SIZE = 6;
 
 export const useDiscovery = (enabled = true) => {
-	const { currentUser } = useAuth();
+	const { currentUser, updateCurrentUser } = useAuth();
 	const navigate = useNavigate();
 	const photoFeed = usePaginatedContent<Photo>(
 		contentService.getDiscoveryPhotos,
@@ -74,11 +74,25 @@ export const useDiscovery = (enabled = true) => {
 			return;
 		}
 
-		setAuthorFollowed(authorId, !currentlyFollowing);
+		const willFollow = !currentlyFollowing;
+		const delta = willFollow ? 1 : -1;
+
+		setAuthorFollowed(authorId, willFollow);
+		updateCurrentUser((user) => ({
+			...user,
+			followingCount: Math.max(0, (user.followingCount ?? 0) + delta),
+		}));
 		const call = currentlyFollowing
 			? userService.unfollowUser(authorId)
 			: userService.followUser(authorId);
-		call.catch(() => setAuthorFollowed(authorId, currentlyFollowing));
+		call.catch(() => {
+			// Revert both feed state and user state on failure
+			setAuthorFollowed(authorId, currentlyFollowing);
+			updateCurrentUser((user) => ({
+				...user,
+				followingCount: Math.max(0, (user.followingCount ?? 0) - delta),
+			}));
+		});
 	};
 
 	return {

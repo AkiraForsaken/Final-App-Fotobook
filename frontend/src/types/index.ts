@@ -91,3 +91,16 @@ export interface Page<T> {
 	items: T[];
 	nextCursor: number | null;
 }
+
+// Row for the admin users table — GET /admin/users.
+export interface AdminUserSummary {
+	id: number;
+	firstName: string;
+	lastName: string;
+	email: string;
+	avatarUrl?: string;
+	isActive: boolean;
+	isAdmin: boolean;
+	createdAt: string;
+	lastLoginAt: string | null;
+}

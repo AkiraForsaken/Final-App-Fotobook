@@ -5,6 +5,13 @@ import { userService } from '../service/userService.ts';
 import { useAuth } from './useAuth.ts';
 import { APP_ROUTE } from '../utils/routes.ts';
 
+const REDIRECT_TOAST_KEY = 'fotobook.redirectToast';
+
+const saveRedirectToast = (toast: { message: string; type: 'success' | 'error' }) => {
+	if (typeof window === 'undefined') return;
+	window.sessionStorage.setItem(REDIRECT_TOAST_KEY, JSON.stringify(toast));
+};
+
 export interface PasswordChangeValues {
 	currentPassword: string;
 	newPassword: string;
@@ -71,7 +78,15 @@ export function usePasswordChangeForm() {
 
 				setValues(EMPTY_VALUES);
 				await logout(); // now async — clears the cookie server-side too
-				navigate(APP_ROUTE.LOGIN, { replace: true });
+				const toast = {
+					message: 'Password changed. Please log in again.',
+					type: 'success' as const,
+				};
+				saveRedirectToast(toast);
+				navigate(APP_ROUTE.LOGIN, {
+					replace: true,
+					state: { toast },
+				});
 				return true;
 			} catch (err) {
 				const message = err instanceof Error ? err.message : 'Failed to change password.';
