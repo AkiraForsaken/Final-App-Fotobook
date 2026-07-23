@@ -1,16 +1,23 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
-import { Button } from './myUI/Button';
+import { Button } from '../myUI/Button';
 import { ProfileHeader } from './ProfileHeader';
-import { ProfileTabs } from './ProfileTabs';
-import { PhotoThumb } from './PhotoThumb';
-import { AlbumThumb } from './AlbumThumb';
-import { FollowCard } from './FollowCard';
-import { PhotoModal } from './PhotoModal';
-import { AlbumModal } from './AlbumModal';
-import type { UserProfile, Photo, Album, FollowRelation, ProfileTab, User } from '../types/index';
-import { APP_ROUTE, routeUtils } from '../utils/routes';
-import type { usePaginatedContent } from '../hooks/usePaginatedContent';
+import { ProfileTabs } from '../ProfileTabs';
+import { PhotoThumb } from '../photo/PhotoThumb';
+import { AlbumThumb } from '../album/AlbumThumb';
+import { FollowCard } from '../FollowCard';
+import { PhotoModal } from '../photo/PhotoModal';
+import { AlbumModal } from '../album/AlbumModal';
+import type {
+	UserProfile,
+	Photo,
+	Album,
+	FollowRelation,
+	ProfileTab,
+	User,
+} from '../../types/index';
+import { APP_ROUTE, routeUtils } from '../../utils/routes';
+import type { usePaginatedContent } from '../../hooks/usePaginatedContent';
 
 // The exact shape each tab's usePaginatedContent() call returns
 type PaginatedSlice<T extends { id: number }> = ReturnType<typeof usePaginatedContent<T>>;

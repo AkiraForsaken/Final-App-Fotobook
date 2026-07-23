@@ -48,27 +48,35 @@ export const EditAlbum = () => {
 		file: null,
 		files: [],
 	});
+	// Track the ID to reset loading/error state during render
+	const [prevRouteAlbumId, setPrevRouteAlbumId] = useState(albumId);
 	const [prevAlbumId, setPrevAlbumId] = useState<number | null>(null);
+
+	if (albumId !== prevRouteAlbumId) {
+		setPrevRouteAlbumId(albumId);
+		setAlbum(null);
+		setLoading(!isNaN(albumId));
+		setLoadError(null);
+	}
 
 	useEffect(() => {
 		if (isNaN(albumId)) return;
 		let active = true;
-		const fetchAlbum = async () => {
-			setLoading(true);
-			setLoadError(null);
-			try {
-				const data = await contentService.getAlbumById(albumId);
+
+		contentService
+			.getAlbumById(albumId)
+			.then((data) => {
 				if (active) setAlbum(data);
-			} catch (err: unknown) {
+			})
+			.catch((err: unknown) => {
 				if (!active) return;
 				setAlbum(null);
 				setLoadError(err instanceof Error ? err.message : 'Could not load this album.');
-			} finally {
+			})
+			.finally(() => {
 				if (active) setLoading(false);
-			}
-		};
+			});
 
-		void fetchAlbum();
 		return () => {
 			active = false;
 		};

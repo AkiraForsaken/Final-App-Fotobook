@@ -23,30 +23,35 @@ export const EditPhoto = () => {
 	const [photo, setPhoto] = useState<Photo | null>(null);
 	const [loading, setLoading] = useState(!isNaN(photoId));
 	const [loadError, setLoadError] = useState<string | null>(null);
+	// Track the ID to reset loading/error state during render
+	const [prevPhotoId, setPrevPhotoId] = useState(photoId);
+
+	if (photoId !== prevPhotoId) {
+		setPrevPhotoId(photoId);
+		setPhoto(null);
+		setLoading(!isNaN(photoId));
+		setLoadError(null);
+	}
 
 	useEffect(() => {
 		if (isNaN(photoId)) {
 			return;
 		}
 		let active = true;
-		const fetchPhoto = async () => {
-			// Wrap in async function to keep logic clean and avoid synchronous render warnings
-			setLoading(true);
-			setLoadError(null);
-
-			try {
-				const data = await contentService.getPhotoById(photoId);
+		contentService
+			.getPhotoById(photoId)
+			.then((data) => {
 				if (active) setPhoto(data);
-			} catch (err: unknown) {
+			})
+			.catch((err: unknown) => {
 				if (!active) return;
 				setPhoto(null);
 				setLoadError(err instanceof Error ? err.message : 'Could not load this photo.');
-			} finally {
+			})
+			.finally(() => {
 				if (active) setLoading(false);
-			}
-		};
+			});
 
-		void fetchPhoto();
 		return () => {
 			active = false;
 		};

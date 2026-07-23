@@ -1,7 +1,7 @@
-import { Avatar } from './myUI/Avatar.tsx';
-import type { Album } from '../types/index.ts';
+import { Avatar } from '../myUI/Avatar.tsx';
+import type { Album } from '../../types/index.ts';
 import { useState } from 'react';
-import { cn } from '../utils/cn.ts';
+import { cn } from '../../utils/cn.ts';
 
 interface AlbumCardProps {
 	album: Album;

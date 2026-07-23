@@ -1,7 +1,7 @@
-import { Avatar } from './myUI/Avatar';
-import { FollowButton } from './FollowButton';
-import type { UserProfile } from '../types/index';
-import { Button } from './myUI/Button';
+import { Avatar } from '../myUI/Avatar';
+import { FollowButton } from '../FollowButton';
+import type { UserProfile } from '../../types/index';
+import { Button } from '../myUI/Button';
 
 interface ProfileHeaderProps {
 	profile: UserProfile;

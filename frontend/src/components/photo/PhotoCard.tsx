@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Avatar } from './myUI/Avatar.tsx';
-import type { Photo } from '../types/index.ts';
-import { cn } from '../utils/cn.ts';
+import { Avatar } from '../myUI/Avatar.tsx';
+import type { Photo } from '../../types/index.ts';
+import { cn } from '../../utils/cn.ts';
 
 interface PhotoCardProps {
 	photo: Photo;

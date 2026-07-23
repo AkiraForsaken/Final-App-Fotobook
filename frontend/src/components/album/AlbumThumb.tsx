@@ -1,29 +1,29 @@
 import { useState } from 'react';
-import type { Photo } from '../types/index';
+import type { Album } from '../../types/index';
 
-interface PhotoThumbProps {
-	photo: Photo;
+interface AlbumThumbProps {
+	album: Album;
 	isOwner?: boolean;
-	onOpen: (photo: Photo) => void;
-	onEdit?: (photo: Photo) => void;
+	onOpen: (album: Album) => void;
+	onEdit?: (album: Album) => void;
 }
 
 /**
- * PhotoThumb — square thumbnail card for the profile photo grid.
- * Shows a lock badge for private photos and an Edit overlay for owners.
+ * AlbumThumb — square thumbnail card for the profile album grid.
+ * Shows image count badge, lock badge for private albums, and Edit for owners.
  */
-export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThumbProps) => {
-	const isPrivate = photo.sharingMode === 'private';
+export const AlbumThumb = ({ album, isOwner = false, onOpen, onEdit }: AlbumThumbProps) => {
+	const isPrivate = album.sharingMode === 'private';
 	const [imgError, setImgError] = useState(false);
 
 	return (
 		<div className="relative group aspect-square bg-bg-page rounded-md overflow-hidden cursor-pointer">
-			{photo.imageUrl && !imgError ? (
+			{album.coverImageUrl && !imgError ? (
 				<img
-					src={photo.imageUrl}
-					alt={photo.title}
+					src={album.coverImageUrl}
+					alt={album.title}
 					className="w-full h-full object-cover transition-transform duration-200 group-hover:scale-105"
-					onClick={() => onOpen(photo)}
+					onClick={() => onOpen(album)}
 					onError={() => setImgError(true)}
 				/>
 			) : (
@@ -41,15 +41,21 @@ export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThum
 				</span>
 			)}
 
-			{/* Likes + Title overlay on hover */}
+			{/* Image count badge */}
+			<span className="absolute top-2 right-2 bg-black/60 text-white text-sm rounded-full px-2 py-0.5 font-medium">
+				<i className="fa-solid fa-images mr-1" />
+				{album.imageUrls.length}
+			</span>
+
+			{/* Likes + title overlay on hover */}
 			<div
 				className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1 text-white pointer-events-none"
-				onClick={() => onOpen(photo)}
+				onClick={() => onOpen(album)}
 			>
-				<span className="text-sm font-semibold px-2 text-center line-clamp-2">{photo.title}</span>
+				<span className="text-sm font-semibold px-2 text-center line-clamp-2">{album.title}</span>
 				<span className="text-xs flex items-center gap-1">
 					<i className="fa-solid fa-heart" />
-					{photo.likesCount}
+					{album.likesCount}
 				</span>
 			</div>
 
@@ -58,11 +64,11 @@ export const PhotoThumb = ({ photo, isOwner = false, onOpen, onEdit }: PhotoThum
 				<button
 					onClick={(e) => {
 						e.stopPropagation();
-						onEdit(photo);
+						onEdit(album);
 					}}
 					className="absolute bottom-2 right-2 z-10 bg-white/90 text-text-secondary cursor-pointer
 					rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface"
-					title="Edit photo"
+					title="Edit album"
 				>
 					<i className="fa-solid fa-pen text-xs" />
 				</button>

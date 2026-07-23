@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { FeedMode, User } from '../types/index.ts';
-import { PhotoCard } from '../components/PhotoCard.tsx';
-import { AlbumCard } from '../components/AlbumCard.tsx';
+import { PhotoCard } from '../components/photo/PhotoCard.tsx';
+import { AlbumCard } from '../components/album/AlbumCard.tsx';
 import { FeedToggle } from '../components/FeedToggle.tsx';
 import { FollowButton } from '../components/FollowButton.tsx';
 import { ScrollFooter } from '../components/ScrollFooter.tsx';
-import { PhotoModal } from '../components/PhotoModal.tsx';
-import { AlbumModal } from '../components/AlbumModal.tsx';
+import { PhotoModal } from '../components/photo/PhotoModal.tsx';
+import { AlbumModal } from '../components/album/AlbumModal.tsx';
 import { routeUtils } from '../utils/routes.ts';
 import { useDiscovery } from '../hooks/useDiscovery.ts';
 import { useAuth } from '../hooks/useAuth.ts';

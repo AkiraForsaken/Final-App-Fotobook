@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Modal } from './myUI/Modal';
-import type { Album } from '../types/index';
-import { cn } from '../utils/cn.ts';
+import { Modal } from '../myUI/Modal.tsx';
+import type { Album } from '../../types/index';
+import { cn } from '../../utils/cn.ts';
 
 interface AlbumModalProps {
 	album: Album | null;

@@ -1,5 +1,5 @@
-import { Modal } from './myUI/Modal';
-import type { Photo } from '../types/index';
+import { Modal } from '../myUI/Modal';
+import type { Photo } from '../../types/index';
 
 interface PhotoModalProps {
 	photo: Photo | null;
