@@ -6,8 +6,8 @@ import { APP_ROUTE } from '../../utils/routes.ts';
 import { useAuth } from '../../hooks/useAuth.ts';
 
 const BASE_NAV_ITEMS = [
-	{ label: 'Feeds', to: '/feeds', icon: 'fa-solid fa-house' },
-	{ label: 'Discovery', to: '/discover', icon: 'fa-solid fa-compass' },
+	{ label: 'Feeds', to: APP_ROUTE.FEEDS, icon: 'fa-solid fa-house' },
+	{ label: 'Discovery', to: APP_ROUTE.DISCOVER, icon: 'fa-solid fa-compass' },
 ];
 
 /**

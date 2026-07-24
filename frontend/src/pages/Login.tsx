@@ -192,7 +192,7 @@ export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				{/* Sign up link */}
 				<p className="mt-8 text-center text-text-secondary">
 					Don't have an account?{' '}
-					<Link to="/signup" className="font-medium text-blue-700 hover:underline">
+					<Link to={APP_ROUTE.SIGNUP} className="font-medium text-blue-700 hover:underline">
 						Sign up
 					</Link>
 				</p>

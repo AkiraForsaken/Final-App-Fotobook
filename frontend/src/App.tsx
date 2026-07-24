@@ -32,7 +32,7 @@ const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 	}
 
 	if (!currentUser) {
-		return <Navigate to="/login" state={{ from: location }} replace />;
+		return <Navigate to={APP_ROUTE.LOGIN} state={{ from: location }} replace />;
 	}
 
 	return <>{children}</>;
@@ -47,7 +47,7 @@ const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
 	}
 
 	if (!currentUser) {
-		return <Navigate to="/login" state={{ from: location }} replace />;
+		return <Navigate to={APP_ROUTE.LOGIN} state={{ from: location }} replace />;
 	}
 
 	if (!currentUser.isActive) {

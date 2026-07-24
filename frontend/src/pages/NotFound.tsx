@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router';
+import { APP_ROUTE } from '../utils/routes';
 
 export const NotFound = () => {
 	return (
@@ -9,7 +10,7 @@ export const NotFound = () => {
 				className={
 					'bg-blue-800 p-2 text-white hover:bg-blue-700 focus-visible:outline-blue-800 rounded'
 				}
-				to={'/discover'}
+				to={APP_ROUTE.DISCOVER}
 			>
 				Go back to discover page
 			</NavLink>

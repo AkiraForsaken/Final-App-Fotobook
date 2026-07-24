@@ -82,7 +82,7 @@ export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => 
 							</>
 						) : (
 							<Button size="md" variant="secondary">
-								<Link to="/login">Log in</Link>
+								<Link to={APP_ROUTE.LOGIN}>Log in</Link>
 							</Button>
 						)}
 					</div>
