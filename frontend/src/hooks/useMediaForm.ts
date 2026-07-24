@@ -14,8 +14,7 @@ interface UseMediaFormOptions {
 export interface MediaPayload {
 	title: string;
 	description: string;
-	sharingMode: string;
-	authorId: number;
+	sharingMode: SharingMode;
 }
 
 function validate(
@@ -55,14 +54,13 @@ function validate(
 /**
  * useMediaForm — manages form state and validation for photo / album create & edit pages.
  *
- * @param onSubmit   Called with a MediaPayload when validation passes.
- *                   Should return the saved resource or throw on failure.
- * @param authorId   The current user's ID — injected into every payload automatically.
- * @param options    mode, initialValues, requireFile.
+ * @param onSubmit  Called with the validated MediaPayload and the currently
+ *                  selected single file (or null) once validation passes.
+ *                  Should return the saved resource or throw on failure.
+ * @param options   mode, initialValues, requireFile.
  */
 export function useMediaForm<T>(
-	onSubmit: (payload: MediaPayload) => Promise<T>,
-	authorId: number,
+	onSubmit: (payload: MediaPayload, file: File | null) => Promise<T>,
 	options: UseMediaFormOptions = {}
 ) {
 	const { mode = 'photo', initialValues, requireFile = true } = options;
@@ -133,10 +131,12 @@ export function useMediaForm<T>(
 					title: values.title.trim(),
 					description: values.description.trim(),
 					sharingMode: values.sharingMode,
-					authorId,
 				};
 
-				const result = await onSubmit(payload);
+				// Only "photo" mode ever sends a single file through this hook.
+				// Album creation happens empty; attaching photos to an album goes
+				// through contentService.addNewPhotoToAlbum directly, not here.
+				const result = await onSubmit(payload, values.file);
 				setSubmitSuccess(true);
 				return result;
 			} catch (err) {
@@ -147,7 +147,7 @@ export function useMediaForm<T>(
 				setSubmitting(false);
 			}
 		},
-		[values, mode, requireFile, authorId, onSubmit]
+		[values, mode, requireFile, onSubmit]
 	);
 
 	return {

@@ -1,6 +1,7 @@
 import { Button } from '../components/myUI/Button';
 import { Link } from 'react-router';
 import type { User } from '../types';
+import { APP_ROUTE } from '../utils/routes';
 
 export const Home = ({ currentUser }: { currentUser: User | null }) => {
 	return (
@@ -28,12 +29,12 @@ export const Home = ({ currentUser }: { currentUser: User | null }) => {
 
 						<div className="flex flex-wrap gap-3">
 							<Button variant="primary" size="lg">
-								<Link to={currentUser ? '/feeds' : '/login'}>
+								<Link to={currentUser ? APP_ROUTE.FEEDS : APP_ROUTE.LOGIN}>
 									{currentUser ? 'Go to Feeds' : 'Log in'}
 								</Link>
 							</Button>
 							<Button variant="primary" size="lg">
-								<Link to={'/discover'}>Discover</Link>
+								<Link to={APP_ROUTE.DISCOVER}>Discover</Link>
 							</Button>
 						</div>
 

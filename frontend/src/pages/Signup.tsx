@@ -215,7 +215,7 @@ export const Signup = ({ onLogin }: { onLogin: (user: User) => void }) => {
 
 				<p className="mt-8 text-center text-text-secondary">
 					Already have an account?{' '}
-					<Link to="/login" className="font-medium text-blue-700 hover:underline">
+					<Link to={APP_ROUTE.LOGIN} className="font-medium text-blue-700 hover:underline">
 						Sign in
 					</Link>
 				</p>

@@ -122,6 +122,11 @@ export async function login(input: LoginRequest) {
 		role: user.role,
 	});
 
+	await prisma.user.update({
+		where: { id: user.id },
+		data: { lastLoginAt: new Date() },
+	});
+
 	return {
 		user: toAuthUserDto(user),
 		accessToken,

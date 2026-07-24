@@ -21,11 +21,13 @@ export const authService = {
 	login: (payload: LoginPayload) =>
 		request<AuthResponse>('/api/auth/login', {
 			method: 'POST',
-			body: JSON.stringify(payload),
+			body: payload,
 		}),
 	signup: (payload: SignupPayload) =>
 		request<AuthResponse>('/api/auth/signup', {
 			method: 'POST',
-			body: JSON.stringify(payload),
+			body: payload,
 		}),
+	logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
+	refresh: () => request<void>('/api/auth/refresh', { method: 'POST' }),
 };

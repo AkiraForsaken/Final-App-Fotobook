@@ -115,33 +115,37 @@ export async function listPublicAlbums({
 
 export async function listAlbumsAdmin({
 	currentUserId,
-	cursor,
+	page = 1,
 	take = 40,
 }: {
 	currentUserId: number | null;
-	cursor?: number;
+	page?: number;
 	take?: number;
 }) {
-	const rows = await prisma.album.findMany({
-		include: albumWithRelations,
-		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-		take: take + 1,
-		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-	});
-
-	const { pageRows, nextCursor } = paginateRows(rows, take);
+	const [rows, totalItems] = await Promise.all([
+		prisma.album.findMany({
+			include: albumWithRelations,
+			orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+			take,
+			skip: (page - 1) * take,
+		}),
+		prisma.album.count(),
+	]);
 
 	const likedAlbumIds = await findLikedAlbumIds(
 		currentUserId,
-		pageRows.map((row) => row.id)
+		rows.map((row) => row.id)
 	);
 	const followedAuthorIds = await findFollowedAuthorIds(
 		currentUserId,
-		pageRows.map((row) => row.author.id)
+		rows.map((row) => row.author.id)
 	);
 	return {
-		items: pageRows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds)),
-		nextCursor,
+		items: rows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds)),
+		page,
+		pageSize: take,
+		totalItems,
+		totalPages: Math.max(1, Math.ceil(totalItems / take)),
 	};
 }
 
@@ -160,10 +164,15 @@ export async function createAlbum(authorId: number, input: CreateAlbumRequest) {
 	return toAlbumDto(row, new Set(), new Set());
 }
 
-export async function updateAlbum(albumId: number, requesterId: number, input: UpdateAlbumRequest) {
+export async function updateAlbum(
+	albumId: number,
+	requesterId: number,
+	requesterRole: 'user' | 'admin',
+	input: UpdateAlbumRequest
+) {
 	const existing = await prisma.album.findUnique({ where: { id: albumId } });
 	if (!existing) throw new NotFoundError('Album not found.');
-	if (existing.authorId !== requesterId) {
+	if (existing.authorId !== requesterId && requesterRole !== 'admin') {
 		throw new ForbiddenError('You can only edit your own albums.');
 	}
 

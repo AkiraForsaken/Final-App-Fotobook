@@ -1,7 +1,7 @@
 import { useParams } from 'react-router';
-import { useProfile } from '../hooks/useProfile';
-import { ProfileView } from '../components/ProfileView';
-import type { User } from '../types/index';
+import { useProfile } from '../hooks/useProfile.ts';
+import { ProfileView } from '../components/profile/ProfileView.tsx';
+import type { User } from '../types/index.ts';
 
 interface PublicProfileProps {
 	currentUser: User | null;
@@ -25,28 +25,29 @@ const ProfileNotFound = ({ userId }: { userId: string }) => (
 export const PublicProfile = ({ currentUser }: PublicProfileProps) => {
 	const { userId } = useParams<{ userId: string }>();
 	const numericId = userId ? parseInt(userId, 10) : NaN;
-	const { profile, photos, albums, following, followers, loading, toggleFollowUser, profilesMap } =
-		useProfile(!isNaN(numericId) ? numericId : null, currentUser);
+	const validId = !isNaN(numericId) ? numericId : null;
 
-	if (!profile) {
-		return <ProfileNotFound userId={userId ?? ''} />;
-	}
+	const { profile, isOwner, loading, error, photos, albums, following, followers, toggleFollow } =
+		useProfile(validId, currentUser);
 
 	if (loading) {
 		return <div className="text-center py-20 text-text-muted">Loading profile...</div>;
 	}
 
+	if (!profile || error) {
+		return <ProfileNotFound userId={userId ?? ''} />;
+	}
+
 	return (
 		<ProfileView
 			profile={profile}
+			currentUser={currentUser}
+			isOwner={isOwner}
 			photos={photos}
 			albums={albums}
 			following={following}
 			followers={followers}
-			profilesMap={profilesMap}
-			currentUser={currentUser}
-			isOwner={false}
-			onFollowToggle={(id) => toggleFollowUser(id)}
+			onFollowToggle={toggleFollow}
 		/>
 	);
 };

@@ -1,96 +1,214 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { contentService } from '../service/contentService.ts';
-import { buildHydratedProfiles } from '../utils/profile.ts';
-import type { User, Album, FollowRelation, Photo, UserProfileData } from '../types/index.ts';
+import { useCallback, useEffect, useState } from 'react';
+import { userService } from '../service/userService.ts';
+import { usePaginatedContent } from './usePaginatedContent.ts';
+import { useAuth } from './useAuth.ts';
+import type { User, UserProfile, Photo, Album, FollowRelation } from '../types/index.ts';
+import { useNavigate } from 'react-router';
+import { APP_ROUTE } from '../utils/routes.ts';
+
+const TAB_PAGE_SIZE = 12;
+
+const EMPTY_PAGE = { items: [], nextCursor: null };
+
+/**
+ * useProfile — drives a single profile page (MyProfile or PublicProfile).
+ */
+// For owner's profile page
+function ownerToProfileHeader(user: User): UserProfile {
+	return {
+		id: user.id,
+		firstName: user.firstName,
+		lastName: user.lastName,
+		avatarUrl: user.avatarUrl,
+		// For the owner, photosCount / albumsCount includes total items (public + private).
+		// Map them directly to publicPhotoCount / publicAlbumCount so ProfileHeader displays the total:
+		publicPhotoCount: user.photosCount ?? 0,
+		publicAlbumCount: user.albumsCount ?? 0,
+		followingCount: user.followingCount ?? 0,
+		// Map plural followersCount from User DTO to singular followerCount on UserProfile:
+		followerCount: user.followersCount ?? 0,
+		isFollowedByMe: false,
+		createdAt: user.createdAt,
+	};
+}
 
 export const useProfile = (userId: number | null, currentUser: User | null) => {
-	const [profiles, setProfiles] = useState<Record<number, UserProfileData>>({});
-	const [loading, setLoading] = useState(true);
-	const [error, setError] = useState<string | null>(null);
+	const { updateCurrentUser } = useAuth();
+	const navigate = useNavigate();
+	const isOwner =
+		currentUser !== null && userId !== null && String(currentUser.id) === String(userId);
 
-	const loadProfileData = useCallback(async () => {
-		try {
-			setLoading(true);
-			const [feedPhotos, feedAlbums, discoveryPhotos, discoveryAlbums, rawProfiles] =
-				await Promise.all([
-					contentService.getFeedPhotos(),
-					contentService.getFeedAlbums(),
-					contentService.getDiscoveryPhotos(),
-					contentService.getDiscoveryAlbums(),
-					contentService.getProfiles(),
-				]);
+	// ── Profile header ──────────────────────────────────────────────────
+	const [publicProfile, setPublicProfile] = useState<UserProfile | null>(null);
+	const [profileLoading, setProfileLoading] = useState(true);
+	const [profileError, setProfileError] = useState<string | null>(null);
 
-			setProfiles(
-				buildHydratedProfiles(rawProfiles, feedPhotos, feedAlbums, discoveryPhotos, discoveryAlbums)
-			);
-			setError(null);
-		} catch (err) {
-			console.error('Failed to load profile content:', err);
-			setError('Could not load profile content.');
-		} finally {
-			setLoading(false);
+	const profile: UserProfile | null =
+		isOwner && currentUser ? ownerToProfileHeader(currentUser) : publicProfile;
+
+	const loadProfile = useCallback(async () => {
+		if (userId === null) {
+			setPublicProfile(null);
+			setProfileLoading(false);
+			return;
 		}
-	}, []);
+
+		if (isOwner) {
+			// Owner profile is managed locally by AuthContext + useEffect above
+			setProfileLoading(false);
+			setProfileError(null);
+			return;
+		}
+
+		setProfileLoading(true);
+		setProfileError(null);
+
+		try {
+			const publicData = await userService.getPublicProfile(userId);
+			setPublicProfile(publicData);
+		} catch (err) {
+			console.error('Failed to load profile:', err);
+			setProfileError('Could not load profile.');
+		} finally {
+			setProfileLoading(false);
+		}
+	}, [userId, isOwner]);
 
 	useEffect(() => {
-		void loadProfileData();
-	}, [loadProfileData]);
+		void loadProfile();
+	}, [loadProfile]);
 
-	const toggleFollowUser = useCallback((targetUserId: number) => {
-		setProfiles((prev) => {
-			if (!prev[targetUserId]) return prev;
-			const isFollowing = prev[targetUserId].profile.isFollowedByMe;
-			return {
-				...prev,
-				[targetUserId]: {
-					...prev[targetUserId],
-					profile: {
-						...prev[targetUserId].profile,
-						isFollowedByMe: !isFollowing,
-						followerCount: isFollowing
-							? prev[targetUserId].profile.followerCount - 1
-							: prev[targetUserId].profile.followerCount + 1,
-					},
-					following: prev[targetUserId].following.map((relation) =>
-						relation.id === targetUserId ? { ...relation, isFollowedByMe: !isFollowing } : relation
-					),
-					followers: prev[targetUserId].followers.map((relation) =>
-						relation.id === targetUserId ? { ...relation, isFollowedByMe: !isFollowing } : relation
-					),
-				},
+	// Guarded so an invalid/missing userId never fires a request with a bad id.
+	const fetchPhotos = useCallback(
+		(cursor: number | undefined, take: number) =>
+			userId === null
+				? Promise.resolve(EMPTY_PAGE)
+				: userService.getUserPhotos(userId, cursor, take),
+		[userId]
+	);
+	const fetchAlbums = useCallback(
+		(cursor: number | undefined, take: number) =>
+			userId === null
+				? Promise.resolve(EMPTY_PAGE)
+				: userService.getUserAlbums(userId, cursor, take),
+		[userId]
+	);
+	const fetchFollowers = useCallback(
+		(cursor: number | undefined, take: number) =>
+			userId === null
+				? Promise.resolve(EMPTY_PAGE)
+				: userService.getUserFollowers(userId, cursor, take),
+		[userId]
+	);
+	const fetchFollowing = useCallback(
+		(cursor: number | undefined, take: number) =>
+			userId === null
+				? Promise.resolve(EMPTY_PAGE)
+				: userService.getUserFollowing(userId, cursor, take),
+		[userId]
+	);
+	const resetKey = `${userId}-${currentUser?.id ?? 'guest'}`;
+	const photos = usePaginatedContent<Photo>(fetchPhotos, TAB_PAGE_SIZE, true, resetKey);
+	const albums = usePaginatedContent<Album>(fetchAlbums, TAB_PAGE_SIZE, true, resetKey);
+	const followers = usePaginatedContent<FollowRelation>(
+		fetchFollowers,
+		TAB_PAGE_SIZE,
+		true,
+		resetKey
+	);
+	const following = usePaginatedContent<FollowRelation>(
+		fetchFollowing,
+		TAB_PAGE_SIZE,
+		true,
+		resetKey
+	);
+
+	// Follow / unfollow ANY user currently visible on this page — the
+	// profile subject itself, or a card in the followers/following lists.
+	const findCurrentlyFollowing = useCallback(
+		(targetUserId: number): boolean | undefined => {
+			if (profile && profile.id === targetUserId) return profile.isFollowedByMe;
+			const inFollowers = followers.items.find((u) => u.id === targetUserId);
+			if (inFollowers) return inFollowers.isFollowedByMe;
+			const inFollowing = following.items.find((u) => u.id === targetUserId);
+			if (inFollowing) return inFollowing.isFollowedByMe;
+			return undefined;
+		},
+		[profile, followers.items, following.items]
+	);
+
+	const toggleFollow = useCallback(
+		(targetUserId: number) => {
+			if (!currentUser) {
+				navigate(APP_ROUTE.LOGIN);
+				return;
+			}
+			const currentlyFollowing = findCurrentlyFollowing(targetUserId);
+			if (currentlyFollowing === undefined) return;
+			const willFollow = !currentlyFollowing;
+			const delta = willFollow ? 1 : -1;
+
+			const applyProfile = (followed: boolean) => {
+				if (!profile || profile.id !== targetUserId) return;
+				setPublicProfile((prev) =>
+					prev
+						? {
+								...prev,
+								isFollowedByMe: followed,
+								followerCount: Math.max(0, prev.followerCount + delta),
+							}
+						: prev
+				);
 			};
-		});
-	}, []);
 
-	const profileInfo = useMemo(() => {
-		if (!userId) return undefined;
-		return profiles[userId];
-	}, [profiles, userId]);
+			const applyLists = (followed: boolean) => {
+				followers.updateItem(targetUserId, (u) => ({ ...u, isFollowedByMe: followed }));
+				following.updateItem(targetUserId, (u) => ({ ...u, isFollowedByMe: followed }));
+			};
 
-	const ownerId = currentUser?.id ?? null;
-	const photos: Photo[] = profileInfo
-		? ownerId === userId
-			? profileInfo.ownerPhotos
-			: profileInfo.publicPhotos
-		: [];
-	const albums: Album[] = profileInfo
-		? ownerId === userId
-			? profileInfo.ownerAlbums
-			: profileInfo.publicAlbums
-		: [];
-	const following: FollowRelation[] = profileInfo?.following ?? [];
-	const followers: FollowRelation[] = profileInfo?.followers ?? [];
+			updateCurrentUser((user) => ({
+				...user,
+				followingCount: Math.max(0, (user.followingCount ?? 0) + delta),
+			}));
+
+			applyProfile(willFollow);
+			applyLists(willFollow);
+
+			const call = willFollow
+				? userService.followUser(targetUserId)
+				: userService.unfollowUser(targetUserId);
+
+			call.catch(() => {
+				// Revert only if network request actually fails
+				updateCurrentUser((user) => ({
+					...user,
+					followingCount: Math.max(0, (user.followingCount ?? 0) - delta),
+				}));
+				applyProfile(currentlyFollowing);
+				applyLists(currentlyFollowing);
+			});
+		},
+		[
+			currentUser,
+			navigate,
+			profile,
+			followers,
+			following,
+			findCurrentlyFollowing,
+			updateCurrentUser,
+		]
+	);
 
 	return {
-		profile: profileInfo?.profile ?? null,
-		photos,
+		profile,
+		isOwner,
+		loading: profileLoading,
+		error: profileError,
+		photos, // { items, loading, loadingMore, hasMore, sentinelRef, refetch, updateItem }
 		albums,
-		following,
 		followers,
-		profilesMap: profiles,
-		loading,
-		error,
-		toggleFollowUser,
-		refetch: loadProfileData, // pages can trigger refetch after create / edit / delete
+		following,
+		toggleFollow,
+		refetch: loadProfile, // profile header only — call photos.refetch() etc. for a specific tab
 	};
 };

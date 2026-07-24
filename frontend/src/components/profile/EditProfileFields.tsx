@@ -1,6 +1,6 @@
-import { cn } from '../utils/cn.ts';
-import { AvatarUploadZone } from './AvatarUploadZone.tsx';
-import type { ProfileInfoValues, ProfileInfoErrors } from '../hooks/useProfileInfoForm.ts';
+import { cn } from '../../utils/cn.ts';
+import { AvatarUploadZone } from '../AvatarUploadZone.tsx';
+import type { ProfileInfoValues, ProfileInfoErrors } from '../../hooks/useProfileInfoForm.ts';
 
 interface EditProfileFieldsProps {
 	values: ProfileInfoValues;

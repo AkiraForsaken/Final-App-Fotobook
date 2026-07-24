@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
-import { Button } from './myUI/Button';
+import { Button } from '../myUI/Button';
 import { ProfileHeader } from './ProfileHeader';
-import { ProfileTabs } from './ProfileTabs';
-import { PhotoThumb } from './PhotoThumb';
-import { AlbumThumb } from './AlbumThumb';
-import { FollowCard } from './FollowCard';
-import { PhotoModal } from './PhotoModal';
-import { AlbumModal } from './AlbumModal';
+import { ProfileTabs } from '../ProfileTabs';
+import { PhotoThumb } from '../photo/PhotoThumb';
+import { AlbumThumb } from '../album/AlbumThumb';
+import { FollowCard } from '../FollowCard';
+import { PhotoModal } from '../photo/PhotoModal';
+import { AlbumModal } from '../album/AlbumModal';
 import type {
 	UserProfile,
 	Photo,
@@ -15,17 +15,19 @@ import type {
 	FollowRelation,
 	ProfileTab,
 	User,
-	UserProfileData,
-} from '../types/index';
-import { APP_ROUTE, routeUtils } from '../utils/routes';
+} from '../../types/index';
+import { APP_ROUTE, routeUtils } from '../../utils/routes';
+import type { usePaginatedContent } from '../../hooks/usePaginatedContent';
+
+// The exact shape each tab's usePaginatedContent() call returns
+type PaginatedSlice<T extends { id: number }> = ReturnType<typeof usePaginatedContent<T>>;
 
 interface ProfileViewProps {
 	profile: UserProfile;
-	photos: Photo[];
-	albums: Album[];
-	following: FollowRelation[];
-	followers: FollowRelation[];
-	profilesMap?: Record<number, UserProfileData>;
+	photos: PaginatedSlice<Photo>;
+	albums: PaginatedSlice<Album>;
+	following: PaginatedSlice<FollowRelation>;
+	followers: PaginatedSlice<FollowRelation>;
 	currentUser: User | null;
 	isOwner?: boolean;
 	onFollowToggle?: (userId: number) => void;
@@ -39,13 +41,26 @@ const EmptyState = ({ message, action }: { message: string; action?: React.React
 	</div>
 );
 
+// Lightweight infinite-scroll footer shared by every tab — shows a spinner
+// while the next page loads, renders nothing once there's nothing left.
+const LoadMoreFooter = ({
+	sentinelRef,
+	loadingMore,
+}: {
+	sentinelRef: (node: HTMLDivElement | null) => void;
+	loadingMore: boolean;
+}) => (
+	<div ref={sentinelRef} className="flex justify-center py-6">
+		{loadingMore && <i className="fa-solid fa-spinner fa-spin text-text-muted" />}
+	</div>
+);
+
 export const ProfileView = ({
 	profile,
 	photos,
 	albums,
 	following,
 	followers,
-	profilesMap = {},
 	currentUser,
 	isOwner = false,
 	onFollowToggle,
@@ -72,7 +87,7 @@ export const ProfileView = ({
 					</Button>
 				</div>
 			)}
-			{photos.length === 0 ? (
+			{photos.items.length === 0 && !photos.loading ? (
 				<EmptyState
 					message="No photos yet."
 					action={
@@ -84,17 +99,20 @@ export const ProfileView = ({
 					}
 				/>
 			) : (
-				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2">
-					{photos.map((photo) => (
-						<PhotoThumb
-							key={photo.id}
-							photo={photo}
-							isOwner={isOwner}
-							onOpen={(p) => setActivePhoto(p)}
-							onEdit={isOwner ? (p) => navigate(routeUtils.getEditPhoto(p.id)) : undefined}
-						/>
-					))}
-				</div>
+				<>
+					<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2">
+						{photos.items.map((photo) => (
+							<PhotoThumb
+								key={photo.id}
+								photo={photo}
+								isOwner={isOwner}
+								onOpen={(p) => setActivePhoto(p)}
+								onEdit={isOwner ? (p) => navigate(routeUtils.getEditPhoto(p.id)) : undefined}
+							/>
+						))}
+					</div>
+					<LoadMoreFooter sentinelRef={photos.sentinelRef} loadingMore={photos.loadingMore} />
+				</>
 			)}
 		</>
 	);
@@ -109,7 +127,7 @@ export const ProfileView = ({
 					</Button>
 				</div>
 			)}
-			{albums.length === 0 ? (
+			{albums.items.length === 0 && !albums.loading ? (
 				<EmptyState
 					message="No albums yet."
 					action={
@@ -121,40 +139,41 @@ export const ProfileView = ({
 					}
 				/>
 			) : (
-				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2">
-					{albums.map((album) => (
-						<AlbumThumb
-							key={album.id}
-							album={album}
-							isOwner={isOwner}
-							onOpen={(a) => setActiveAlbum(a)}
-							onEdit={isOwner ? (a) => navigate(routeUtils.getEditAlbum(a.id)) : undefined}
-						/>
-					))}
-				</div>
+				<>
+					<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2">
+						{albums.items.map((album) => (
+							<AlbumThumb
+								key={album.id}
+								album={album}
+								isOwner={isOwner}
+								onOpen={(a) => setActiveAlbum(a)}
+								onEdit={isOwner ? (a) => navigate(routeUtils.getEditAlbum(a.id)) : undefined}
+							/>
+						))}
+					</div>
+					<LoadMoreFooter sentinelRef={albums.sentinelRef} loadingMore={albums.loadingMore} />
+				</>
 			)}
 		</>
 	);
 
-	const followList = (users: FollowRelation[], emptyMessage: string) =>
-		users.length === 0 ? (
+	const followList = (slice: PaginatedSlice<FollowRelation>, emptyMessage: string) =>
+		slice.items.length === 0 && !slice.loading ? (
 			<EmptyState message={emptyMessage} />
 		) : (
-			<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2">
-				{users.map((user) => {
-					const liveIsFollowing =
-						profilesMap[user.id]?.profile.isFollowedByMe ?? user.isFollowedByMe;
-					return (
+			<>
+				<div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-1 sm:gap-2">
+					{slice.items.map((user) => (
 						<FollowCard
 							key={user.id}
 							user={user}
 							currentUserId={currentUser?.id}
-							isFollowing={liveIsFollowing}
 							onFollowToggle={() => onFollowToggle?.(user.id)}
 						/>
-					);
-				})}
-			</div>
+					))}
+				</div>
+				<LoadMoreFooter sentinelRef={slice.sentinelRef} loadingMore={slice.loadingMore} />
+			</>
 		);
 
 	return (

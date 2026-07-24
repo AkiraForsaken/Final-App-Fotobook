@@ -18,13 +18,40 @@ import { ContentLayout } from './components/layouts/ContentLayout.tsx';
 import { ErrorBoundary } from './components/ErrorBoundary.tsx';
 import { AuthProvider } from './contexts/AuthContext.tsx';
 import { useAuth } from './hooks/useAuth.ts';
+import { AdminLayout } from './components/layouts/AdminLayout.tsx';
+import { ManageUsers } from './pages/admin/ManageUsers.tsx';
+import { ManagePhotos } from './pages/admin/ManagePhotos.tsx';
+import { ManageAlbums } from './pages/admin/ManageAlbums.tsx';
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-	const { currentUser } = useAuth();
+	const { currentUser, checkingSession } = useAuth();
 	const location = useLocation();
 
+	if (checkingSession) {
+		return <div className="text-center py-20 text-text-muted">Loading...</div>;
+	}
+
 	if (!currentUser) {
-		return <Navigate to="/login" state={{ from: location }} replace />;
+		return <Navigate to={APP_ROUTE.LOGIN} state={{ from: location }} replace />;
+	}
+
+	return <>{children}</>;
+};
+
+const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
+	const { currentUser, checkingSession } = useAuth();
+	const location = useLocation();
+
+	if (checkingSession) {
+		return <div className="text-center py-20 text-text-muted">Loading...</div>;
+	}
+
+	if (!currentUser) {
+		return <Navigate to={APP_ROUTE.LOGIN} state={{ from: location }} replace />;
+	}
+
+	if (!currentUser.isActive) {
+		return <Navigate to={APP_ROUTE.HOME} replace />;
 	}
 
 	return <>{children}</>;
@@ -114,6 +141,51 @@ const AppContent = () => {
 						/>
 
 						<Route path="*" element={<NotFound />} />
+					</Route>
+
+					{/* Admin dashboard — separate shell (AdminLayout), each route
+					    individually RequireAdmin-guarded like the pattern above. */}
+					<Route element={<AdminLayout />}>
+						<Route
+							path={APP_ROUTE.ADMIN}
+							element={
+								<RequireAdmin>
+									<Navigate to={APP_ROUTE.ADMIN_USERS} replace />
+								</RequireAdmin>
+							}
+						/>
+						<Route
+							path={APP_ROUTE.ADMIN_USERS}
+							element={
+								<RequireAdmin>
+									<ManageUsers />
+								</RequireAdmin>
+							}
+						/>
+						<Route
+							path={APP_ROUTE.ADMIN_EDIT_USER}
+							element={
+								<RequireAdmin>
+									<EditProfile />
+								</RequireAdmin>
+							}
+						/>
+						<Route
+							path={APP_ROUTE.ADMIN_PHOTOS}
+							element={
+								<RequireAdmin>
+									<ManagePhotos />
+								</RequireAdmin>
+							}
+						/>
+						<Route
+							path={APP_ROUTE.ADMIN_ALBUMS}
+							element={
+								<RequireAdmin>
+									<ManageAlbums />
+								</RequireAdmin>
+							}
+						/>
 					</Route>
 				</Routes>
 			</ErrorBoundary>

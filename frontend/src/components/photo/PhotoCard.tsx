@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import { Avatar } from './myUI/Avatar.tsx';
-import type { Photo } from '../types/index.ts';
-import { cn } from '../utils/cn.ts';
+import { Avatar } from '../myUI/Avatar.tsx';
+import type { Photo } from '../../types/index.ts';
+import { cn } from '../../utils/cn.ts';
 
 interface PhotoCardProps {
 	photo: Photo;
@@ -20,11 +20,14 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 	});
 
 	return (
-		<article className="flex items-stretch overflow-hidden rounded-lg bg-surface shadow-sm ring-1 ring-gray-200 hover:shadow-md transition-shadow duration-150">
-			{/* Thumbnail */}
+		<article
+			className="flex flex-col md:flex-row overflow-hidden rounded-lg bg-surface shadow-sm 
+		ring-1 ring-gray-200 hover:shadow-md transition-shadow duration-150"
+		>
+			{/* Thumbnail for larger screens */}
 			<button
-				className="w-64 shrink-0 cursor-pointer
-				focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
+				className="hidden w-full max-w-none shrink-0 cursor-pointer md:block md:w-64
+					focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500"
 				onClick={() => onClickPhoto?.(photo)}
 				aria-label={`View photo: ${photo.title}`}
 			>
@@ -44,12 +47,11 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 				)}
 			</button>
 
-			{/* Content */}
+			{/* Author on top for small screens, content / right side on large screens */}
 			<div className="flex flex-col gap-2 px-4 py-3 min-w-0 flex-1">
-				{/* Author */}
 				<button
 					className="flex items-center gap-2 w-fit cursor-pointer
-          focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
+					focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 rounded"
 					onClick={() => onClickAuthor?.(author.id)}
 					aria-label={`View ${author.firstName} ${author.lastName}'s profile`}
 				>
@@ -59,9 +61,31 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 						lastName={author.lastName}
 						size="w-10 h-10"
 					/>
-					<span className="text-sm font-medium text-text-primary hover:underline">
+					<span className="text-sm font-medium truncate text-text-primary hover:underline">
 						{author.firstName} {author.lastName}
 					</span>
+				</button>
+
+				{/* Thumbnail for small screens */}
+				<button
+					className="relative w-full overflow-hidden rounded-lg cursor-pointer md:hidden mx-auto"
+					onClick={() => onClickPhoto?.(photo)}
+					aria-label={`View photo: ${photo.title}`}
+				>
+					{photo.imageUrl && !imgError ? (
+						<img
+							src={photo.imageUrl}
+							alt={photo.title}
+							className="aspect-[4/3] w-full object-cover"
+							onError={() => setImgError(true)}
+						/>
+					) : (
+						<img
+							src={'/assets/fallback.png'}
+							alt={'Error Fallback image'}
+							className="aspect-[4/3] w-full object-cover"
+						/>
+					)}
 				</button>
 
 				{/* Title */}

@@ -1,7 +1,6 @@
-import { useProfile } from '../hooks/useProfile';
-import { ProfileView } from '../components/ProfileView';
-import type { User } from '../types';
-// import { MY_USER_ID } from '../data/profileMockData';
+import { useProfile } from '../hooks/useProfile.ts';
+import { ProfileView } from '../components/profile/ProfileView.tsx';
+import type { User } from '../types/index.ts';
 
 interface MyProfileProps {
 	currentUser: User;
@@ -12,30 +11,28 @@ interface MyProfileProps {
  * Shows private content, Edit buttons, Add Photo/Album actions.
  * Protected by RequireAuth in App.tsx.
  */
-
 export const MyProfile = ({ currentUser }: MyProfileProps) => {
-	const { profile, photos, albums, following, followers, loading, toggleFollowUser, profilesMap } =
+	const { profile, isOwner, loading, error, photos, albums, following, followers, toggleFollow } =
 		useProfile(currentUser.id, currentUser);
-
-	if (!profile) {
-		return <div className="text-center py-20 text-text-muted">Profile data unavailable.</div>;
-	}
 
 	if (loading) {
 		return <div className="text-center py-20 text-text-muted">Loading profile...</div>;
 	}
 
+	if (!profile || error) {
+		return <div className="text-center py-20 text-text-muted">Profile data unavailable.</div>;
+	}
+
 	return (
 		<ProfileView
 			profile={profile}
+			currentUser={currentUser}
+			isOwner={isOwner}
 			photos={photos}
 			albums={albums}
 			following={following}
 			followers={followers}
-			profilesMap={profilesMap}
-			currentUser={currentUser}
-			isOwner={true}
-			onFollowToggle={(id) => toggleFollowUser(id)}
+			onFollowToggle={toggleFollow}
 		/>
 	);
 };

@@ -4,10 +4,28 @@ import * as albumService from '../services/album.service.js';
 import * as userService from '../services/user.service.js';
 
 export async function listUsers(req: Request, res: Response) {
-	const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
-	const take = req.query.take ? Number(req.query.take) : 20;
-	const users = await userService.listUsers(req.user!.id, cursor, take);
-	res.json(users);
+	const page = req.query.page ? Number(req.query.page) : 1;
+	const take = req.query.take ? Number(req.query.take) : 40;
+	const result = await userService.listUsers(req.user!.id, page, take);
+	res.json(result);
+}
+
+export async function getUserById(req: Request, res: Response) {
+	const userId = Number(req.params.id);
+	const profile = await userService.getUserProfile(userId, req.user?.id ?? null);
+	res.json(profile);
+}
+
+export async function setUserPassword(req: Request, res: Response) {
+	const userId = Number(req.params.id);
+	await userService.adminSetPassword(userId, req.body.newPassword);
+	res.json({ message: 'Password updated. The user will need to log in again.' });
+}
+
+export async function adminUpdateUser(req: Request, res: Response) {
+	const userId = Number(req.params.id);
+	const profile = await userService.updateProfile(userId, req.body, req.file);
+	res.json(profile);
 }
 
 export async function adminDeactivateUser(req: Request, res: Response) {
@@ -29,20 +47,22 @@ export async function adminDeleteUser(req: Request, res: Response) {
 }
 
 export async function getPhotos(req: Request, res: Response) {
-	const { cursor, take } = req.query as unknown as { cursor?: number; take: number }; // can add type query validate variant later
+	const page = req.query.page ? Number(req.query.page) : 1;
+	const take = req.query.take ? Number(req.query.take) : 40;
 	const result = await photoService.listPhotosAdmin({
 		currentUserId: req.user?.id ?? null,
-		cursor,
+		page,
 		take,
 	});
 	res.json(result);
 }
 
 export async function getAlbums(req: Request, res: Response) {
-	const { cursor, take } = req.query as unknown as { cursor?: number; take: number };
+	const page = req.query.page ? Number(req.query.page) : 1;
+	const take = req.query.take ? Number(req.query.take) : 40;
 	const result = await albumService.listAlbumsAdmin({
 		currentUserId: req.user?.id ?? null,
-		cursor,
+		page,
 		take,
 	});
 	res.json(result);
