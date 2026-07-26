@@ -12,34 +12,13 @@ import type {
 import bcrypt from 'bcryptjs';
 import { env } from '../schemas/env.js';
 import { dateToISO, roleToIsAdmin } from '../utils/dto-helpers.js';
+import { toAuthUserDto } from '../utils/dto/auth.dto.js';
 
 const BCRYPT_ROUNDS = 10;
 const REFRESH_TOKEN_MAX_AGE_DAYS = 7;
 const EMAIL_VERIFICATION_TOKEN_TTL_HOURS = 24;
 const PASSWORD_RESET_TOKEN_TTL_HOURS = 1;
 const REQUIRE_EMAIL_VERIFICATION = env.REQUIRE_EMAIL_VERIFICATION === 'true';
-
-function toAuthUserDto(user: {
-	id: number;
-	firstName: string;
-	lastName: string;
-	email: string;
-	avatarUrl: string | null;
-	isActive: boolean;
-	role: 'user' | 'admin';
-	createdAt: Date;
-}) {
-	return {
-		id: user.id,
-		firstName: user.firstName,
-		lastName: user.lastName,
-		email: user.email,
-		avatarUrl: user.avatarUrl,
-		isActive: user.isActive,
-		isAdmin: roleToIsAdmin(user.role),
-		createdAt: dateToISO(user.createdAt),
-	};
-}
 
 async function createAuthTokens(user: { id: number; role: 'user' | 'admin' }) {
 	const { token: refreshToken, dbRecord } = await createRefreshToken(user.id);

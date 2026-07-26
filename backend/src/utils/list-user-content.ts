@@ -2,7 +2,7 @@ import { prisma } from '../prisma/client.js';
 import { NotFoundError } from './app-error.js';
 import { findFollowedAuthorIds, paginateRows } from './helpers.js';
 
-interface PaginatedUserListOptions {
+export interface PaginatedUserListOptions {
 	targetUserId: number;
 	currentUserId: number | null;
 	currentUserRole: 'user' | 'admin';

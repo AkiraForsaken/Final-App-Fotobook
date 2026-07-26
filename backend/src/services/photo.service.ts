@@ -3,13 +3,8 @@ import { NotFoundError, ForbiddenError } from '../utils/app-error.js';
 import { storage } from './storage.service.js';
 import type { CreatePhotoRequest, UpdatePhotoRequest } from '../schemas/photo.js';
 import type { Prisma } from '@prisma/client';
-import {
-	findFollowedAuthorIds,
-	findLikedPhotoIds,
-	paginateRows,
-	photoWithRelations,
-	toPhotoDto,
-} from '../utils/helpers.js';
+import { findLikedPhotoIds, photoWithRelations, toPhotoDto } from '../utils/dto/photo.dto.js';
+import { findFollowedAuthorIds, paginateRows } from '../utils/helpers.js';
 
 interface ListPublicPhotosOptions {
 	authorIds?: number[]; // restrict to these authors (Feed); omit for Discovery
