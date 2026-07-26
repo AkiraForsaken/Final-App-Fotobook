@@ -9,7 +9,7 @@ async function getFollowedAuthorIds(userId: number | null): Promise<number[] | u
 		where: { followerId: userId },
 		select: { followingId: true },
 	});
-	return follows.map((f) => f.followingId);
+	return [...follows.map((f) => f.followingId), userId];
 }
 
 export async function feedPhotos(req: Request, res: Response) {

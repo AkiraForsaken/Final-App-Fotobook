@@ -73,6 +73,7 @@ export function toAlbumDto(
 		coverImageUrl:
 			row.coverPhoto?.imageUrl ?? row.photoLinks[0]?.photo.imageUrl ?? DEFAULT_COVER_URL,
 		imageUrls: row.photoLinks.map((link) => link.photo.imageUrl),
+		photoIds: row.photoLinks.map((link) => link.photo.id),
 		sharingMode: row.sharingMode,
 		likesCount: row._count.likes,
 		likedByMe: likedAlbumIds.has(row.id),

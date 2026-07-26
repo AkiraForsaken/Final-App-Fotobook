@@ -3,8 +3,14 @@ import { useNavigate } from 'react-router';
 import { validatePasswordChange } from '../utils/validation.ts';
 import { userService } from '../service/userService.ts';
 import { useAuth } from './useAuth.ts';
-import type { User } from '../types/index.ts';
 import { APP_ROUTE } from '../utils/routes.ts';
+
+const REDIRECT_TOAST_KEY = 'fotobook.redirectToast';
+
+const saveRedirectToast = (toast: { message: string; type: 'success' | 'error' }) => {
+	if (typeof window === 'undefined') return;
+	window.sessionStorage.setItem(REDIRECT_TOAST_KEY, JSON.stringify(toast));
+};
 
 export interface PasswordChangeValues {
 	currentPassword: string;
@@ -29,7 +35,7 @@ const EMPTY_VALUES: PasswordChangeValues = {
  * On success, logs the user out and redirects to /login — changing a
  * credential invalidates the current session as a security precaution.
  */
-export function usePasswordChangeForm(currentUser: User) {
+export function usePasswordChangeForm() {
 	const { logout } = useAuth();
 	const navigate = useNavigate();
 
@@ -62,14 +68,25 @@ export function usePasswordChangeForm(currentUser: User) {
 			setSubmitting(true);
 			setSubmitError(null);
 			try {
-				await userService.changePassword(currentUser.id, {
+				// currentUser param no longer needed server-side — the backend
+				// identifies the user from the session cookie (req.user.id),
+				// same as every other /users/current/* call.
+				await userService.changePassword({
 					currentPassword: values.currentPassword,
 					newPassword: values.newPassword,
 				});
 
 				setValues(EMPTY_VALUES);
-				logout();
-				navigate(APP_ROUTE.LOGIN, { replace: true });
+				await logout(); // now async — clears the cookie server-side too
+				const toast = {
+					message: 'Password changed. Please log in again.',
+					type: 'success' as const,
+				};
+				saveRedirectToast(toast);
+				navigate(APP_ROUTE.LOGIN, {
+					replace: true,
+					state: { toast },
+				});
 				return true;
 			} catch (err) {
 				const message = err instanceof Error ? err.message : 'Failed to change password.';
@@ -79,7 +96,7 @@ export function usePasswordChangeForm(currentUser: User) {
 				setSubmitting(false);
 			}
 		},
-		[values, currentUser, logout, navigate]
+		[values, logout, navigate]
 	);
 
 	return { values, errors, submitting, submitError, handleChange, handleSubmit };

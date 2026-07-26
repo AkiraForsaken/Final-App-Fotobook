@@ -12,7 +12,13 @@ export async function create(req: Request, res: Response) {
 
 export async function update(req: Request, res: Response) {
 	const photoId = Number(req.params.id);
-	const photo = await photoService.updatePhoto(photoId, req.user!.id, req.body, req.file);
+	const photo = await photoService.updatePhoto(
+		photoId,
+		req.user!.id,
+		req.user!.role,
+		req.body,
+		req.file
+	);
 	res.json(photo);
 }
 

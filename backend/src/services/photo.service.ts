@@ -55,33 +55,38 @@ export async function listPublicPhotos({
 
 export async function listPhotosAdmin({
 	currentUserId,
-	cursor,
+	page = 1,
 	take = 40,
 }: {
 	currentUserId: number | null;
-	cursor?: number;
+	page?: number;
 	take?: number;
 }) {
-	const rows = await prisma.photo.findMany({
-		include: photoWithRelations,
-		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-		take: take + 1,
-		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
-	});
-
-	const { pageRows, nextCursor } = paginateRows(rows, take);
+	const [rows, totalItems] = await Promise.all([
+		prisma.photo.findMany({
+			include: photoWithRelations,
+			orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
+			where: { isStandalone: true },
+			take,
+			skip: (page - 1) * take,
+		}),
+		prisma.photo.count({ where: { isStandalone: true } }),
+	]);
 
 	const likedPhotoIds = await findLikedPhotoIds(
 		currentUserId,
-		pageRows.map((row) => row.id)
+		rows.map((row) => row.id)
 	);
 	const followedAuthorIds = await findFollowedAuthorIds(
 		currentUserId,
-		pageRows.map((row) => row.author.id)
+		rows.map((row) => row.author.id)
 	);
 	return {
-		items: pageRows.map((row) => toPhotoDto(row, likedPhotoIds, followedAuthorIds)),
-		nextCursor,
+		items: rows.map((row) => toPhotoDto(row, likedPhotoIds, followedAuthorIds)),
+		page,
+		pageSize: take,
+		totalItems,
+		totalPages: Math.max(1, Math.ceil(totalItems / take)),
 	};
 }
 
@@ -115,12 +120,13 @@ export async function createPhoto(
 export async function updatePhoto(
 	photoId: number,
 	requesterId: number,
+	requesterRole: 'user' | 'admin',
 	input: UpdatePhotoRequest,
 	file?: Express.Multer.File
 ) {
 	const existing = await prisma.photo.findUnique({ where: { id: photoId } });
 	if (!existing) throw new NotFoundError('Photo not found.');
-	if (existing.authorId !== requesterId) {
+	if (existing.authorId !== requesterId && requesterRole !== 'admin') {
 		throw new ForbiddenError('You can only edit your own photos.');
 	}
 

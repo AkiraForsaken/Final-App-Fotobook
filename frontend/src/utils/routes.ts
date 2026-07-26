@@ -16,6 +16,13 @@ export const APP_ROUTE = {
 	ADD_ALBUM: '/albums/add',
 	EDIT_ALBUM: '/albums/:id/edit',
 
+	// Admin
+	ADMIN: '/admin',
+	ADMIN_USERS: '/admin/users',
+	ADMIN_PHOTOS: '/admin/photos',
+	ADMIN_ALBUMS: '/admin/albums',
+	ADMIN_EDIT_USER: '/admin/users/:id/edit',
+
 	NOT_FOUND: '*',
 } as const;
 
@@ -26,4 +33,5 @@ export const routeUtils = {
 	getPublicProfile: (userId: string | number) => `/profile/${userId}`,
 	getEditPhoto: (id: string | number) => `/photos/${id}/edit`,
 	getEditAlbum: (id: string | number) => `/albums/${id}/edit`,
+	getAdminEditUser: (id: string | number) => `/admin/users/${id}/edit`,
 };

@@ -1,34 +1,38 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useInfiniteScroll } from '../hooks/useInfiniteScroll.ts';
-import type { FeedMode, Photo, Album, User } from '../types/index.ts';
-import { useDiscovery } from '../hooks/useDiscovery.ts';
-import { useProfile } from '../hooks/useProfile.ts';
-import { PhotoCard } from '../components/PhotoCard.tsx';
-import { AlbumCard } from '../components/AlbumCard.tsx';
+import type { FeedMode, User } from '../types/index.ts';
+import { PhotoCard } from '../components/photo/PhotoCard.tsx';
+import { AlbumCard } from '../components/album/AlbumCard.tsx';
 import { FeedToggle } from '../components/FeedToggle.tsx';
 import { FollowButton } from '../components/FollowButton.tsx';
 import { ScrollFooter } from '../components/ScrollFooter.tsx';
-import { PhotoModal } from '../components/PhotoModal.tsx';
-import { AlbumModal } from '../components/AlbumModal.tsx';
+import { PhotoModal } from '../components/photo/PhotoModal.tsx';
+import { AlbumModal } from '../components/album/AlbumModal.tsx';
 import { routeUtils } from '../utils/routes.ts';
-
-// 6 cards per load
-const PAGE_SIZE = 6;
+import { useDiscovery } from '../hooks/useDiscovery.ts';
+import { useAuth } from '../hooks/useAuth.ts';
 
 export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
-	const { discoveryPhotos, discoveryAlbums, loading, toggleLikePhoto, toggleLikeAlbum } =
-		useDiscovery();
-	const { profilesMap, toggleFollowUser } = useProfile(null, currentUser);
+	const { checkingSession } = useAuth();
+	const {
+		photoFeed,
+		albumFeed,
+		activePhoto,
+		setActivePhoto,
+		activeAlbum,
+		setActiveAlbum,
+		toggleLikePhoto,
+		toggleLikeAlbum,
+		toggleFollow,
+		loading,
+	} = useDiscovery(!checkingSession);
+
 	const navigate = useNavigate();
 	const [feedMode, setFeedMode] = useState<FeedMode>('photos');
 
-	const photoScroll = useInfiniteScroll(discoveryPhotos, PAGE_SIZE);
-	const albumScroll = useInfiniteScroll(discoveryAlbums, PAGE_SIZE);
-
-	// Modal states
-	const [activePhoto, setActivePhoto] = useState<Photo | null>(null);
-	const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
+	if (checkingSession) {
+		return <div className="flex h-screen items-center justify-center">Verifying session...</div>;
+	}
 
 	if (loading) {
 		return (
@@ -36,19 +40,14 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 		);
 	}
 
-	const followBtn = (authorId: number) => {
-		if (!currentUser || currentUser.id === authorId) return null;
-
-		// Look up the profile bundle state from provider
-		const targetProfile = profilesMap[authorId]?.profile;
-		const isFollowing = targetProfile ? targetProfile.isFollowedByMe : false;
-
+	const followBtn = (author: { id: number; isFollowedByMe?: boolean }) => {
+		if (!currentUser || currentUser.id === author.id) return null;
 		return (
 			<FollowButton
-				authorId={targetProfile?.id ?? authorId}
+				authorId={author.id}
 				currentUserId={currentUser.id}
-				isFollowing={isFollowing}
-				onToggle={() => toggleFollowUser(authorId)}
+				isFollowing={Boolean(author.isFollowedByMe)}
+				onToggle={() => toggleFollow(author.id, Boolean(author.isFollowedByMe))}
 			/>
 		);
 	};
@@ -62,7 +61,7 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 					{/* Photos grid */}
 					<div className={feedMode === 'photos' ? '' : 'hidden'}>
 						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-							{(photoScroll.visibleItems as Photo[]).map((photo) => (
+							{photoFeed.items.map((photo) => (
 								<div key={photo.id} className="relative">
 									<PhotoCard
 										photo={photo}
@@ -70,23 +69,22 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 										onClickPhoto={(p) => setActivePhoto(p)}
 										onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 									/>
-									<div className="absolute top-3 right-3">{followBtn(photo.author.id)}</div>
+									<div className="absolute top-4 right-1">{followBtn(photo.author)}</div>
 								</div>
 							))}
 						</div>
-						{/* Photo sentinel */}
 						<div
-							ref={(node) => photoScroll.sentinelRef(node)}
+							ref={(node) => photoFeed.sentinelRef(node)}
 							className="mt-4 flex justify-center py-6"
 						>
-							<ScrollFooter hasMore={photoScroll.hasMore || photoScroll.loading} mode="photo" />
+							<ScrollFooter hasMore={photoFeed.hasMore || photoFeed.loadingMore} mode="photo" />
 						</div>
 					</div>
 
 					{/* Albums grid */}
 					<div className={feedMode === 'albums' ? '' : 'hidden'}>
 						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-							{(albumScroll.visibleItems as Album[]).map((album) => (
+							{albumFeed.items.map((album) => (
 								<div key={album.id} className="relative">
 									<AlbumCard
 										album={album}
@@ -94,16 +92,15 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 										onClickAlbum={(a) => setActiveAlbum(a)}
 										onClickAuthor={(id) => navigate(routeUtils.getPublicProfile(id))}
 									/>
-									<div className="absolute top-3 right-3">{followBtn(album.author.id)}</div>
+									<div className="absolute top-3 right-3">{followBtn(album.author)}</div>
 								</div>
 							))}
 						</div>
-						{/* Album sentinel */}
 						<div
-							ref={(node) => albumScroll.sentinelRef(node)}
+							ref={(node) => albumFeed.sentinelRef(node)}
 							className="mt-4 flex justify-center py-6"
 						>
-							<ScrollFooter hasMore={albumScroll.hasMore || albumScroll.loading} mode="album" />
+							<ScrollFooter hasMore={albumFeed.hasMore || albumFeed.loadingMore} mode="album" />
 						</div>
 					</div>
 				</div>

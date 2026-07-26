@@ -25,7 +25,7 @@ export const FollowButton = ({
 				onToggle(authorId);
 			}}
 			className={cn(
-				'text-xs font-semibold px-3 py-1 rounded-full border transition-colors',
+				'text-xs font-semibold px-3 py-1 rounded-full border transition-colors cursor-pointer',
 				isFollowing
 					? 'bg-blue-800 text-white border-blue-800 hover:bg-blue-700 hover:border-blue-700'
 					: 'bg-surface text-nav-active-text border-blue-800 hover:bg-blue-50'

@@ -18,7 +18,6 @@ import {
 	toPhotoDto,
 	albumWithRelations,
 	findLikedAlbumIds,
-	DEFAULT_COVER_URL,
 	toAlbumDto,
 	paginateRows,
 } from '../utils/helpers.js';
@@ -111,6 +110,33 @@ function toPublicProfileDto(user: PublicProfileUserPayload, currentUserId: numbe
 		publicAlbumCount: user._count.albums,
 		isFollowedByMe: currentUserId ? user.followers.length > 0 : false,
 		createdAt: user.createdAt.toISOString(),
+	};
+}
+
+const adminUserSummarySelect = {
+	id: true,
+	firstName: true,
+	lastName: true,
+	email: true,
+	avatarUrl: true,
+	isActive: true,
+	role: true,
+	createdAt: true,
+	lastLoginAt: true,
+} satisfies Prisma.UserSelect;
+type AdminUserSummaryRow = Prisma.UserGetPayload<{ select: typeof adminUserSummarySelect }>;
+
+function toAdminUserSummaryDto(row: AdminUserSummaryRow) {
+	return {
+		id: row.id,
+		firstName: row.firstName,
+		lastName: row.lastName,
+		email: row.email,
+		avatarUrl: row.avatarUrl,
+		isActive: row.isActive,
+		isAdmin: row.role === 'admin',
+		createdAt: row.createdAt.toISOString(),
+		lastLoginAt: row.lastLoginAt ? row.lastLoginAt.toISOString() : null,
 	};
 }
 
@@ -248,24 +274,58 @@ export async function changePassword(userId: number, input: ChangePasswordReques
 		data: { passwordHash: newPasswordHash },
 	});
 
-	await prisma.refreshToken.updateMany({
-		where: { userId, revokedAt: null },
-		data: { revokedAt: new Date() },
-	});
+	// await prisma.refreshToken.updateMany({
+	// 	where: { userId, revokedAt: null },
+	// 	data: { revokedAt: new Date() },
+	// });
 }
 
 /**
  * List all users for admin panel or discovery (with pagination).
  */
-export async function listUsers(currentUserId: number, cursor?: number, take: number = 20) {
-	const users = await prisma.user.findMany({
-		where: { id: { not: currentUserId } }, // Don't list self
-		select: userProfileSelect,
-		orderBy: { createdAt: 'desc' },
-		take,
-		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+export async function listUsers(currentUserId: number, page: number = 1, take: number = 40) {
+	const where: Prisma.UserWhereInput = { id: { not: currentUserId } };
+
+	const [rows, totalItems] = await Promise.all([
+		prisma.user.findMany({
+			where,
+			select: adminUserSummarySelect,
+			orderBy: [{ lastLoginAt: 'asc' }, { createdAt: 'desc' }],
+			take,
+			skip: (page - 1) * take,
+		}),
+		prisma.user.count({ where }),
+	]);
+
+	return {
+		items: rows.map(toAdminUserSummaryDto),
+		page,
+		pageSize: take,
+		totalItems,
+		totalPages: Math.max(1, Math.ceil(totalItems / take)),
+	};
+}
+
+/**
+ * Admin: set a user's password directly — This is an admin override.
+ * Revokes only the TARGET user's active sessions so they must sign in again
+ * with the new password — the calling admin's own session is untouched.
+ */
+export async function adminSetPassword(userId: number, newPassword: string) {
+	const user = await prisma.user.findUnique({ where: { id: userId } });
+	if (!user) throw new NotFoundError('User not found.');
+
+	const newPasswordHash = await bcrypt.hash(newPassword, BCRYPT_ROUNDS);
+
+	await prisma.user.update({
+		where: { id: userId },
+		data: { passwordHash: newPasswordHash },
 	});
-	return users.map(toUserProfileDto);
+
+	await prisma.refreshToken.updateMany({
+		where: { userId, revokedAt: null },
+		data: { revokedAt: new Date() },
+	});
 }
 
 /**
@@ -331,7 +391,6 @@ export async function reactivateUser(userId: number) {
 	});
 }
 
-// Admin: Delete a user (hard delete).
 export async function deleteUser(userId: number) {
 	const orphanedUrls = await prisma.$transaction(async (tx) => {
 		const user = await tx.user.findUnique({
@@ -343,7 +402,7 @@ export async function deleteUser(userId: number) {
 		});
 		if (!user) throw new NotFoundError('User not found.');
 
-		await tx.user.delete({ where: { id: userId } }); // cascades photos, albums, tokens, follows, likes
+		await tx.user.delete({ where: { id: userId } });
 
 		const urls = user.photos.map((p) => p.imageUrl);
 		if (user.avatarUrl) urls.push(user.avatarUrl);
@@ -353,9 +412,6 @@ export async function deleteUser(userId: number) {
 	await Promise.all(
 		orphanedUrls.map((url) =>
 			storage.remove(url).catch((err) => {
-				// storage.remove() already handles its own errors internally and
-				// logs — this catch is just a defensive backstop in case that
-				// contract changes later.
 				console.error(`Failed to remove file during user deletion cleanup: ${url}`, err);
 			})
 		)
@@ -468,11 +524,7 @@ export async function listUserFollowers({
 
 	const rows = await prisma.follow.findMany({
 		where: { followingId: targetUserId },
-		include: {
-			follower: {
-				select: publicProfileSelect(currentUserId),
-			},
-		},
+		include: { follower: { select: publicProfileSelect(currentUserId) } },
 		orderBy: { createdAt: 'desc' },
 		take: take + 1, // Fetch one extra to check if there is a next page
 		skip: offset,
@@ -502,11 +554,7 @@ export async function listUserFollowing({
 
 	const rows = await prisma.follow.findMany({
 		where: { followerId: targetUserId },
-		include: {
-			following: {
-				select: publicProfileSelect(currentUserId),
-			},
-		},
+		include: { following: { select: publicProfileSelect(currentUserId) } },
 		orderBy: { createdAt: 'desc' },
 		take: take + 1,
 		skip: offset,

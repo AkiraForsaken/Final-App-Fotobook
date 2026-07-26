@@ -9,7 +9,7 @@ export async function create(req: Request, res: Response) {
 
 export async function update(req: Request, res: Response) {
 	const albumId = Number(req.params.id);
-	const album = await albumService.updateAlbum(albumId, req.user!.id, req.body);
+	const album = await albumService.updateAlbum(albumId, req.user!.id, req.user!.role, req.body);
 	res.json(album);
 }
 
