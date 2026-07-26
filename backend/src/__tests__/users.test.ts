@@ -141,16 +141,14 @@ describe('GET /api/users/:id/followers and /following relationship lists', () =>
 		await request(app).post(`/api/users/${target.id}/follow`).set(authHeader(accessToken));
 
 		// Test Followers endpoint
-		const followersRes = await request(app).get(
-			`/api/users/${target.id}/followers?offset=0&take=5`
-		);
+		const followersRes = await request(app).get(`/api/users/${target.id}/followers?page=1&take=5`);
 		expect(followersRes.status).toBe(200);
 		expect(Array.isArray(followersRes.body.items)).toBe(true);
 		expect(followersRes.body.items[0].id).toBe(follower.id);
 
 		// Test Following endpoint
 		const followingRes = await request(app).get(
-			`/api/users/${follower.id}/following?offset=0&take=5`
+			`/api/users/${follower.id}/following?page=1&take=5`
 		);
 		expect(followingRes.status).toBe(200);
 		expect(followingRes.body.items[0].id).toBe(target.id);

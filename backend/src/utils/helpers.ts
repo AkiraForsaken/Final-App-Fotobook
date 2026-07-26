@@ -1,12 +1,13 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma/client.js';
+import { dateToISO, toAuthorDto } from './dto-helpers.js';
 
 export const photoWithRelations = {
 	author: { select: { id: true, firstName: true, lastName: true, avatarUrl: true } },
 	_count: { select: { likes: true } },
 } satisfies Prisma.PhotoInclude;
 
-type PhotoRow = Prisma.PhotoGetPayload<{ include: typeof photoWithRelations }>;
+export type PhotoRow = Prisma.PhotoGetPayload<{ include: typeof photoWithRelations }>;
 
 // Shapes a DB row into the wire-format Photo DTO (matches frontend/src/types
 // Photo interface — nested author, derived likesCount/likedByMe).
@@ -23,11 +24,8 @@ export function toPhotoDto(
 		sharingMode: row.sharingMode,
 		likesCount: row._count.likes,
 		likedByMe: likedPhotoIds.has(row.id),
-		author: {
-			...row.author,
-			isFollowedByMe: followedAuthorIds.has(row.author.id),
-		},
-		createdAt: row.createdAt.toISOString(),
+		author: toAuthorDto(row.author, followedAuthorIds.has(row.author.id)),
+		createdAt: dateToISO(row.createdAt),
 	};
 }
 
@@ -58,7 +56,7 @@ export const albumWithRelations = {
 	_count: { select: { likes: true } },
 } satisfies Prisma.AlbumInclude;
 
-type AlbumRow = Prisma.AlbumGetPayload<{ include: typeof albumWithRelations }>;
+export type AlbumRow = Prisma.AlbumGetPayload<{ include: typeof albumWithRelations }>;
 
 // Shapes a DB row into the wire-format Album DTO (matches frontend Album interface).
 export function toAlbumDto(
@@ -77,11 +75,8 @@ export function toAlbumDto(
 		sharingMode: row.sharingMode,
 		likesCount: row._count.likes,
 		likedByMe: likedAlbumIds.has(row.id),
-		author: {
-			...row.author,
-			isFollowedByMe: followedAuthorIds.has(row.author.id),
-		},
-		createdAt: row.createdAt.toISOString(),
+		author: toAuthorDto(row.author, followedAuthorIds.has(row.author.id)),
+		createdAt: dateToISO(row.createdAt),
 	};
 }
 

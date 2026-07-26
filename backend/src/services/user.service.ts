@@ -12,15 +12,15 @@ import bcrypt from 'bcryptjs';
 import { createEmailVerificationToken } from './auth.service.js';
 import { env } from '../schemas/env.js';
 import {
-	findFollowedAuthorIds,
-	findLikedPhotoIds,
 	photoWithRelations,
 	toPhotoDto,
 	albumWithRelations,
-	findLikedAlbumIds,
 	toAlbumDto,
-	paginateRows,
+	PhotoRow,
+	AlbumRow,
 } from '../utils/helpers.js';
+import { listUserContent } from '../utils/list-user-content.js';
+import { dateToISO, roleToIsAdmin } from '../utils/dto-helpers.js';
 
 const BCRYPT_ROUNDS = 10;
 
@@ -67,8 +67,8 @@ function toUserProfileDto(row: UserProfileRow) {
 		albumsCount: row._count.albums,
 		// bio: row.bio,
 		isActive: row.isActive,
-		isAdmin: row.role === 'admin',
-		createdAt: row.createdAt.toISOString(),
+		isAdmin: roleToIsAdmin(row.role),
+		createdAt: dateToISO(row.createdAt),
 	};
 }
 
@@ -109,7 +109,7 @@ function toPublicProfileDto(user: PublicProfileUserPayload, currentUserId: numbe
 		publicPhotoCount: user._count.photos,
 		publicAlbumCount: user._count.albums,
 		isFollowedByMe: currentUserId ? user.followers.length > 0 : false,
-		createdAt: user.createdAt.toISOString(),
+		createdAt: dateToISO(user.createdAt),
 	};
 }
 
@@ -134,9 +134,9 @@ function toAdminUserSummaryDto(row: AdminUserSummaryRow) {
 		email: row.email,
 		avatarUrl: row.avatarUrl,
 		isActive: row.isActive,
-		isAdmin: row.role === 'admin',
-		createdAt: row.createdAt.toISOString(),
-		lastLoginAt: row.lastLoginAt ? row.lastLoginAt.toISOString() : null,
+		isAdmin: roleToIsAdmin(row.role),
+		createdAt: dateToISO(row.createdAt),
+		lastLoginAt: row.lastLoginAt ? dateToISO(row.lastLoginAt) : null,
 	};
 }
 
@@ -421,86 +421,38 @@ export async function deleteUser(userId: number) {
 /**
  * Paginate and list public or all photos for a user based on permissions.
  */
-export async function listUserPhotos({
-	targetUserId,
-	currentUserId,
-	currentUserRole,
-	cursor,
-	take = 10,
-}: PaginatedUserListOptions) {
-	const userExists = await prisma.user.findUnique({ where: { id: targetUserId } });
-	if (!userExists) throw new NotFoundError('User not found.');
-
-	const isOwnerOrAdmin = targetUserId === currentUserId || currentUserRole === 'admin';
-
-	const rows = await prisma.photo.findMany({
-		where: {
-			authorId: targetUserId,
-			...(!isOwnerOrAdmin ? { sharingMode: 'public' } : {}),
-			isStandalone: true,
+export async function listUserPhotos(options: PaginatedUserListOptions) {
+	return listUserContent(options, {
+		findMany: (args) => prisma.photo.findMany(args) as Promise<PhotoRow[]>,
+		findLikedIds: async (userId, photoIds) => {
+			const likes = await prisma.photoLike.findMany({
+				where: { userId, photoId: { in: photoIds } },
+				select: { photoId: true },
+			});
+			return likes.map((l) => l.photoId);
 		},
 		include: photoWithRelations,
-		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-		take: take + 1,
-		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+		extraWhere: { isStandalone: true },
+		toDto: toPhotoDto,
 	});
-
-	const { pageRows, nextCursor } = paginateRows(rows, take);
-
-	const likedPhotoIds = await findLikedPhotoIds(
-		currentUserId,
-		pageRows.map((row) => row.id)
-	);
-	const followedAuthorIds = await findFollowedAuthorIds(
-		currentUserId,
-		pageRows.map((row) => row.author.id)
-	);
-	return {
-		items: pageRows.map((row) => toPhotoDto(row, likedPhotoIds, followedAuthorIds)),
-		nextCursor,
-	};
 }
 
 /**
  * Paginate and list public or all albums for a user based on permissions.
  */
-export async function listUserAlbums({
-	targetUserId,
-	currentUserId,
-	currentUserRole,
-	cursor,
-	take = 10,
-}: PaginatedUserListOptions) {
-	const userExists = await prisma.user.findUnique({ where: { id: targetUserId } });
-	if (!userExists) throw new NotFoundError('User not found.');
-
-	const isOwnerOrAdmin = targetUserId === currentUserId || currentUserRole === 'admin';
-
-	const rows = await prisma.album.findMany({
-		where: {
-			authorId: targetUserId,
-			...(!isOwnerOrAdmin ? { sharingMode: 'public' } : {}),
+export async function listUserAlbums(options: PaginatedUserListOptions) {
+	return listUserContent(options, {
+		findMany: (args) => prisma.album.findMany(args) as Promise<AlbumRow[]>,
+		findLikedIds: async (userId, albumIds) => {
+			const likes = await prisma.albumLike.findMany({
+				where: { userId, albumId: { in: albumIds } },
+				select: { albumId: true },
+			});
+			return likes.map((l) => l.albumId);
 		},
 		include: albumWithRelations,
-		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-		take: take + 1,
-		...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
+		toDto: toAlbumDto,
 	});
-
-	const { pageRows, nextCursor } = paginateRows(rows, take);
-
-	const likedAlbumIds = await findLikedAlbumIds(
-		currentUserId,
-		pageRows.map((r) => r.id)
-	);
-	const followedAuthorIds = await findFollowedAuthorIds(
-		currentUserId,
-		pageRows.map((row) => row.author.id)
-	);
-	return {
-		items: pageRows.map((row) => toAlbumDto(row, likedAlbumIds, followedAuthorIds)),
-		nextCursor,
-	};
 }
 
 interface OffsetFollowListOptions {

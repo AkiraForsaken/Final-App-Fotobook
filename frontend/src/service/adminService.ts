@@ -19,8 +19,8 @@ function toAdminUpdateUserFormData(payload: AdminUpdateUserPayload): FormData {
 }
 
 export const adminService = {
-	listUsers: (page: number | undefined, pageSize: number) =>
-		request<PagedResult<AdminUserSummary>>('/api/admin/users', { params: { page, pageSize } }),
+	listUsers: (page: number | undefined, take: number) =>
+		request<PagedResult<AdminUserSummary>>('/api/admin/users', { params: { page, take } }),
 
 	getUserById: (userId: number) => request<User>(`/api/admin/users/${userId}`),
 
@@ -44,11 +44,11 @@ export const adminService = {
 
 	deleteUser: (userId: number) => request<void>(`/api/admin/${userId}`, { method: 'DELETE' }),
 
-	listPhotos: (page: number | undefined, pageSize: number) =>
-		request<PagedResult<Photo>>('/api/admin/photos', { params: { page, pageSize } }),
+	listPhotos: (page: number | undefined, take: number) =>
+		request<PagedResult<Photo>>('/api/admin/photos', { params: { page, take } }),
 
-	listAlbums: (page: number | undefined, pageSize: number) =>
-		request<PagedResult<Album>>('/api/admin/albums', { params: { page, pageSize } }),
+	listAlbums: (page: number | undefined, take: number) =>
+		request<PagedResult<Album>>('/api/admin/albums', { params: { page, take } }),
 
 	// Admin delete reuses the normal photo/album delete routes — the backend
 	// service layer already bypasses the ownership check for requesterRole === 'admin'.

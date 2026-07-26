@@ -11,6 +11,7 @@ import type {
 } from '../schemas/auth.js';
 import bcrypt from 'bcryptjs';
 import { env } from '../schemas/env.js';
+import { dateToISO, roleToIsAdmin } from '../utils/dto-helpers.js';
 
 const BCRYPT_ROUNDS = 10;
 const REFRESH_TOKEN_MAX_AGE_DAYS = 7;
@@ -35,9 +36,20 @@ function toAuthUserDto(user: {
 		email: user.email,
 		avatarUrl: user.avatarUrl,
 		isActive: user.isActive,
-		isAdmin: user.role === 'admin',
-		createdAt: user.createdAt.toISOString(),
+		isAdmin: roleToIsAdmin(user.role),
+		createdAt: dateToISO(user.createdAt),
 	};
+}
+
+async function createAuthTokens(user: { id: number; role: 'user' | 'admin' }) {
+	const { token: refreshToken, dbRecord } = await createRefreshToken(user.id);
+
+	// Create access token
+	const accessToken = signAccessToken({
+		sub: user.id,
+		role: user.role,
+	});
+	return { accessToken, refreshToken, refreshTokenExpiresAt: dbRecord.expiresAt };
 }
 
 /**
@@ -72,19 +84,11 @@ export async function signup(input: SignupRequest) {
 	const baseUrl = env.FRONTEND_URL || 'http://localhost:5173';
 	console.log(`[auth] Verification link for ${user.email}: ${baseUrl}/verify-email`);
 
-	const { token: refreshToken, dbRecord } = await createRefreshToken(user.id);
-
-	// Create access token
-	const accessToken = signAccessToken({
-		sub: user.id,
-		role: user.role,
-	});
+	const tokens = await createAuthTokens(user);
 
 	return {
 		user: toAuthUserDto(user),
-		accessToken,
-		refreshToken,
-		refreshTokenExpiresAt: dbRecord.expiresAt,
+		...tokens,
 	};
 }
 
@@ -114,13 +118,7 @@ export async function login(input: LoginRequest) {
 		throw new UnauthorizedError('Please verify your email before signing in.');
 	}
 
-	const { token: refreshToken, dbRecord } = await createRefreshToken(user.id);
-
-	// Create access token
-	const accessToken = signAccessToken({
-		sub: user.id,
-		role: user.role,
-	});
+	const tokens = await createAuthTokens(user);
 
 	await prisma.user.update({
 		where: { id: user.id },
@@ -129,9 +127,7 @@ export async function login(input: LoginRequest) {
 
 	return {
 		user: toAuthUserDto(user),
-		accessToken,
-		refreshToken,
-		refreshTokenExpiresAt: dbRecord.expiresAt,
+		...tokens,
 	};
 }
 

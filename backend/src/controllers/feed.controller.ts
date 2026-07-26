@@ -12,62 +12,32 @@ async function getFollowedAuthorIds(userId: number | null): Promise<number[] | u
 	return [...follows.map((f) => f.followingId), userId];
 }
 
-export async function feedPhotos(req: Request, res: Response) {
-	const currentUserId = req.user?.id ?? null;
-	const { cursor, take } = req.query as any;
+type FeedHandler = (opts: {
+	authorIds?: number[];
+	currentUserId: number | null;
+	cursor?: number;
+	take: number;
+}) => Promise<{ items: unknown; nextCursor: number | null }>;
 
-	// Feed is empty for guests
-	if (!currentUserId) {
-		res.json({ items: [], nextCursor: null });
-		return;
-	}
+function makeFeedHandler(serviceFn: FeedHandler, requireFollowed: boolean) {
+	return async (req: Request, res: Response) => {
+		const currentUserId = req.user?.id ?? null;
+		const cursor = req.query.cursor ? (req.query.cursor as unknown as number) : undefined;
+		const take = req.query.take ? (req.query.take as unknown as number) : 6;
 
-	const authorIds = await getFollowedAuthorIds(currentUserId);
-	const result = await photoService.listPublicPhotos({
-		authorIds: authorIds,
-		currentUserId,
-		cursor: cursor ? parseInt(cursor as string, 10) : undefined,
-		take: parseInt(take as string, 10),
-	});
-	res.json(result);
+		// Check for feeds
+		if (requireFollowed && !currentUserId) {
+			res.json({ items: [], nextCursor: null });
+			return;
+		}
+
+		const authorIds = requireFollowed ? await getFollowedAuthorIds(currentUserId) : undefined;
+		const result = await serviceFn({ authorIds, currentUserId, cursor, take });
+		res.json(result);
+	};
 }
 
-export async function discoveryPhotos(req: Request, res: Response) {
-	const { cursor, take } = req.query as any;
-	const photos = await photoService.listPublicPhotos({
-		currentUserId: req.user?.id ?? null,
-		cursor: cursor ? parseInt(cursor as string, 10) : undefined,
-		take: parseInt(take as string, 10),
-	});
-	res.json(photos);
-}
-
-export async function feedAlbums(req: Request, res: Response) {
-	const currentUserId = req.user?.id ?? null;
-	const { cursor, take } = req.query as any;
-
-	// Feed is empty for guests
-	if (!currentUserId) {
-		res.json({ items: [], nextCursor: null });
-		return;
-	}
-
-	const authorIds = await getFollowedAuthorIds(currentUserId);
-	const result = await albumService.listPublicAlbums({
-		authorIds: authorIds,
-		currentUserId,
-		cursor: cursor ? parseInt(cursor as string, 10) : undefined,
-		take: parseInt(take as string, 10),
-	});
-	res.json(result);
-}
-
-export async function discoveryAlbums(req: Request, res: Response) {
-	const { cursor, take } = req.query as any;
-	const photos = await albumService.listPublicAlbums({
-		currentUserId: req.user?.id ?? null,
-		cursor: cursor ? parseInt(cursor as string, 10) : undefined,
-		take: parseInt(take as string, 10),
-	});
-	res.json(photos);
-}
+export const feedPhotos = makeFeedHandler(photoService.listPublicPhotos, true);
+export const feedAlbums = makeFeedHandler(albumService.listPublicAlbums, true);
+export const discoveryPhotos = makeFeedHandler(photoService.listPublicPhotos, false);
+export const discoveryAlbums = makeFeedHandler(albumService.listPublicAlbums, false);

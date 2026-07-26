@@ -57,9 +57,9 @@ export const userService = {
 		request<Page<Album>>(`/api/users/${userId}/albums`, { params: { cursor, take } }),
 
 	// Offset-pagination
-	getUserFollowers: (userId: number, offset: number | undefined, take: number) =>
-		request<Page<FollowRelation>>(`/api/users/${userId}/followers`, { params: { offset, take } }),
+	getUserFollowers: (userId: number, page: number | undefined, take: number) =>
+		request<Page<FollowRelation>>(`/api/users/${userId}/followers`, { params: { page, take } }),
 
-	getUserFollowing: (userId: number, offset: number | undefined, take: number) =>
-		request<Page<FollowRelation>>(`/api/users/${userId}/following`, { params: { offset, take } }),
+	getUserFollowing: (userId: number, page: number | undefined, take: number) =>
+		request<Page<FollowRelation>>(`/api/users/${userId}/following`, { params: { page, take } }),
 };
