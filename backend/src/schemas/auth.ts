@@ -1,9 +1,32 @@
 import { z } from 'zod';
 import { userSchema } from './user.js';
 
+const passwordSchema = z
+	.string()
+	.min(10, 'Password must be at least 10 characters')
+	.max(64, 'Password must be at most 64 characters')
+	.refine(
+		(pw) => {
+			const commonPasswords = new Set([
+				'password123',
+				'1234567890',
+				'qwerty12345',
+				'admin12345',
+				'letmein12345',
+				'welcome1234',
+				'monket12345',
+				'football123',
+			]);
+			return !commonPasswords.has(pw.toLowerCase());
+		},
+		{
+			message: 'Password is too common. Please choose a more secure password.',
+		}
+	);
+
 export const loginRequestSchema = z.object({
 	email: z.email(),
-	password: z.string().min(10).max(64),
+	password: passwordSchema,
 });
 export type LoginRequest = z.infer<typeof loginRequestSchema>;
 
@@ -11,7 +34,7 @@ export const signupRequestSchema = z.object({
 	firstName: z.string().min(1).max(25),
 	lastName: z.string().min(1).max(25),
 	email: z.email().max(255),
-	password: z.string().min(10).max(64),
+	password: passwordSchema,
 });
 export type SignupRequest = z.infer<typeof signupRequestSchema>;
 
@@ -27,7 +50,7 @@ export type ForgotPasswordRequest = z.infer<typeof forgotPasswordRequestSchema>;
 
 export const resetPasswordRequestSchema = z.object({
 	token: z.string().min(1),
-	newPassword: z.string().min(10).max(64),
+	newPassword: passwordSchema,
 });
 export type ResetPasswordRequest = z.infer<typeof resetPasswordRequestSchema>;
 
@@ -46,12 +69,12 @@ export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;
 
 // Body for POST /api/users/:id/password
 export const changePasswordRequestSchema = z.object({
-	currentPassword: z.string().min(10).max(64),
-	newPassword: z.string().min(10).max(64),
+	currentPassword: passwordSchema,
+	newPassword: passwordSchema,
 });
 export type ChangePasswordRequest = z.infer<typeof changePasswordRequestSchema>;
 
 export const adminResetPasswordRequestSchema = z.object({
-	newPassword: z.string().min(10).max(64),
+	newPassword: passwordSchema,
 });
 export type AdminResetPasswordRequest = z.infer<typeof adminResetPasswordRequestSchema>;

@@ -5,8 +5,6 @@ import { authService } from '../service/authService.ts';
 import { setAuthFailureHandler } from '../service/api.ts';
 import { userService } from '../service/userService.ts';
 
-const LOCAL_STORAGE_USER = 'fotobook.currentUser';
-
 interface AuthContextValue {
 	currentUser: User | null;
 	isAuthenticated: boolean;
@@ -18,35 +16,20 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const readStoredUser = (): User | null => {
-	if (typeof window === 'undefined') return null;
-
-	const stored = window.localStorage.getItem(LOCAL_STORAGE_USER);
-	if (!stored) return null;
-
-	try {
-		return JSON.parse(stored) as User;
-	} catch {
-		return null;
-	}
-};
-
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
 	// The httpOnly cookie is the real source of truth — this is just a cache
 	// so a page refresh doesn't flash a logged-out UI while we verify.
-	const [currentUser, setCurrentUser] = useState<User | null>(() => readStoredUser());
+	const [currentUser, setCurrentUser] = useState<User | null>(null);
 	const [checkingSession, setCheckingSession] = useState(true);
 	const hasCheckedOnce = useRef(false);
 
 	const login = useCallback((user: User) => {
 		setCurrentUser(user);
-		window.localStorage.setItem(LOCAL_STORAGE_USER, JSON.stringify(user));
 
 		userService
 			.getCurrentProfile()
 			.then((fullProfile) => {
 				setCurrentUser(fullProfile);
-				window.localStorage.setItem(LOCAL_STORAGE_USER, JSON.stringify(fullProfile));
 			})
 			.catch(() => {
 				// Ignore error if offline / user payload was already valid
@@ -55,7 +38,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 	const clearLocalSession = useCallback(() => {
 		setCurrentUser(null);
-		window.localStorage.removeItem(LOCAL_STORAGE_USER);
 	}, []);
 
 	const logout = useCallback(async () => {
@@ -105,7 +87,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		setCurrentUser((prev) => {
 			if (!prev) return null;
 			const updated = updater(prev);
-			window.localStorage.setItem(LOCAL_STORAGE_USER, JSON.stringify(updated));
 			return updated;
 		});
 	}, []);

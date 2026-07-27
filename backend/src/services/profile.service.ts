@@ -1,53 +1,17 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma/client.js';
-import { roleToIsAdmin, dateToISO } from '../utils/dto-helpers.js';
 import { ConflictError, NotFoundError, UnauthorizedError } from '../utils/app-error.js';
 import { ChangePasswordRequest, UpdateUserRequest } from '../schemas/auth.js';
 import { storage } from './storage.service.js';
-import { createEmailVerificationToken } from './auth.service.js';
-import { env } from '../schemas/env.js';
 import bcrypt from 'bcryptjs';
-import { BCRYPT_ROUNDS, publicProfileSelect, toPublicProfileDto } from './user.service.js';
-
-const userProfileSelect = {
-	id: true,
-	firstName: true,
-	lastName: true,
-	email: true,
-	avatarUrl: true,
-	_count: {
-		select: {
-			followers: true,
-			following: true,
-			photos: true,
-			albums: true,
-		},
-	},
-	// bio: true,
-	isActive: true,
-	role: true,
-	createdAt: true,
-} satisfies Prisma.UserSelect;
-
-type UserProfileRow = Prisma.UserGetPayload<{ select: typeof userProfileSelect }>;
-
-function toUserProfileDto(row: UserProfileRow) {
-	return {
-		id: row.id,
-		firstName: row.firstName,
-		lastName: row.lastName,
-		email: row.email,
-		avatarUrl: row.avatarUrl,
-		followersCount: row._count.followers,
-		followingCount: row._count.following,
-		photosCount: row._count.photos,
-		albumsCount: row._count.albums,
-		// bio: row.bio,
-		isActive: row.isActive,
-		isAdmin: roleToIsAdmin(row.role),
-		createdAt: dateToISO(row.createdAt),
-	};
-}
+import { BCRYPT_ROUNDS, EMAIL_VERIFICATION_TOKEN_TTL_HOURS, hashToken } from '../utils/jwt.js';
+import { sendVerificationEmail } from './email.service.js';
+import {
+	publicProfileSelect,
+	toPublicProfileDto,
+	toUserProfileDto,
+	userProfileSelect,
+} from '../utils/dto/user.dto.js';
 
 /**
  * Get person user's profile. (only for authorized)
@@ -83,10 +47,6 @@ export async function updateProfile(
 	input: UpdateUserRequest,
 	file?: Express.Multer.File
 ) {
-	let avatarFields: Partial<Prisma.UserUpdateInput> = {};
-	let emailUpdateFields: Partial<Prisma.UserUpdateInput> = {};
-	let oldAvatarUrl: string | null = null;
-
 	const existingUser = await prisma.user.findUnique({
 		where: { id: userId },
 		select: { avatarUrl: true, email: true },
@@ -94,68 +54,73 @@ export async function updateProfile(
 	if (!existingUser) {
 		throw new NotFoundError('User not found');
 	}
+	let emailUpdateFields: Partial<Prisma.UserUpdateInput> = {};
+	let verificationToken: { tokenHash: string; expiresAt: Date } | null = null;
+
+	if (input.email) {
+		const normalizedEmail = input.email.trim().toLowerCase();
+
+		if (normalizedEmail !== existingUser.email) {
+			const emailExists = await prisma.user.findUnique({ where: { email: normalizedEmail } });
+			if (emailExists) {
+				throw new ConflictError('Email already in use');
+			}
+
+			const token = crypto.randomUUID();
+			const tokenHash = hashToken(token);
+			const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_HOURS * 60 * 60 * 1000);
+
+			// Send BEFORE touching storage or the DB — if this fails, nothing
+			// below runs and the profile is left completely untouched.
+			await sendVerificationEmail({ email: normalizedEmail, firstName: input.firstName }, token);
+
+			verificationToken = { tokenHash, expiresAt };
+			emailUpdateFields = { email: normalizedEmail, isEmailVerified: false };
+		}
+	}
+
+	let avatarFields: Partial<Prisma.UserUpdateInput> = {};
+	let oldAvatarUrl: string | null = null;
+
 	// Handle avatar upload
 	if (file) {
 		oldAvatarUrl = existingUser?.avatarUrl ?? null;
 		const { url } = await storage.resolve(file);
 		avatarFields = { avatarUrl: url };
 	}
-	// Handle email change
-	if (input.email) {
-		const normalizedEmail = input.email.trim().toLowerCase();
 
-		if (normalizedEmail !== existingUser.email) {
-			// Ensure the new email doesn't exist
-			const emailExists = await prisma.user.findUnique({
-				where: { email: normalizedEmail },
-			});
-			if (emailExists) {
-				throw new ConflictError('Email already in use');
-			}
-			emailUpdateFields = {
-				email: normalizedEmail,
-				isEmailVerified: false,
-			};
-
-			// Optional: If you want to revoke active sessions upon email change:
-			// await revokeUserSessions(userId);
-		}
-	}
-
-	const user = await prisma.user.update({
-		where: { id: userId },
-		data: {
-			firstName: input.firstName,
-			lastName: input.lastName,
-			...emailUpdateFields,
-			...avatarFields,
-		},
-		select: userProfileSelect,
-	});
-	// Create token and send verification email
-	if (emailUpdateFields.email) {
-		const token = await createEmailVerificationToken(userId);
-		const baseUrl = env.FRONTEND_URL || 'http://localhost:5173';
-		console.log(
-			`[auth] Verification link for ${user.email}: ${baseUrl}/verify-email?token=${token}`
-		);
-		// TODO: replace with real email send once the email provider is implemented.
-	}
-	// Revoke session
-	if (emailUpdateFields.email) {
-		await prisma.refreshToken.updateMany({
-			where: { userId, revokedAt: null },
-			data: { revokedAt: new Date() },
+	// Handle user creation
+	const user = await prisma.$transaction(async (tx) => {
+		const updated = await tx.user.update({
+			where: { id: userId },
+			data: {
+				firstName: input.firstName,
+				lastName: input.lastName,
+				...emailUpdateFields,
+				...avatarFields,
+			},
+			select: userProfileSelect,
 		});
-	}
 
-	// Only remove the old avatar file after the DB write succeeds.
+		if (verificationToken) {
+			await tx.emailVerificationToken.create({
+				data: {
+					userId,
+					tokenHash: verificationToken.tokenHash,
+					expiresAt: verificationToken.expiresAt,
+				},
+			});
+			await tx.refreshToken.updateMany({
+				where: { userId, revokedAt: null },
+				data: { revokedAt: new Date() },
+			});
+		}
+
+		return updated;
+	});
+
 	if (file && oldAvatarUrl) {
 		await storage.remove(oldAvatarUrl);
-	}
-
-	if (emailUpdateFields.email) {
-		// await sendVerificationEmail(user.email, emailUpdateFields.emailVerificationToken);
 	}
 
 	return toUserProfileDto(user);
@@ -177,14 +142,15 @@ export async function changePassword(userId: number, input: ChangePasswordReques
 	// Hash new password
 	const newPasswordHash = await bcrypt.hash(input.newPassword, BCRYPT_ROUNDS);
 
-	// Update password
-	await prisma.user.update({
-		where: { id: userId },
-		data: { passwordHash: newPasswordHash },
-	});
-
-	await prisma.refreshToken.updateMany({
-		where: { userId, revokedAt: null },
-		data: { revokedAt: new Date() },
-	});
+	// Update password + revoke token (atomic)
+	await prisma.$transaction([
+		prisma.user.update({
+			where: { id: userId },
+			data: { passwordHash: newPasswordHash },
+		}),
+		prisma.refreshToken.updateMany({
+			where: { userId, revokedAt: null },
+			data: { revokedAt: new Date() },
+		}),
+	]);
 }

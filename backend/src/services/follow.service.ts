@@ -1,6 +1,6 @@
 import { prisma } from '../prisma/client.js';
 import { ForbiddenError, NotFoundError } from '../utils/app-error.js';
-import { publicProfileSelect, toPublicProfileDto } from './user.service.js';
+import { publicProfileSelect, toPublicProfileDto } from '../utils/dto/user.dto.js';
 
 /**
  * Follow another user.

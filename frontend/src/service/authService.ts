@@ -30,4 +30,10 @@ export const authService = {
 		}),
 	logout: () => request<void>('/api/auth/logout', { method: 'POST' }),
 	refresh: () => request<void>('/api/auth/refresh', { method: 'POST' }),
+	verifyEmail: (payload: { token: string }) =>
+		request<{ message: string }>('/api/auth/verify-email', { method: 'POST', body: payload }),
+	forgotPassword: (payload: { email: string }) =>
+		request<{ message: string }>('/api/auth/forgot-password', { method: 'POST', body: payload }),
+	resetPassword: (payload: { token: string; newPassword: string }) =>
+		request<{ message: string }>('/api/auth/reset-password', { method: 'POST', body: payload }),
 };

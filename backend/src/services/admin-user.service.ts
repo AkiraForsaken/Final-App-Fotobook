@@ -1,37 +1,11 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma/client.js';
-import { roleToIsAdmin, dateToISO } from '../utils/dto-helpers.js';
 import { NotFoundError } from '../utils/app-error.js';
 import bcrypt from 'bcryptjs';
-import { BCRYPT_ROUNDS } from './user.service.js';
+import { BCRYPT_ROUNDS } from '../utils/jwt.js';
 import { storage } from './storage.service.js';
+import { adminUserSummarySelect, toAdminUserSummaryDto } from '../utils/dto/user.dto.js';
 
-const adminUserSummarySelect = {
-	id: true,
-	firstName: true,
-	lastName: true,
-	email: true,
-	avatarUrl: true,
-	isActive: true,
-	role: true,
-	createdAt: true,
-	lastLoginAt: true,
-} satisfies Prisma.UserSelect;
-type AdminUserSummaryRow = Prisma.UserGetPayload<{ select: typeof adminUserSummarySelect }>;
-
-function toAdminUserSummaryDto(row: AdminUserSummaryRow) {
-	return {
-		id: row.id,
-		firstName: row.firstName,
-		lastName: row.lastName,
-		email: row.email,
-		avatarUrl: row.avatarUrl,
-		isActive: row.isActive,
-		isAdmin: roleToIsAdmin(row.role),
-		createdAt: dateToISO(row.createdAt),
-		lastLoginAt: row.lastLoginAt ? dateToISO(row.lastLoginAt) : null,
-	};
-}
 /**
  * List all users for admin panel or discovery (with pagination).
  */

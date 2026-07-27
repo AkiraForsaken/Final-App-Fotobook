@@ -157,9 +157,9 @@ export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 
 					{/* Forgot password */}
 					<div className="text-right">
-						<a href="#" className="text-blue-700 hover:underline">
+						<Link to={APP_ROUTE.FORGOT_PASSWORD} className="text-blue-700 hover:underline">
 							Forgot password?
-						</a>
+						</Link>
 					</div>
 
 					{/* Submit button */}
