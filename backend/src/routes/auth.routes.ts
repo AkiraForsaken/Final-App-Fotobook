@@ -8,13 +8,13 @@ import {
 	resetPasswordRequestSchema,
 } from '../schemas/auth.js';
 import * as authController from '../controllers/auth.controller.js';
-import { strictRateLimit } from '../middlewares/rate-limit.js';
+import { authRateLimit, strictRateLimit } from '../middlewares/rate-limit.js';
 
 export const authRouter = Router();
 
-authRouter.post('/signup', strictRateLimit, validate(signupRequestSchema), authController.signup);
+authRouter.post('/signup', authRateLimit, validate(signupRequestSchema), authController.signup);
 
-authRouter.post('/login', strictRateLimit, validate(loginRequestSchema), authController.login);
+authRouter.post('/login', authRateLimit, validate(loginRequestSchema), authController.login);
 
 authRouter.post('/logout', authController.logout);
 

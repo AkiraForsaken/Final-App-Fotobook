@@ -8,6 +8,7 @@ import { apiRouter } from './routes/api.routes.js';
 import { errorHandler } from './middlewares/error-handler.js';
 import { env } from './schemas/env.js';
 import { prisma } from './prisma/client.js';
+import { apiRateLimit } from './middlewares/rate-limit.js';
 
 const UPLOAD_DIR = env.UPLOAD_DIR ?? path.join(process.cwd(), 'uploads');
 export const app = express();
@@ -32,5 +33,5 @@ app.get('/ready', async (_req, res) => {
 	}
 });
 
-app.use('/api', apiRouter);
+app.use('/api', apiRateLimit, apiRouter);
 app.use(errorHandler);
