@@ -8,13 +8,8 @@ import {
 } from '../utils/app-error.js';
 import type { CreateAlbumRequest, UpdateAlbumRequest } from '../schemas/album.js';
 import { storage } from './storage.service.js';
-import {
-	albumWithRelations,
-	findLikedAlbumIds,
-	findFollowedAuthorIds,
-	toAlbumDto,
-	paginateRows,
-} from '../utils/helpers.js';
+import { findFollowedAuthorIds, paginateRows } from '../utils/helpers.js';
+import { albumWithRelations, findLikedAlbumIds, toAlbumDto } from '../utils/dto/album.dto.js';
 
 // Re-fetches a single album with relations and shapes it as a DTO. Accepts
 // either the global `prisma` client or an active transaction client, so

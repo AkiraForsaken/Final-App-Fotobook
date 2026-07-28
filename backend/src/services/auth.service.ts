@@ -1,7 +1,12 @@
 import { prisma } from '../prisma/client.js';
 import { Prisma } from '@prisma/client';
 import { UnauthorizedError, ConflictError, NotFoundError } from '../utils/app-error.js';
-import { signAccessToken, hashToken, generateOpaqueToken } from '../utils/jwt.js';
+import {
+	signAccessToken,
+	hashToken,
+	generateOpaqueToken,
+	EMAIL_VERIFICATION_TOKEN_TTL_HOURS,
+} from '../utils/jwt.js';
 import type {
 	LoginRequest,
 	SignupRequest,
@@ -11,33 +16,23 @@ import type {
 } from '../schemas/auth.js';
 import bcrypt from 'bcryptjs';
 import { env } from '../schemas/env.js';
+import { toAuthUserDto } from '../utils/dto/user.dto.js';
+import { sendPasswordResetEmail, sendVerificationEmail } from './email.service.js';
+import { BCRYPT_ROUNDS } from '../utils/jwt.js';
 
-const BCRYPT_ROUNDS = 10;
 const REFRESH_TOKEN_MAX_AGE_DAYS = 7;
-const EMAIL_VERIFICATION_TOKEN_TTL_HOURS = 24;
 const PASSWORD_RESET_TOKEN_TTL_HOURS = 1;
 const REQUIRE_EMAIL_VERIFICATION = env.REQUIRE_EMAIL_VERIFICATION === 'true';
 
-function toAuthUserDto(user: {
-	id: number;
-	firstName: string;
-	lastName: string;
-	email: string;
-	avatarUrl: string | null;
-	isActive: boolean;
-	role: 'user' | 'admin';
-	createdAt: Date;
-}) {
-	return {
-		id: user.id,
-		firstName: user.firstName,
-		lastName: user.lastName,
-		email: user.email,
-		avatarUrl: user.avatarUrl,
-		isActive: user.isActive,
-		isAdmin: user.role === 'admin',
-		createdAt: user.createdAt.toISOString(),
-	};
+async function createAuthTokens(user: { id: number; role: 'user' | 'admin' }) {
+	const { token: refreshToken, dbRecord } = await createRefreshToken(user.id);
+
+	// Create access token
+	const accessToken = signAccessToken({
+		sub: user.id,
+		role: user.role,
+	});
+	return { accessToken, refreshToken, refreshTokenExpiresAt: dbRecord.expiresAt };
 }
 
 /**
@@ -45,8 +40,9 @@ function toAuthUserDto(user: {
  */
 export async function signup(input: SignupRequest) {
 	// Check if email already exists
+	const normalizedEmail = input.email.toLowerCase();
 	const existingUser = await prisma.user.findUnique({
-		where: { email: input.email.toLowerCase() },
+		where: { email: normalizedEmail },
 	});
 	if (existingUser) {
 		throw new ConflictError('An account with this email already exists.');
@@ -55,36 +51,40 @@ export async function signup(input: SignupRequest) {
 	// Hash password
 	const passwordHash = await bcrypt.hash(input.password, BCRYPT_ROUNDS);
 
+	// Generate token and send email first
+	const verificationToken = createEmailVerificationToken();
+	await sendVerificationEmail(
+		{ email: normalizedEmail, firstName: input.firstName },
+		verificationToken.token
+	);
+
 	// Create user
-	const user = await prisma.user.create({
-		data: {
-			firstName: input.firstName,
-			lastName: input.lastName,
-			email: input.email.toLowerCase(),
-			passwordHash,
-			isEmailVerified: false,
-			role: 'user',
-		},
+	const user = await prisma.$transaction(async (tx) => {
+		const created = await tx.user.create({
+			data: {
+				firstName: input.firstName,
+				lastName: input.lastName,
+				email: normalizedEmail,
+				passwordHash,
+				isEmailVerified: false,
+				role: 'user',
+			},
+		});
+		await tx.emailVerificationToken.create({
+			data: {
+				userId: created.id,
+				tokenHash: verificationToken.tokenHash,
+				expiresAt: verificationToken.expiresAt,
+			},
+		});
+		return created;
 	});
 
-	// Create refresh token
-	await createEmailVerificationToken(user.id);
-	const baseUrl = env.FRONTEND_URL || 'http://localhost:5173';
-	console.log(`[auth] Verification link for ${user.email}: ${baseUrl}/verify-email`);
-
-	const { token: refreshToken, dbRecord } = await createRefreshToken(user.id);
-
-	// Create access token
-	const accessToken = signAccessToken({
-		sub: user.id,
-		role: user.role,
-	});
+	const tokens = await createAuthTokens(user);
 
 	return {
 		user: toAuthUserDto(user),
-		accessToken,
-		refreshToken,
-		refreshTokenExpiresAt: dbRecord.expiresAt,
+		...tokens,
 	};
 }
 
@@ -114,13 +114,7 @@ export async function login(input: LoginRequest) {
 		throw new UnauthorizedError('Please verify your email before signing in.');
 	}
 
-	const { token: refreshToken, dbRecord } = await createRefreshToken(user.id);
-
-	// Create access token
-	const accessToken = signAccessToken({
-		sub: user.id,
-		role: user.role,
-	});
+	const tokens = await createAuthTokens(user);
 
 	await prisma.user.update({
 		where: { id: user.id },
@@ -129,9 +123,7 @@ export async function login(input: LoginRequest) {
 
 	return {
 		user: toAuthUserDto(user),
-		accessToken,
-		refreshToken,
-		refreshTokenExpiresAt: dbRecord.expiresAt,
+		...tokens,
 	};
 }
 
@@ -172,11 +164,18 @@ export async function forgotPassword(input: ForgotPasswordRequest) {
 	});
 
 	if (user) {
-		const resetToken = await createPasswordResetToken(user.id);
-		const baseUrl = env.FRONTEND_URL || 'http://localhost:5173';
-		console.log(
-			`[auth] Password reset link for ${user.email}: ${baseUrl}/reset-password?token=${resetToken}`
+		const resetToken = createPasswordResetToken();
+		await sendPasswordResetEmail(
+			{ email: user.email, firstName: user.firstName },
+			resetToken.token
 		);
+		await prisma.passwordResetToken.create({
+			data: {
+				userId: user.id,
+				tokenHash: resetToken.tokenHash,
+				expiresAt: resetToken.expiresAt,
+			},
+		});
 	}
 
 	return {
@@ -271,23 +270,17 @@ async function rotateRefreshToken(tokenHash: string) {
 
 export async function refreshAccessToken(refreshToken: string) {
 	const tokenHash = hashToken(refreshToken);
-	const MAX_RETRIES = 2;
-	for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
-		try {
-			const result = await rotateRefreshToken(tokenHash);
-			return { ...result, user: toAuthUserDto(result.user) };
-		} catch (err) {
-			if (
-				err instanceof Prisma.PrismaClientKnownRequestError &&
-				err.code === 'P2034' &&
-				attempt < MAX_RETRIES
-			) {
-				continue; // Postgres aborted for serialization conflict — safe to retry
-			}
-			throw err;
+
+	try {
+		const result = await rotateRefreshToken(tokenHash);
+		return { ...result, user: toAuthUserDto(result.user) };
+	} catch (err) {
+		// A write conflict (P2034) means another concurrent request won the race to claim this token.
+		if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === 'P2034') {
+			throw new UnauthorizedError('Refresh token was concurrently consumed');
 		}
+		throw err;
 	}
-	throw new Error('Max retries reached for token rotation');
 }
 
 /**
@@ -317,34 +310,18 @@ async function createRefreshToken(userId: number) {
 	return { token, dbRecord };
 }
 
-export async function createEmailVerificationToken(userId: number) {
+export function createEmailVerificationToken() {
 	const token = crypto.randomUUID();
 	const expiresAt = new Date(Date.now() + EMAIL_VERIFICATION_TOKEN_TTL_HOURS * 60 * 60 * 1000);
 	const tokenHash = hashToken(token);
 
-	await prisma.emailVerificationToken.create({
-		data: {
-			userId,
-			tokenHash,
-			expiresAt,
-		},
-	});
-
-	return token;
+	return { token, tokenHash, expiresAt };
 }
 
-async function createPasswordResetToken(userId: number) {
+function createPasswordResetToken() {
 	const token = crypto.randomUUID();
 	const expiresAt = new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_HOURS * 60 * 60 * 1000);
 	const tokenHash = hashToken(token);
 
-	await prisma.passwordResetToken.create({
-		data: {
-			userId,
-			tokenHash,
-			expiresAt,
-		},
-	});
-
-	return token;
+	return { token, tokenHash, expiresAt };
 }

@@ -14,7 +14,13 @@ export function validate(schema: z.ZodType, target: ValidationTarget = 'body') {
 			return;
 		}
 		if (target === 'query') {
-			Object.assign(req.query, result.data);
+			// Overrides the read-only getter safely
+			Object.defineProperty(req, 'query', {
+				value: result.data,
+				writable: true,
+				configurable: true,
+				enumerable: true,
+			});
 		} else {
 			req[target] = result.data;
 		}

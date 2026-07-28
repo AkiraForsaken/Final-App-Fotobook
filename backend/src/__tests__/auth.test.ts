@@ -1,14 +1,20 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import { app } from '../app.js';
 import { prisma } from '../prisma/client.js';
 import { createTestUser, RAW_PASSWORD } from './helpers/factories.js';
 import { loginAs } from './helpers/auth.js';
 import crypto from 'node:crypto';
+import { sendVerificationEmail, sendPasswordResetEmail } from '../services/email.service.js';
 
 function hashToken(token: string) {
 	return crypto.createHash('sha256').update(token).digest('hex');
 }
+
+vi.mock('../services/email.service.js', () => ({
+	sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+	sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe('POST /api/auth/signup', () => {
 	it('creates a user and returns an access token + refresh cookie', async () => {
@@ -38,6 +44,21 @@ describe('POST /api/auth/signup', () => {
 	it('rejects an invalid payload', async () => {
 		const res = await request(app).post('/api/auth/signup').send({ email: 'not-an-email' });
 		expect(res.status).toBe(400);
+	});
+
+	it('does not create a user when the verification email fails to send', async () => {
+		vi.mocked(sendVerificationEmail).mockRejectedValueOnce(new Error('SMTP down'));
+
+		const res = await request(app).post('/api/auth/signup').send({
+			firstName: 'Fails',
+			lastName: 'ToSend',
+			email: 'email-fail@example.com',
+			password: 'Password123!',
+		});
+
+		expect(res.status).toBeGreaterThanOrEqual(500);
+		const created = await prisma.user.findUnique({ where: { email: 'email-fail@example.com' } });
+		expect(created).toBeNull();
 	});
 });
 
@@ -199,5 +220,16 @@ describe('POST /api/auth/forgot-password + reset-password', () => {
 			.post('/api/auth/reset-password')
 			.send({ token: rawToken, newPassword: 'NewPassword1!' });
 		expect(res.status).toBe(401);
+	});
+
+	it('fails the request and persists no token when the reset email fails to send', async () => {
+		const user = await createTestUser({ email: 'reset-fail@example.com' });
+		vi.mocked(sendPasswordResetEmail).mockRejectedValueOnce(new Error('SMTP down'));
+
+		const res = await request(app).post('/api/auth/forgot-password').send({ email: user.email });
+		expect(res.status).toBeGreaterThanOrEqual(500);
+
+		const tokens = await prisma.passwordResetToken.findMany({ where: { userId: user.id } });
+		expect(tokens).toHaveLength(0);
 	});
 });

@@ -31,7 +31,7 @@ describe('Admin route access control', () => {
 
 		const res = await request(app).get('/api/admin/users').set(authHeader(accessToken));
 		expect(res.status).toBe(200);
-		expect(Array.isArray(res.body)).toBe(true);
+		expect(Array.isArray(res.body.items)).toBe(true);
 	});
 });
 

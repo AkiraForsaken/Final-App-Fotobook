@@ -23,6 +23,10 @@ export const APP_ROUTE = {
 	ADMIN_ALBUMS: '/admin/albums',
 	ADMIN_EDIT_USER: '/admin/users/:id/edit',
 
+	FORGOT_PASSWORD: '/forgot-password',
+	RESET_PASSWORD: '/reset-password',
+	VERIFY_EMAIL: '/verify-email',
+
 	NOT_FOUND: '*',
 } as const;
 

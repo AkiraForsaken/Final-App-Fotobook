@@ -2,6 +2,8 @@ import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { env } from '../schemas/env.js';
 
+export const BCRYPT_ROUNDS = 10;
+export const EMAIL_VERIFICATION_TOKEN_TTL_HOURS = 24;
 export interface AccessTokenPayload {
 	sub: number; // userId
 	role: 'user' | 'admin';

@@ -3,13 +3,19 @@ import { requireAuth } from '../middlewares/auth.middleware.js';
 import { requireAdmin } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
 import * as adminController from '../controllers/admin.controller.js';
-import { idParamsSchema, paginationQuerySchema } from '../schemas/common.js';
+import { idParamsSchema, offsetPaginationSchema } from '../schemas/common.js';
 import { adminResetPasswordRequestSchema, updateUserRequestSchema } from '../schemas/auth.js';
 import { uploadAvatarImage } from '../middlewares/upload.js';
 
 export const adminRouter = Router();
 
-adminRouter.get('/users', requireAuth, requireAdmin, adminController.listUsers);
+adminRouter.get(
+	'/users',
+	requireAuth,
+	requireAdmin,
+	validate(offsetPaginationSchema, 'query'),
+	adminController.listUsers
+);
 
 adminRouter
 	.route('/users/:id')
@@ -54,7 +60,7 @@ adminRouter.get(
 	'/photos',
 	requireAuth,
 	requireAdmin,
-	validate(paginationQuerySchema, 'query'),
+	validate(offsetPaginationSchema, 'query'),
 	adminController.getPhotos
 );
 
@@ -62,6 +68,6 @@ adminRouter.get(
 	'/albums',
 	requireAuth,
 	requireAdmin,
-	validate(paginationQuerySchema, 'query'),
+	validate(offsetPaginationSchema, 'query'),
 	adminController.getAlbums
 );

@@ -17,27 +17,27 @@ export async function changePassword(req: Request, res: Response) {
 }
 
 export async function getPublicProfile(req: Request, res: Response) {
-	const userId = Number(req.params.id);
+	const userId = req.params.id as unknown as number;
 	const profile = await userService.getPublicUserProfile(userId, req.user?.id ?? null);
 	res.json(profile);
 }
 
 export async function followUser(req: Request, res: Response) {
-	const userId = Number(req.params.id);
+	const userId = req.params.id as unknown as number;
 	const result = await userService.followUser(req.user!.id, userId);
 	res.json(result);
 }
 
 export async function unfollowUser(req: Request, res: Response) {
-	const userId = Number(req.params.id);
+	const userId = req.params.id as unknown as number;
 	await userService.unfollowUser(req.user!.id, userId);
 	res.json({ message: 'Unfollowed successfully.' });
 }
 
 export async function getUserPhotos(req: Request, res: Response) {
-	const targetUserId = Number(req.params.id);
-	const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
-	const take = req.query.take ? Number(req.query.take) : 10;
+	const targetUserId = req.params.id as unknown as number;
+	const cursor = req.query.cursor ? (req.query.cursor as unknown as number) : undefined;
+	const take = req.query.take ? (req.query.take as unknown as number) : 10;
 
 	const result = await userService.listUserPhotos({
 		targetUserId,
@@ -50,9 +50,9 @@ export async function getUserPhotos(req: Request, res: Response) {
 }
 
 export async function getUserAlbums(req: Request, res: Response) {
-	const targetUserId = Number(req.params.id);
-	const cursor = req.query.cursor ? Number(req.query.cursor) : undefined;
-	const take = req.query.take ? Number(req.query.take) : 10;
+	const targetUserId = req.params.id as unknown as number;
+	const cursor = req.query.cursor ? (req.query.cursor as unknown as number) : undefined;
+	const take = req.query.take ? (req.query.take as unknown as number) : 10;
 
 	const result = await userService.listUserAlbums({
 		targetUserId,
@@ -65,9 +65,11 @@ export async function getUserAlbums(req: Request, res: Response) {
 }
 
 export async function getUserFollowers(req: Request, res: Response) {
-	const targetUserId = Number(req.params.id);
-	const offset = req.query.offset ? Number(req.query.offset) : 0;
-	const take = req.query.take ? Number(req.query.take) : 10;
+	const targetUserId = req.params.id as unknown as number;
+	const page = req.query.page ? (req.query.page as unknown as number) : 1;
+	const take = req.query.take ? (req.query.take as unknown as number) : 10;
+
+	const offset = (page - 1) * take;
 
 	const result = await userService.listUserFollowers({
 		targetUserId,
@@ -79,9 +81,11 @@ export async function getUserFollowers(req: Request, res: Response) {
 }
 
 export async function getUserFollowing(req: Request, res: Response) {
-	const targetUserId = Number(req.params.id);
-	const offset = req.query.offset ? Number(req.query.offset) : 0;
-	const take = req.query.take ? Number(req.query.take) : 10;
+	const targetUserId = req.params.id as unknown as number;
+	const page = req.query.page ? (req.query.page as unknown as number) : 1;
+	const take = req.query.take ? (req.query.take as unknown as number) : 10;
+
+	const offset = (page - 1) * take;
 
 	const result = await userService.listUserFollowing({
 		targetUserId,

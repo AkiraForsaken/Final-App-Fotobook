@@ -1,6 +1,5 @@
 import { PrismaClient, SharingMode, UserRole } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import pg from 'pg';
 import * as bcrypt from 'bcryptjs';
 import { env } from 'process';
 
@@ -22,10 +21,10 @@ async function main() {
 	await prisma.photo.deleteMany({});
 	await prisma.user.deleteMany({});
 
-	// 2. Setup reusable password hash (Use 'Password123!' to log in as anyone)
+	// 2. Setup reusable password hash ('Password123!')
 	const defaultPasswordHash = await bcrypt.hash('Password123!', 10);
 
-	// 3. Insert Users matching specified explicit IDs
+	// 3. Insert 8 Users with explicit IDs
 	console.log('Seeding users...');
 	const usersData = [
 		{
@@ -73,7 +72,7 @@ async function main() {
 		{
 			id: 7,
 			firstName: 'Serie',
-			lastName: 'The Living Grimmoir',
+			lastName: 'The Living Grimoire',
 			email: 'serie@example.com',
 			avatarUrl: '/assets/serie.jpeg',
 		},
@@ -95,34 +94,73 @@ async function main() {
 				email: u.email,
 				passwordHash: defaultPasswordHash,
 				avatarUrl: u.avatarUrl,
-				role: u.id === 7 ? UserRole.admin : UserRole.user, // Let Serie be the admin
+				role: u.id === 7 ? UserRole.admin : UserRole.user, // Serie as Admin
 				isEmailVerified: true,
 				isActive: true,
 			},
 		});
 	}
 
-	// 4. Seed Follows graph from Profile 1 data
+	// 4. Seed Rich Follow Graph
 	console.log('Seeding follows...');
 	await prisma.follow.createMany({
 		data: [
-			// Frieren's followings
-			{ followerId: 1, followingId: 3 }, // Frieren follows Stark
-			{ followerId: 1, followingId: 2 }, // Frieren follows Fern
-			{ followerId: 1, followingId: 6 }, // Frieren follows Eisen
-			// Frieren's followers
-			{ followerId: 5, followingId: 1 }, // Heiter follows Frieren
-			{ followerId: 7, followingId: 1 }, // Serie follows Frieren
-			{ followerId: 3, followingId: 1 }, // Stark follows Frieren
-			{ followerId: 4, followingId: 1 }, // Himmel follows Frieren
+			// Frieren (1)
+			{ followerId: 1, followingId: 2 }, // -> Fern
+			{ followerId: 1, followingId: 3 }, // -> Stark
+			{ followerId: 1, followingId: 4 }, // -> Himmel
+			{ followerId: 1, followingId: 6 }, // -> Eisen
+			{ followerId: 1, followingId: 8 }, // -> Flamme
+
+			// Fern (2)
+			{ followerId: 2, followingId: 1 }, // -> Frieren
+			{ followerId: 2, followingId: 3 }, // -> Stark
+			{ followerId: 2, followingId: 5 }, // -> Heiter
+
+			// Stark (3)
+			{ followerId: 3, followingId: 1 }, // -> Frieren
+			{ followerId: 3, followingId: 2 }, // -> Fern
+			{ followerId: 3, followingId: 6 }, // -> Eisen
+
+			// Himmel (4)
+			{ followerId: 4, followingId: 1 }, // -> Frieren
+			{ followerId: 4, followingId: 5 }, // -> Heiter
+			{ followerId: 4, followingId: 6 }, // -> Eisen
+
+			// Heiter (5)
+			{ followerId: 5, followingId: 1 }, // -> Frieren
+			{ followerId: 5, followingId: 4 }, // -> Himmel
+			{ followerId: 5, followingId: 2 }, // -> Fern
+
+			// Eisen (6)
+			{ followerId: 6, followingId: 3 }, // -> Stark
+			{ followerId: 6, followingId: 4 }, // -> Himmel
+			{ followerId: 6, followingId: 5 }, // -> Heiter
+
+			// Serie (7)
+			{ followerId: 7, followingId: 1 }, // -> Frieren
+			{ followerId: 7, followingId: 8 }, // -> Flamme
+
+			// Flamme (8)
+			{ followerId: 8, followingId: 1 }, // -> Frieren
+			{ followerId: 8, followingId: 7 }, // -> Serie
 		],
 	});
 
-	// 5. Seed Standalone Photos (Feed photos + Profile 1 private photo)
-	console.log('Seeding photos...');
+	// 5. Seed Standalone Photos (Ensuring ALL 8 users have local asset photos)
+	console.log('Seeding standalone photos...');
 	const photosData = [
 		{
 			id: 1,
+			authorId: 1,
+			title: 'Above the Clouds',
+			description: 'Portrait at sunset after a long day of traveling.',
+			imageUrl: '/assets/frieren.jpeg',
+			sharingMode: SharingMode.public,
+			createdAt: new Date('2024-06-10T10:00:00Z'),
+		},
+		{
+			id: 2,
 			authorId: 2,
 			title: 'Magic in the Forest',
 			description: 'A serene view from our adventure in the ancient woods.',
@@ -131,57 +169,94 @@ async function main() {
 			createdAt: new Date('2024-06-10T09:00:00Z'),
 		},
 		{
-			id: 2,
-			authorId: 1,
-			title: 'Above the Clouds',
-			description: 'Portrait at sunset after a long day of traveling.',
-			imageUrl: '/assets/frieren.jpeg',
-			sharingMode: SharingMode.public,
-			createdAt: new Date('2024-06-09T17:30:00Z'),
-		},
-		{
 			id: 3,
 			authorId: 3,
 			title: 'Battle Ready',
-			description: 'Stark in his finest armor, just before the big fight.',
+			description: 'Stark in his finest armor, ready for practice.',
 			imageUrl: '/assets/stark.jpeg',
 			sharingMode: SharingMode.public,
-			createdAt: new Date('2024-06-08T12:00:00Z'),
+			createdAt: new Date('2024-06-09T14:00:00Z'),
+		},
+		{
+			id: 4,
+			authorId: 4,
+			title: 'A Hero’s Stance',
+			description: 'Posing for the statue carvers once again.',
+			imageUrl: '/assets/himmel.jpeg',
+			sharingMode: SharingMode.public,
+			createdAt: new Date('2024-06-08T11:30:00Z'),
+		},
+		{
+			id: 5,
+			authorId: 5,
+			title: 'Quiet Reflection',
+			description: 'Enjoying a peaceful moment and a fine vintage.',
+			imageUrl: '/assets/heiter.jpeg',
+			sharingMode: SharingMode.public,
+			createdAt: new Date('2024-06-07T16:20:00Z'),
+		},
+		{
+			id: 6,
+			authorId: 6,
+			title: 'Unwavering Vanguard',
+			description: 'Standing guard over the northern pass.',
+			imageUrl: '/assets/eisen.jpeg',
+			sharingMode: SharingMode.public,
+			createdAt: new Date('2024-06-06T08:15:00Z'),
 		},
 		{
 			id: 7,
-			authorId: 2,
-			title: 'Spellweaving at Dusk',
-			description: 'An experimental spell gone beautifully wrong.',
-			imageUrl: 'https://picsum.photos/seed/736/736',
+			authorId: 7,
+			title: 'The Great Sanctuary',
+			description: 'Overseeing the Continental Magic Association.',
+			imageUrl: '/assets/serie.jpeg',
 			sharingMode: SharingMode.public,
-			createdAt: new Date('2024-06-04T20:00:00Z'),
+			createdAt: new Date('2024-06-05T19:00:00Z'),
 		},
 		{
 			id: 8,
-			authorId: 3,
-			title: 'The Silent Summit',
-			description: 'After three days of climbing, silence was the reward.',
-			imageUrl: 'https://picsum.photos/736/736',
+			authorId: 8,
+			title: 'Fields of Flowers',
+			description: 'A spell that creates a field of blue flowers.',
+			imageUrl: '/assets/flamme.jpeg',
 			sharingMode: SharingMode.public,
-			createdAt: new Date('2024-06-03T07:45:00Z'),
+			createdAt: new Date('2024-06-04T12:00:00Z'),
 		},
+		// Additional feed/testing photos
 		{
 			id: 9,
 			authorId: 1,
 			title: 'Library of the Ancients',
 			description: 'Frieren browsing grimoires older than most civilizations.',
-			imageUrl: 'https://picsum.photos/736/736',
+			imageUrl: 'https://picsum.photos/seed/frieren_lib/736/736',
 			sharingMode: SharingMode.public,
-			createdAt: new Date('2024-06-02T11:20:00Z'),
+			createdAt: new Date('2024-06-03T11:20:00Z'),
 		},
 		{
-			id: 199,
+			id: 10,
+			authorId: 2,
+			title: 'Spellweaving at Dusk',
+			description: 'An experimental spell gone beautifully right.',
+			imageUrl: 'https://picsum.photos/seed/fern_dusk/736/736',
+			sharingMode: SharingMode.public,
+			createdAt: new Date('2024-06-02T20:00:00Z'),
+		},
+		{
+			id: 11,
+			authorId: 3,
+			title: 'The Silent Summit',
+			description: 'After three days of climbing, silence was the reward.',
+			imageUrl: 'https://picsum.photos/seed/stark_summit/736/736',
+			sharingMode: SharingMode.public,
+			createdAt: new Date('2024-06-01T07:45:00Z'),
+		},
+		{
+			id: 12,
 			authorId: 1,
-			title: 'Private Spellbook Study',
-			description: 'Deciphering scripts alone in the evening. (Private to me)',
-			imageUrl: 'https://picsum.photos/seed/priv/600/600',
-			sharingMode: SharingMode.private,
+			title: 'Private Grimoire Study',
+			description: 'Deciphering secret scripts alone in the evening.',
+			imageUrl: 'https://picsum.photos/seed/frieren_priv/600/600',
+			sharingMode: SharingMode.private, // Private test photo
 			createdAt: new Date('2026-06-10T08:00:00Z'),
 		},
 	];
@@ -197,163 +272,158 @@ async function main() {
 				imageUrl: p.imageUrl,
 				imageMimeType: 'image/jpeg',
 				imageSizeBytes: 1024 * 500,
-				isStandalone: true, // Expressly standalone
+				isStandalone: true,
 				createdAt: p.createdAt,
 			},
 		});
 	}
 
-	console.log('📖 Seeding Discovery Albums & handling inline Photo generation...');
+	// 6. Seed Albums (All 8 users own at least 1 album)
+	console.log('📖 Seeding Discovery Albums & generating inline photos...');
 	const structuralAlbums = [
 		{
-			id: 201,
-			authorId: 7,
-			title: 'The Great Library',
-			description: "Serie's personal archive of forbidden knowledge.",
-			coverImageUrl: 'https://picsum.photos/seed/da201/736/736',
+			id: 1,
+			authorId: 1,
+			title: 'Stars and Spells',
+			description: "A mage's collection of celestial magic and grimoires.",
+			coverImageUrl: '/assets/frieren.jpeg',
 			imageUrls: [
-				'https://picsum.photos/seed/da201a/400/400',
-				'https://picsum.photos/seed/da201b/400/400',
+				'https://picsum.photos/seed/alb1a/400/400',
+				'https://picsum.photos/seed/alb1b/400/400',
 			],
 			createdAt: '2024-06-11T10:00:00Z',
 		},
 		{
-			id: 202,
+			id: 2,
+			authorId: 2,
+			title: 'Magic in Practice',
+			description: "Fern's field notes and defensive spell observations.",
+			coverImageUrl: '/assets/fern.jpeg',
+			imageUrls: [
+				'https://picsum.photos/seed/alb2a/400/400',
+				'https://picsum.photos/seed/alb2b/400/400',
+			],
+			createdAt: '2024-06-10T14:00:00Z',
+		},
+		{
+			id: 3,
+			authorId: 3,
+			title: 'Hero in Training',
+			description: "Stark's records of training drills and martial progress.",
+			coverImageUrl: '/assets/stark.jpeg',
+			imageUrls: [
+				'https://picsum.photos/seed/alb3a/400/400',
+				'https://picsum.photos/seed/alb3b/400/400',
+			],
+			createdAt: '2024-06-09T08:00:00Z',
+		},
+		{
+			id: 4,
+			authorId: 4,
+			title: 'Battles We Won',
+			description: 'Himmel insisted on documenting every victory and statue.',
+			coverImageUrl: '/assets/himmel.jpeg',
+			imageUrls: [
+				'https://picsum.photos/seed/alb4a/400/400',
+				'https://picsum.photos/seed/alb4b/400/400',
+			],
+			createdAt: '2024-06-08T16:00:00Z',
+		},
+		{
+			id: 5,
+			authorId: 5,
+			title: 'Blessings and Beyond',
+			description: "Heiter's travels to remote sanctuaries and shrines.",
+			coverImageUrl: '/assets/heiter.jpeg',
+			imageUrls: [
+				'https://picsum.photos/seed/alb5a/400/400',
+				'https://picsum.photos/seed/alb5b/400/400',
+			],
+			createdAt: '2024-06-07T07:30:00Z',
+		},
+		{
+			id: 6,
+			authorId: 6,
+			title: 'Northern Wilds',
+			description: "Eisen's solo expeditions into mountain territory.",
+			coverImageUrl: '/assets/eisen.jpeg',
+			imageUrls: [
+				'https://picsum.photos/seed/alb6a/400/400',
+				'https://picsum.photos/seed/alb6b/400/400',
+			],
+			createdAt: '2024-06-06T10:00:00Z',
+		},
+		{
+			id: 7,
+			authorId: 7,
+			title: 'The Great Library',
+			description: "Serie's personal archive of forbidden magic.",
+			coverImageUrl: '/assets/serie.jpeg',
+			imageUrls: [
+				'https://picsum.photos/seed/alb7a/400/400',
+				'https://picsum.photos/seed/alb7b/400/400',
+			],
+			createdAt: '2024-06-05T12:00:00Z',
+		},
+		{
+			id: 8,
 			authorId: 8,
 			title: "Flamme's Travels",
 			description: 'Before she became a legend, she was just a traveller.',
-			coverImageUrl: 'https://picsum.photos/seed/da202/736/736',
+			coverImageUrl: '/assets/flamme.jpeg',
 			imageUrls: [
-				'https://picsum.photos/seed/da202a/400/400',
-				'https://picsum.photos/seed/da202b/400/400',
-				'https://picsum.photos/seed/da202c/400/400',
+				'https://picsum.photos/seed/alb8a/400/400',
+				'https://picsum.photos/seed/alb8b/400/400',
 			],
-			createdAt: '2024-06-09T14:00:00Z',
+			createdAt: '2024-06-04T17:00:00Z',
 		},
 		{
-			id: 203,
-			authorId: 2,
-			title: 'Magic in Practice',
-			description: "Fern's field notes, illustrated.",
-			coverImageUrl: 'https://picsum.photos/seed/da203/736/736',
-			imageUrls: [
-				'https://picsum.photos/seed/da203a/400/400',
-				'https://picsum.photos/seed/da203b/400/400',
-			],
-			createdAt: '2024-06-07T08:00:00Z',
-		},
-		{
-			id: 204,
-			authorId: 4,
-			title: 'Battles We Won',
-			description: 'Himmel insisted on documenting every victory.',
-			coverImageUrl: 'https://picsum.photos/seed/da204/736/736',
-			imageUrls: [
-				'https://picsum.photos/seed/da204a/400/400',
-				'https://picsum.photos/seed/da204b/400/400',
-				'https://picsum.photos/seed/da204c/400/400',
-				'https://picsum.photos/seed/da204d/400/400',
-			],
-			createdAt: '2024-06-05T16:00:00Z',
-		},
-		{
-			id: 205,
-			authorId: 6,
-			title: 'Northern Wilds',
-			description: "Eisen's solo expedition into uncharted mountain territory.",
-			coverImageUrl: 'https://picsum.photos/seed/da205/736/736',
-			imageUrls: [
-				'https://picsum.photos/seed/da205a/400/400',
-				'https://picsum.photos/seed/da205b/400/400',
-			],
-			createdAt: '2024-06-03T10:00:00Z',
-		},
-		{
-			id: 206,
-			authorId: 5,
-			title: 'Blessings and Beyond',
-			description: "Heiter's travels to the most remote shrines.",
-			coverImageUrl: 'https://picsum.photos/seed/da206/736/736',
-			imageUrls: [
-				'https://picsum.photos/seed/da206a/400/400',
-				'https://picsum.photos/seed/da206b/400/400',
-			],
-			createdAt: '2024-06-01T07:30:00Z',
-		},
-		{
-			id: 207,
-			authorId: 1,
-			title: 'Stars and Spells',
-			description: "A mage's guide to celestial magic.",
-			coverImageUrl: 'https://picsum.photos/seed/da207/736/736',
-			imageUrls: [
-				'https://picsum.photos/seed/da207a/400/400',
-				'https://picsum.photos/seed/da207b/400/400',
-				'https://picsum.photos/seed/da207c/400/400',
-			],
-			createdAt: '2024-05-30T22:00:00Z',
-		},
-		{
-			id: 208,
-			authorId: 3,
-			title: 'Hero in Training',
-			description: "Stark's first year as a proper adventurer.",
-			coverImageUrl: 'https://picsum.photos/seed/da208/736/736',
-			imageUrls: [
-				'https://picsum.photos/seed/da208a/400/400',
-				'https://picsum.photos/seed/da208b/400/400',
-			],
-			createdAt: '2024-05-28T13:00:00Z',
-		},
-		{
-			id: 209,
+			id: 9,
 			authorId: 7,
 			title: 'Knowledge Preserved',
-			description: 'Serie cataloguing spells lost to time.',
-			coverImageUrl: 'https://picsum.photos/seed/da209/736/736',
+			description: 'Cataloguing ancient spells lost to human memory.',
+			coverImageUrl: 'https://picsum.photos/seed/alb9_cov/736/736',
 			imageUrls: [
-				'https://picsum.photos/seed/da209a/400/400',
-				'https://picsum.photos/seed/da209b/400/400',
-				'https://picsum.photos/seed/da209c/400/400',
+				'https://picsum.photos/seed/alb9a/400/400',
+				'https://picsum.photos/seed/alb9b/400/400',
 			],
-			createdAt: '2024-05-26T09:00:00Z',
+			createdAt: '2024-06-03T09:00:00Z',
 		},
 		{
-			id: 210,
+			id: 10,
 			authorId: 8,
 			title: 'Embers of the Past',
-			description: 'Flamme revisited, through those she inspired.',
-			coverImageUrl: 'https://picsum.photos/seed/736/736',
+			description: 'Reflections on human potential and magic.',
+			coverImageUrl: 'https://picsum.photos/seed/alb10_cov/736/736',
 			imageUrls: [
-				'https://picsum.photos/seed/da210a/400/400',
-				'https://picsum.photos/seed/da210b/400/400',
-				'https://picsum.photos/seed/da210c/400/400',
+				'https://picsum.photos/seed/alb10a/400/400',
+				'https://picsum.photos/seed/alb10b/400/400',
 			],
-			createdAt: '2024-05-24T17:00:00Z',
+			createdAt: '2024-06-02T15:00:00Z',
 		},
 	];
 
-	// Global counter tracking inline photo IDs dynamically to avoid sequence stepping conflicts
-	let inlinePhotoIdCounter = 1000;
+	// Start inline album photo IDs at 100 to keep IDs organized
+	let inlinePhotoIdCounter = 100;
 
 	for (const a of structuralAlbums) {
-		// Build the Cover Photo as an inline, non-standalone, description-less record
+		// Create Cover Photo record
 		const coverPhotoRecord = await prisma.photo.create({
 			data: {
 				id: inlinePhotoIdCounter++,
 				authorId: a.authorId,
-				title: null, // Null title for inline images
-				description: null, // Null description for inline images
+				title: null,
+				description: null,
 				imageUrl: a.coverImageUrl,
 				imageMimeType: 'image/jpeg',
 				imageSizeBytes: 420000,
 				sharingMode: SharingMode.public,
-				isStandalone: false, // Only part of an album
+				isStandalone: false,
 				createdAt: new Date(a.createdAt),
 			},
 		});
 
-		// Build the Album record linked to the cover photo's unique identifier
+		// Create Album record
 		const albumRecord = await prisma.album.create({
 			data: {
 				id: a.id,
@@ -366,7 +436,7 @@ async function main() {
 			},
 		});
 
-		// Associate the Cover Photo with the Album in the many-to-many junction model
+		// Link Cover Photo to Album
 		await prisma.albumPhoto.create({
 			data: {
 				albumId: albumRecord.id,
@@ -376,20 +446,20 @@ async function main() {
 			},
 		});
 
-		// Iterate over the supplemental sub-images array, producing individual records and link structures
+		// Create and link supplemental inline photos
 		let internalPosition = 1;
 		for (const url of a.imageUrls) {
 			const internalPhoto = await prisma.photo.create({
 				data: {
 					id: inlinePhotoIdCounter++,
 					authorId: a.authorId,
-					title: null, // Null title for inline images
-					description: null, // Null description for inline images
+					title: null,
+					description: null,
 					imageUrl: url,
 					imageMimeType: 'image/jpeg',
 					imageSizeBytes: 350000,
 					sharingMode: SharingMode.public,
-					isStandalone: false, // Only part of an album
+					isStandalone: false,
 					createdAt: new Date(a.createdAt),
 				},
 			});
@@ -405,7 +475,7 @@ async function main() {
 		}
 	}
 
-	// 6. Reset SQL Auto-increment sequences (Crucial for Postgres)
+	// 7. Reset SQL Auto-increment sequences for all core entities
 	console.log('Resetting database auto-increment sequences...');
 	await prisma.$executeRawUnsafe(
 		`SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE(MAX(id), 1)) FROM users;`
@@ -413,8 +483,11 @@ async function main() {
 	await prisma.$executeRawUnsafe(
 		`SELECT setval(pg_get_serial_sequence('photos', 'id'), COALESCE(MAX(id), 1)) FROM photos;`
 	);
+	await prisma.$executeRawUnsafe(
+		`SELECT setval(pg_get_serial_sequence('albums', 'id'), COALESCE(MAX(id), 1)) FROM albums;`
+	);
 
-	console.log('✅ Database successfully populated with anime-tier mock data!');
+	console.log('✅ Database successfully populated with testing data!');
 }
 
 main()

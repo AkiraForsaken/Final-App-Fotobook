@@ -22,6 +22,9 @@ import { AdminLayout } from './components/layouts/AdminLayout.tsx';
 import { ManageUsers } from './pages/admin/ManageUsers.tsx';
 import { ManagePhotos } from './pages/admin/ManagePhotos.tsx';
 import { ManageAlbums } from './pages/admin/ManageAlbums.tsx';
+import { ForgotPassword } from './pages/ForgotPassword.tsx';
+import { ResetPassword } from './pages/ResetPassword.tsx';
+import { VerifyEmail } from './pages/VerifyEmail.tsx';
 
 const RequireAuth = ({ children }: { children: React.ReactNode }) => {
 	const { currentUser, checkingSession } = useAuth();
@@ -67,6 +70,9 @@ const AppContent = () => {
 					<Route element={<AuthLayout />}>
 						<Route path={APP_ROUTE.LOGIN} element={<Login onLogin={login} />} />
 						<Route path={APP_ROUTE.SIGNUP} element={<Signup onLogin={login} />} />
+						<Route path={APP_ROUTE.FORGOT_PASSWORD} element={<ForgotPassword />} />
+						<Route path={APP_ROUTE.RESET_PASSWORD} element={<ResetPassword />} />
+						<Route path={APP_ROUTE.VERIFY_EMAIL} element={<VerifyEmail />} />
 					</Route>
 
 					<Route element={<ContentLayout />}>

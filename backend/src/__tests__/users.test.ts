@@ -1,8 +1,15 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import request from 'supertest';
 import { app } from '../app.js';
 import { createTestPhoto, createTestUser } from './helpers/factories.js';
 import { loginAs, authHeader } from './helpers/auth.js';
+import { sendVerificationEmail } from '../services/email.service.js';
+import { prisma } from '../prisma/client.js';
+
+vi.mock('../services/email.service.js', () => ({
+	sendVerificationEmail: vi.fn().mockResolvedValue(undefined),
+	sendPasswordResetEmail: vi.fn().mockResolvedValue(undefined),
+}));
 
 describe('GET /api/users/:id (public profile) — 3.1', () => {
 	it('never exposes email, isActive, or isAdmin, as a guest', async () => {
@@ -141,18 +148,35 @@ describe('GET /api/users/:id/followers and /following relationship lists', () =>
 		await request(app).post(`/api/users/${target.id}/follow`).set(authHeader(accessToken));
 
 		// Test Followers endpoint
-		const followersRes = await request(app).get(
-			`/api/users/${target.id}/followers?offset=0&take=5`
-		);
+		const followersRes = await request(app).get(`/api/users/${target.id}/followers?page=1&take=5`);
 		expect(followersRes.status).toBe(200);
 		expect(Array.isArray(followersRes.body.items)).toBe(true);
 		expect(followersRes.body.items[0].id).toBe(follower.id);
 
 		// Test Following endpoint
 		const followingRes = await request(app).get(
-			`/api/users/${follower.id}/following?offset=0&take=5`
+			`/api/users/${follower.id}/following?page=1&take=5`
 		);
 		expect(followingRes.status).toBe(200);
 		expect(followingRes.body.items[0].id).toBe(target.id);
+	});
+});
+
+describe('PUT /api/users/current/profile — verification email failure', () => {
+	it('leaves the profile untouched when the verification email fails to send', async () => {
+		const user = await createTestUser({ email: 'safe@example.com' });
+		const { accessToken } = await loginAs(app, user.email);
+		vi.mocked(sendVerificationEmail).mockRejectedValueOnce(new Error('SMTP down'));
+
+		const res = await request(app)
+			.put('/api/users/current/profile')
+			.set(authHeader(accessToken))
+			.field('firstName', user.firstName)
+			.field('lastName', user.lastName)
+			.field('email', 'changed@example.com');
+
+		expect(res.status).toBeGreaterThanOrEqual(500);
+		const stillOld = await prisma.user.findUnique({ where: { id: user.id } });
+		expect(stillOld?.email).toBe('safe@example.com');
 	});
 });

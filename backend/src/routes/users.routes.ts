@@ -4,7 +4,11 @@ import { validate } from '../middlewares/validate.js';
 import { updateUserRequestSchema, changePasswordRequestSchema } from '../schemas/auth.js';
 import * as usersController from '../controllers/users.controller.js';
 import { uploadAvatarImage } from '../middlewares/upload.js';
-import { idParamsSchema } from '../schemas/common.js';
+import {
+	idParamsSchema,
+	offsetPaginationSchema,
+	paginationQuerySchema,
+} from '../schemas/common.js';
 
 export const usersRouter = Router();
 
@@ -40,6 +44,7 @@ usersRouter.get(
 	'/:id/photos',
 	optionalAuth,
 	validate(idParamsSchema, 'params'),
+	validate(paginationQuerySchema, 'query'),
 	usersController.getUserPhotos
 );
 
@@ -47,6 +52,7 @@ usersRouter.get(
 	'/:id/albums',
 	optionalAuth,
 	validate(idParamsSchema, 'params'),
+	validate(paginationQuerySchema, 'query'),
 	usersController.getUserAlbums
 );
 
@@ -54,6 +60,7 @@ usersRouter.get(
 	'/:id/followers',
 	optionalAuth,
 	validate(idParamsSchema, 'params'),
+	validate(offsetPaginationSchema, 'query'),
 	usersController.getUserFollowers
 );
 
@@ -61,5 +68,6 @@ usersRouter.get(
 	'/:id/following',
 	optionalAuth,
 	validate(idParamsSchema, 'params'),
+	validate(offsetPaginationSchema, 'query'),
 	usersController.getUserFollowing
 );

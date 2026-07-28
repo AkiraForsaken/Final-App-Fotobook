@@ -4,12 +4,13 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000';
 
 const client = axios.create({ baseURL: BASE_URL, withCredentials: true });
 
+let accessToken: string | null = null;
+
 // Add a request interceptor to dynamically get the token before EVERY request
 client.interceptors.request.use(
 	(config) => {
-		const token = localStorage.getItem('accessToken');
-		if (token) {
-			config.headers.Authorization = `Bearer ${token}`;
+		if (accessToken) {
+			config.headers.Authorization = `Bearer ${accessToken}`;
 		}
 		return config;
 	},
@@ -17,8 +18,6 @@ client.interceptors.request.use(
 		return Promise.reject(error);
 	}
 );
-
-let accessToken: string | null = null;
 
 // AuthContext registers a handler here so that an auth failure can clear local sessions
 type AuthFailureHandler = () => void;
@@ -74,11 +73,8 @@ async function rawRequest<T>(
 		headers['Content-Type'] = 'application/json';
 	}
 
-	// Read token from memory or fallback to localStorage if memory was wiped on refresh
-	const token = accessToken || localStorage.getItem('accessToken');
-
-	if (token && !isAuthRoute(path)) {
-		headers['Authorization'] = `Bearer ${token}`;
+	if (accessToken && !isAuthRoute(path)) {
+		headers['Authorization'] = `Bearer ${accessToken}`;
 	}
 
 	const config: AxiosRequestConfig = {
@@ -96,7 +92,6 @@ async function rawRequest<T>(
 		const resData = response.data as { accessToken?: string };
 		if (resData?.accessToken) {
 			accessToken = resData.accessToken;
-			localStorage.setItem('accessToken', resData.accessToken);
 		}
 	}
 	return { status: response.status, data: response.data as T };

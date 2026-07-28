@@ -46,3 +46,9 @@ export class ExternalServiceError extends AppError {
 		super(502, message);
 	}
 }
+
+export class EmailDeliveryError extends AppError {
+	constructor(message = 'Failed to send email.') {
+		super(502, message);
+	}
+}

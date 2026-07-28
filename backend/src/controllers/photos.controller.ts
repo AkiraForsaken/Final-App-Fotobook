@@ -11,7 +11,7 @@ export async function create(req: Request, res: Response) {
 }
 
 export async function update(req: Request, res: Response) {
-	const photoId = Number(req.params.id);
+	const photoId = req.params.id as unknown as number;
 	const photo = await photoService.updatePhoto(
 		photoId,
 		req.user!.id,
@@ -23,25 +23,25 @@ export async function update(req: Request, res: Response) {
 }
 
 export async function remove(req: Request, res: Response) {
-	const photoId = Number(req.params.id);
+	const photoId = req.params.id as unknown as number;
 	await photoService.deletePhoto(photoId, req.user!.id, req.user!.role);
 	res.status(204).send();
 }
 
 export async function like(req: Request, res: Response) {
-	const photoId = Number(req.params.id);
+	const photoId = req.params.id as unknown as number;
 	const result = await photoService.likePhoto(photoId, req.user!.id);
 	res.json(result);
 }
 
 export async function unlike(req: Request, res: Response) {
-	const photoId = Number(req.params.id);
+	const photoId = req.params.id as unknown as number;
 	const result = await photoService.unlikePhoto(photoId, req.user!.id);
 	res.json(result);
 }
 
 export async function getById(req: Request, res: Response) {
-	const photoId = Number(req.params.id);
+	const photoId = req.params.id as unknown as number;
 	const photo = await photoService.getPhotoById(
 		photoId,
 		req.user?.id ?? null,

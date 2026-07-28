@@ -2,6 +2,8 @@ import multer from 'multer';
 import type { NextFunction, Request, Response } from 'express';
 import { Prisma } from '@prisma/client';
 import { AppError } from '../utils/app-error.js';
+import { logger } from '../utils/logger.js';
+import { env } from '../schemas/env.js';
 
 /**
  * Turns any thrown error into a response, and never leaks stack
@@ -41,6 +43,17 @@ export function errorHandler(err: unknown, req: Request, res: Response, _next: N
 		}
 	}
 
-	console.error(`[${req.method} ${req.originalUrl}]`, err);
+	logger.error(
+		{
+			err:
+				env.NODE_ENV === 'production'
+					? { message: (err as Error)?.message, name: (err as Error)?.name }
+					: err,
+			method: req.method,
+			url: req.originalUrl,
+			requestId: (req as any).requestId,
+		},
+		'Unhandled error'
+	);
 	res.status(500).json({ error: 'Something went wrong. Please try again.' });
 }
