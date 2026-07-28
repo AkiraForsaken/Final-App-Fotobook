@@ -1,5 +1,5 @@
 import { APP_ROUTE } from './utils/routes.ts';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router';
 import { Feeds } from './pages/Feeds.tsx';
 import { Discovery } from './pages/Discovery.tsx';
 import { Login } from './pages/Login.tsx';
@@ -25,40 +25,9 @@ import { ManageAlbums } from './pages/admin/ManageAlbums.tsx';
 import { ForgotPassword } from './pages/ForgotPassword.tsx';
 import { ResetPassword } from './pages/ResetPassword.tsx';
 import { VerifyEmail } from './pages/VerifyEmail.tsx';
-
-const RequireAuth = ({ children }: { children: React.ReactNode }) => {
-	const { currentUser, checkingSession } = useAuth();
-	const location = useLocation();
-
-	if (checkingSession) {
-		return <div className="text-center py-20 text-text-muted">Loading...</div>;
-	}
-
-	if (!currentUser) {
-		return <Navigate to={APP_ROUTE.LOGIN} state={{ from: location }} replace />;
-	}
-
-	return <>{children}</>;
-};
-
-const RequireAdmin = ({ children }: { children: React.ReactNode }) => {
-	const { currentUser, checkingSession } = useAuth();
-	const location = useLocation();
-
-	if (checkingSession) {
-		return <div className="text-center py-20 text-text-muted">Loading...</div>;
-	}
-
-	if (!currentUser) {
-		return <Navigate to={APP_ROUTE.LOGIN} state={{ from: location }} replace />;
-	}
-
-	if (!currentUser.isActive) {
-		return <Navigate to={APP_ROUTE.HOME} replace />;
-	}
-
-	return <>{children}</>;
-};
+import { RequireAuth } from './components/requireWrapper/RequireAuth.tsx';
+import { RequireAdmin } from './components/requireWrapper/RequireAdmin.tsx';
+import { RequireVerifiedEmail } from './components/requireWrapper/RequireVerifiedEmail.tsx';
 
 const AppContent = () => {
 	const { currentUser, login } = useAuth();
@@ -115,7 +84,9 @@ const AppContent = () => {
 							path={APP_ROUTE.ADD_PHOTO}
 							element={
 								<RequireAuth>
-									<AddPhoto />
+									<RequireVerifiedEmail>
+										<AddPhoto />
+									</RequireVerifiedEmail>
 								</RequireAuth>
 							}
 						/>
@@ -133,7 +104,9 @@ const AppContent = () => {
 							path={APP_ROUTE.ADD_ALBUM}
 							element={
 								<RequireAuth>
-									<AddAlbum />
+									<RequireVerifiedEmail>
+										<AddAlbum />
+									</RequireVerifiedEmail>
 								</RequireAuth>
 							}
 						/>

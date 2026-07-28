@@ -1,8 +1,7 @@
-import { useNavigate } from 'react-router';
+import { useNavigate, useLocation, Link } from 'react-router';
 import { Avatar } from './myUI/Avatar.tsx';
 import { SearchBar } from './myUI/SearchBar.tsx';
 import { Button } from './myUI/Button.tsx';
-import { Link } from 'react-router';
 import { useAuth } from '../hooks/useAuth.ts';
 import { useTheme } from '../hooks/useTheme.ts';
 import { APP_ROUTE } from '../utils/routes.ts';
@@ -15,6 +14,7 @@ interface TopBarProps {
 
 export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => {
 	const navigate = useNavigate();
+	const location = useLocation(); // Track current route
 	const { currentUser, logout } = useAuth();
 	const { theme, setTheme } = useTheme();
 	const isDark = theme === 'dark';
@@ -44,8 +44,9 @@ export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => 
 							{adminLayout ? 'FotoBookAdmin' : 'FotoBook'}
 						</span>
 
-						{/* Desktop search */}
+						{/* Desktop search — key forces reset on route change */}
 						<SearchBar
+							key={location.pathname}
 							className="hidden sm:block w-64 md:w-80"
 							placeholder="Search photos / albums…"
 							onSearch={onSearch}
@@ -88,9 +89,13 @@ export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => 
 					</div>
 				</div>
 
-				{/* Mobile search - below main row */}
+				{/* Mobile search — key forces reset on route change */}
 				<div className="block sm:hidden pb-3">
-					<SearchBar placeholder="Search photos / albums…" onSearch={onSearch} />
+					<SearchBar
+						key={location.pathname}
+						placeholder="Search photos / albums…"
+						onSearch={onSearch}
+					/>
 				</div>
 			</div>
 		</header>

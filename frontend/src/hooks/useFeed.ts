@@ -5,9 +5,19 @@ import type { Album, Photo } from '../types/index.ts';
 
 const PAGE_SIZE = 6;
 
-export const useFeed = (enabled = true) => {
-	const photoFeed = usePaginatedContent<Photo>(contentService.getFeedPhotos, PAGE_SIZE, enabled);
-	const albumFeed = usePaginatedContent<Album>(contentService.getFeedAlbums, PAGE_SIZE, enabled);
+export const useFeed = (enabled = true, searchQuery: string) => {
+	const photoFeed = usePaginatedContent<Photo>(
+		contentService.getFeedPhotos,
+		PAGE_SIZE,
+		enabled,
+		searchQuery
+	);
+	const albumFeed = usePaginatedContent<Album>(
+		contentService.getFeedAlbums,
+		PAGE_SIZE,
+		enabled,
+		searchQuery
+	);
 
 	// Modal states managed within the hook's domain
 	const [activePhoto, setActivePhoto] = useState<Photo | null>(null);

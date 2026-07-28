@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router';
 import type { FeedMode } from '../types/index.ts';
 import { PhotoCard } from '../components/photo/PhotoCard.tsx';
 import { AlbumCard } from '../components/album/AlbumCard.tsx';
@@ -10,9 +10,21 @@ import { AlbumModal } from '../components/album/AlbumModal.tsx';
 import { routeUtils } from '../utils/routes.ts';
 import { useFeed } from '../hooks/useFeed.ts';
 import { useAuth } from '../hooks/useAuth.ts';
+import type { ContentOutletContext } from '../components/layouts/ContentLayout.tsx';
 
 export const Feeds = () => {
 	const { checkingSession } = useAuth();
+	const { setOnSearch } = useOutletContext<ContentOutletContext>();
+
+	const navigate = useNavigate();
+	const [feedMode, setFeedMode] = useState<FeedMode>('photos');
+	const [searchQuery, setSearchQuery] = useState('');
+
+	useEffect(() => {
+		setOnSearch(setSearchQuery);
+		return () => setOnSearch(null);
+	}, [setOnSearch]);
+
 	const {
 		photoFeed,
 		albumFeed,
@@ -23,10 +35,7 @@ export const Feeds = () => {
 		toggleLikePhoto,
 		toggleLikeAlbum,
 		loading,
-	} = useFeed(!checkingSession);
-
-	const [feedMode, setFeedMode] = useState<FeedMode>('photos');
-	const navigate = useNavigate();
+	} = useFeed(!checkingSession, searchQuery);
 
 	if (checkingSession) {
 		return <div className="flex h-screen items-center justify-center">Verifying session...</div>;

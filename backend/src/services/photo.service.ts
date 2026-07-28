@@ -8,6 +8,7 @@ import { findFollowedAuthorIds, paginateRows } from '../utils/helpers.js';
 
 interface ListPublicPhotosOptions {
 	authorIds?: number[]; // restrict to these authors (Feed); omit for Discovery
+	search?: string;
 	currentUserId: number | null;
 	cursor?: number; // keyset pagination — photo id to start after
 	take?: number;
@@ -15,6 +16,7 @@ interface ListPublicPhotosOptions {
 
 export async function listPublicPhotos({
 	authorIds,
+	search,
 	currentUserId,
 	cursor,
 	take = 20,
@@ -24,6 +26,7 @@ export async function listPublicPhotos({
 			sharingMode: 'public',
 			...(authorIds ? { authorId: { in: authorIds } } : {}),
 			isStandalone: true,
+			...(search ? { title: { contains: search, mode: 'insensitive' } } : {}),
 		},
 		include: photoWithRelations,
 		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],

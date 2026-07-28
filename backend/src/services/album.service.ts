@@ -70,6 +70,7 @@ async function assignCoverIfNeeded(
 
 interface ListPublicAlbumsOptions {
 	authorIds?: number[]; // restrict to these authors (Feed); omit for Discovery
+	search?: string;
 	currentUserId: number | null;
 	cursor?: number; // keyset pagination — album id to start after
 	take?: number;
@@ -77,6 +78,7 @@ interface ListPublicAlbumsOptions {
 
 export async function listPublicAlbums({
 	authorIds,
+	search,
 	currentUserId,
 	cursor,
 	take = 20,
@@ -85,6 +87,7 @@ export async function listPublicAlbums({
 		where: {
 			sharingMode: 'public',
 			...(authorIds ? { authorId: { in: authorIds } } : {}),
+			...(search ? { title: { contains: search, mode: 'insensitive' } } : {}),
 		},
 		include: albumWithRelations,
 		orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],

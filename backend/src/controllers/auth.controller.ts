@@ -82,3 +82,8 @@ export async function resetPassword(req: Request, res: Response) {
 	const result = await authService.resetPassword(req.body);
 	res.json(result);
 }
+
+export async function resendVerification(req: Request, res: Response) {
+	const result = await authService.resendVerificationEmail(req.user!.id);
+	res.json(result);
+}

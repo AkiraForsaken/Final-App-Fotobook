@@ -215,6 +215,35 @@ export async function resetPassword(input: ResetPasswordRequest) {
 	});
 }
 
+export async function resendVerificationEmail(userId: number) {
+	const user = await prisma.user.findUnique({ where: { id: userId } });
+	if (!user) throw new NotFoundError('User not found.');
+	if (user.isEmailVerified) throw new ConflictError('Your email is already verified.');
+
+	const verificationToken = createEmailVerificationToken();
+	await sendVerificationEmail(
+		{ email: user.email, firstName: user.firstName },
+		verificationToken.token
+	);
+
+	await prisma.$transaction(async (tx) => {
+		// invalidate any previously-issued, still-unused tokens
+		await tx.emailVerificationToken.updateMany({
+			where: { userId, usedAt: null },
+			data: { usedAt: new Date() },
+		});
+		await tx.emailVerificationToken.create({
+			data: {
+				userId,
+				tokenHash: verificationToken.tokenHash,
+				expiresAt: verificationToken.expiresAt,
+			},
+		});
+	});
+
+	return { message: 'Verification email sent.' };
+}
+
 /**
  * Refresh an access token using a valid refresh token.
  */

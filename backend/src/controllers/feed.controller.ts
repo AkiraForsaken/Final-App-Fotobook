@@ -13,10 +13,11 @@ async function getFollowedAuthorIds(userId: number | null): Promise<number[] | u
 }
 
 type FeedHandler = (opts: {
-	authorIds?: number[];
+	authorIds?: number[]; // restrict to these authors (Feed); omit for Discovery
+	search?: string;
 	currentUserId: number | null;
-	cursor?: number;
-	take: number;
+	cursor?: number; // keyset pagination — photo id to start after
+	take?: number;
 }) => Promise<{ items: unknown; nextCursor: number | null }>;
 
 function makeFeedHandler(serviceFn: FeedHandler, requireFollowed: boolean) {
@@ -24,6 +25,8 @@ function makeFeedHandler(serviceFn: FeedHandler, requireFollowed: boolean) {
 		const currentUserId = req.user?.id ?? null;
 		const cursor = req.query.cursor ? (req.query.cursor as unknown as number) : undefined;
 		const take = req.query.take ? (req.query.take as unknown as number) : 6;
+		const search = req.query.q as string;
+		console.log(search);
 
 		// Check for feeds
 		if (requireFollowed && !currentUserId) {
@@ -32,7 +35,7 @@ function makeFeedHandler(serviceFn: FeedHandler, requireFollowed: boolean) {
 		}
 
 		const authorIds = requireFollowed ? await getFollowedAuthorIds(currentUserId) : undefined;
-		const result = await serviceFn({ authorIds, currentUserId, cursor, take });
+		const result = await serviceFn({ authorIds, search, currentUserId, cursor, take });
 		res.json(result);
 	};
 }

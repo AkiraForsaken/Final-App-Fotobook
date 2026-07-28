@@ -10,6 +10,7 @@ export const idParamsSchema = z.object({
 export const paginationQuerySchema = z.object({
 	cursor: z.coerce.number().int().positive().optional(),
 	take: z.coerce.number().int().min(1).max(100).default(20),
+	q: z.coerce.string().max(140).optional(),
 });
 
 export const offsetPaginationSchema = z.object({

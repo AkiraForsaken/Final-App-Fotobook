@@ -9,6 +9,7 @@ import {
 } from '../schemas/auth.js';
 import * as authController from '../controllers/auth.controller.js';
 import { authRateLimit, strictRateLimit } from '../middlewares/rate-limit.js';
+import { requireAuth } from '../middlewares/auth.middleware.js';
 
 export const authRouter = Router();
 
@@ -32,3 +33,4 @@ authRouter.post(
 	validate(resetPasswordRequestSchema),
 	authController.resetPassword
 );
+authRouter.post('/resend-verification', requireAuth, authController.resendVerification);

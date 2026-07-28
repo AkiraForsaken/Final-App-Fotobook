@@ -34,18 +34,18 @@ function toAlbumPhotoFormData(payload: AlbumPhotoPayload, file: File): FormData 
 
 export const contentService = {
 	// ── Feed (server-paginated, cursor/take) ──────────────────────────────
-	getFeedPhotos: (cursor: number | undefined, take: number) =>
-		request<Page<Photo>>('/api/feed/photos', { params: { cursor, take } }),
+	getFeedPhotos: (cursor: number | undefined, take: number, q?: string) =>
+		request<Page<Photo>>('/api/feed/photos', { params: { cursor, take, q } }),
 
-	getFeedAlbums: (cursor: number | undefined, take: number) =>
-		request<Page<Album>>('/api/feed/albums', { params: { cursor, take } }),
+	getFeedAlbums: (cursor: number | undefined, take: number, q?: string) =>
+		request<Page<Album>>('/api/feed/albums', { params: { cursor, take, q } }),
 
 	// ── Discovery (server-paginated, cursor/take) ─────────────────────────
-	getDiscoveryPhotos: (cursor: number | undefined, take: number) =>
-		request<Page<Photo>>('/api/discovery/photos', { params: { cursor, take } }),
+	getDiscoveryPhotos: (cursor: number | undefined, take: number, q?: string) =>
+		request<Page<Photo>>('/api/discovery/photos', { params: { cursor, take, q } }),
 
-	getDiscoveryAlbums: (cursor: number | undefined, take: number) =>
-		request<Page<Album>>('/api/discovery/albums', { params: { cursor, take } }),
+	getDiscoveryAlbums: (cursor: number | undefined, take: number, q?: string) =>
+		request<Page<Album>>('/api/discovery/albums', { params: { cursor, take, q } }),
 
 	// ── Single-item fetch — direct /photos/:id/edit, /albums/:id/edit loads
 	getPhotoById: (id: number) => request<Photo>(`/api/photos/${id}`),

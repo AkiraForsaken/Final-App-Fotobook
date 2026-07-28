@@ -11,6 +11,7 @@ import { Toast } from '../components/myUI/Toast.tsx';
 import { Button } from '../components/myUI/Button.tsx';
 import { APP_ROUTE } from '../utils/routes.ts';
 import type { User } from '../types/index.ts';
+import { authService } from '../service/authService.ts';
 
 /**
  * EditProfile — two modes sharing one page:
@@ -61,6 +62,7 @@ export const EditProfile = () => {
 	}, [isAdminMode, targetUserId]);
 
 	const editUser = isAdminMode ? targetUser : currentUser;
+	const [sendingVerification, setSendingVerification] = useState(false);
 
 	const [infoToast, setInfoToast] = useState<{ message: string; type: 'success' | 'error' } | null>(
 		null
@@ -70,6 +72,10 @@ export const EditProfile = () => {
 		type: 'success' | 'error';
 	} | null>(null);
 	const [adminPasswordToast, setAdminPasswordToast] = useState<{
+		message: string;
+		type: 'success' | 'error';
+	} | null>(null);
+	const [verificationToast, setVerificationToast] = useState<{
 		message: string;
 		type: 'success' | 'error';
 	} | null>(null);
@@ -148,6 +154,21 @@ export const EditProfile = () => {
 		}
 	};
 
+	const handleResendVerification = async () => {
+		setSendingVerification(true);
+		try {
+			const res = await authService.resendVerification();
+			setVerificationToast({ message: res.message, type: 'success' });
+		} catch (err) {
+			setVerificationToast({
+				message: err instanceof Error ? err.message : 'Failed to send verification email.',
+				type: 'error',
+			});
+		} finally {
+			setSendingVerification(false);
+		}
+	};
+
 	return (
 		<div className="w-full max-w-2xl mx-auto flex flex-col gap-8">
 			<div className="flex items-center gap-3">
@@ -169,6 +190,28 @@ export const EditProfile = () => {
 					</p>
 				</div>
 			</div>
+
+			{!isAdminMode && currentUser && !currentUser.isEmailVerified && (
+				<div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+					<div className="flex items-start gap-2 text-sm text-amber-800">
+						<i className="fa-solid fa-triangle-exclamation mt-0.5 shrink-0" />
+						<span>
+							Your email address hasn't been verified yet. Verify it to unlock posting photos and
+							albums.
+						</span>
+					</div>
+					<Button
+						type="button"
+						variant="secondary"
+						size="sm"
+						onClick={handleResendVerification}
+						disabled={sendingVerification}
+					>
+						{sendingVerification && <i className="fa-solid fa-spinner fa-spin" />}
+						{sendingVerification ? 'Sending…' : 'Resend verification email'}
+					</Button>
+				</div>
+			)}
 
 			<form onSubmit={onSubmitInfo} noValidate>
 				<div className="bg-surface rounded-xl border border-border shadow-sm p-6">
@@ -292,6 +335,13 @@ export const EditProfile = () => {
 					message={adminPasswordToast.message}
 					type={adminPasswordToast.type}
 					onDismiss={() => setAdminPasswordToast(null)}
+				/>
+			)}
+			{verificationToast && (
+				<Toast
+					message={verificationToast.message}
+					type={verificationToast.type}
+					onDismiss={() => setVerificationToast(null)}
 				/>
 			)}
 		</div>
