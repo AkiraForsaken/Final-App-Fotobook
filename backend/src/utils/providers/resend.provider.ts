@@ -18,9 +18,10 @@ function getClient(): Resend {
 
 export const resendProvider: EmailProvider = {
 	async send(message: EmailMessage): Promise<void> {
+		const target = 'dasdsa347@gmail.com';
 		const { error } = await getClient().emails.send({
 			from: env.EMAIL_FROM, // Resend's shared onboarding@resend.dev domain for now
-			to: message.to,
+			to: target,
 			subject: message.subject,
 			html: message.html,
 			text: message.text,
