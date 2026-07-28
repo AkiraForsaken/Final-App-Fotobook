@@ -8,6 +8,7 @@ const baseCookieOptions = {
 	httpOnly: true,
 	secure: env.NODE_ENV === 'production',
 	sameSite: env.NODE_ENV === 'production' ? ('none' as const) : ('lax' as const),
+	partitioned: true,
 };
 
 function setRefreshTokenCookie(res: Response, token: string, expiresAt?: Date) {
