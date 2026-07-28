@@ -24,9 +24,13 @@ async function getTransporter(): Promise<Transporter> {
 			transporterPromise = Promise.resolve(
 				nodemailer.createTransport({
 					host: 'smtp.ethereal.email',
-					port: 587,
+					port: 465,
 					secure: false,
 					auth: { user: env.ETHEREAL_USER, pass: env.ETHEREAL_PASS },
+					// Add timeouts so it fails fast rather than hanging Vercel
+					connectionTimeout: 5000,
+					greetingTimeout: 5000,
+					socketTimeout: 5000,
 				})
 			);
 		} else {
