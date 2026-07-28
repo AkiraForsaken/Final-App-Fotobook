@@ -7,7 +7,7 @@ const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
 const baseCookieOptions = {
 	httpOnly: true,
 	secure: env.NODE_ENV === 'production',
-	sameSite: 'lax' as const,
+	sameSite: env.NODE_ENV === 'production' ? ('none' as const) : ('lax' as const),
 };
 
 function setRefreshTokenCookie(res: Response, token: string, expiresAt?: Date) {
