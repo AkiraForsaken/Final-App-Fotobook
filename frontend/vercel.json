@@ -6,7 +6,4 @@
 		}
 	],
 	"crons": [],
-	"git": {
-		"deploymentEnabled": "has-changed-path:frontend"
-	}
 }
