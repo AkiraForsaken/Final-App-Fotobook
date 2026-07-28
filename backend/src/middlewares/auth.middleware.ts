@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { verifyAccessToken } from '../utils/jwt.js';
 import { UnauthorizedError } from '../utils/app-error.js';
 import { ForbiddenError } from '../utils/app-error.js';
+import { prisma } from '../prisma/client.js';
 
 function extractBearerToken(req: Request): string | null {
 	const header = req.headers.authorization;
@@ -57,5 +58,23 @@ export function requireAdmin(req: Request, res: Response, next: NextFunction) {
 		throw new ForbiddenError('You must be an admin to access this resource.');
 	}
 
+	next();
+}
+
+// auth.middleware.ts — new export
+export async function requireVerifiedEmail(
+	req: Request,
+	_res: Response,
+	next: NextFunction
+): Promise<void> {
+	if (!req.user) throw new UnauthorizedError('Please log in to continue.');
+	const user = await prisma.user.findUnique({
+		where: { id: req.user.id },
+		select: { isEmailVerified: true },
+	});
+	if (!user) throw new UnauthorizedError('Your session is no longer valid.');
+	if (!user.isEmailVerified) {
+		throw new ForbiddenError('Please verify your email before posting photos or albums.');
+	}
 	next();
 }

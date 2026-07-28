@@ -2,9 +2,11 @@ import { Avatar } from '../myUI/Avatar';
 import { FollowButton } from '../FollowButton';
 import type { UserProfile } from '../../types/index';
 import { Button } from '../myUI/Button';
+import { cn } from '../../utils/cn';
 
 interface ProfileHeaderProps {
 	profile: UserProfile;
+	isEmailVerified?: boolean;
 	isOwner: boolean;
 	currentUserId?: number;
 	isFollowing: boolean;
@@ -25,6 +27,7 @@ const Stat = ({ value, label }: { value?: number | null; label: string }) => {
 
 export const ProfileHeader = ({
 	profile,
+	isEmailVerified,
 	isOwner,
 	currentUserId,
 	isFollowing,
@@ -48,7 +51,26 @@ export const ProfileHeader = ({
 			<div className="flex flex-col items-center sm:items-start gap-2 flex-1">
 				{/* Name + action buttons */}
 				<div className="flex flex-col sm:flex-row flex-wrap items-center gap-2 sm:gap-6">
-					<h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">{fullName}</h1>
+					<div className="flex items-center gap-2">
+						<h1 className="text-2xl sm:text-3xl font-semibold text-text-primary">{fullName}</h1>
+						{isOwner && typeof isEmailVerified === 'boolean' && (
+							<span
+								className={cn(
+									'inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium',
+									isEmailVerified ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'
+								)}
+							>
+								<i
+									className={
+										isEmailVerified
+											? 'fa-solid fa-circle-check'
+											: 'fa-solid fa-triangle-exclamation'
+									}
+								/>
+								{isEmailVerified ? 'Verified' : 'Unverified'}
+							</span>
+						)}
+					</div>
 
 					{isOwner ? (
 						<Button onClick={onEditProfile} variant="primary" size="md">

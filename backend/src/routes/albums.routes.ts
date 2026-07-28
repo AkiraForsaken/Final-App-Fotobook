@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { optionalAuth, requireAuth } from '../middlewares/auth.middleware.js';
+import { optionalAuth, requireAuth, requireVerifiedEmail } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
 import { uploadPhotoImage } from '../middlewares/upload.js';
 import {
@@ -13,7 +13,13 @@ import * as albumsController from '../controllers/albums.controller.js';
 
 export const albumsRouter = Router();
 
-albumsRouter.post('/', requireAuth, validate(createAlbumRequestSchema), albumsController.create);
+albumsRouter.post(
+	'/',
+	requireAuth,
+	requireVerifiedEmail,
+	validate(createAlbumRequestSchema),
+	albumsController.create
+);
 
 albumsRouter.get(
 	'/:id',

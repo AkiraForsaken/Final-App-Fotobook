@@ -11,6 +11,7 @@ export interface User {
 	followingCount: number;
 	photosCount: number;
 	albumsCount: number;
+	isEmailVerified: boolean;
 	isActive: boolean;
 	isAdmin: boolean;
 	createdAt: string;
@@ -56,7 +57,7 @@ export interface Album {
 
 export type FeedMode = 'photos' | 'albums';
 
-// Profile
+// Public Profile
 export interface UserProfile {
 	id: number;
 	firstName: string;

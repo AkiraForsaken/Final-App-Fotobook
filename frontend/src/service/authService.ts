@@ -36,4 +36,6 @@ export const authService = {
 		request<{ message: string }>('/api/auth/forgot-password', { method: 'POST', body: payload }),
 	resetPassword: (payload: { token: string; newPassword: string }) =>
 		request<{ message: string }>('/api/auth/reset-password', { method: 'POST', body: payload }),
+	resendVerification: () =>
+		request<{ message: string }>('/api/auth/resend-verification', { method: 'POST' }),
 };

@@ -5,7 +5,7 @@ export interface Page<T> {
 	nextCursor: number | null;
 }
 
-type Fetcher<T> = (cursor: number | undefined, take: number) => Promise<Page<T>>;
+type Fetcher<T> = (cursor: number | undefined, take: number, query?: string) => Promise<Page<T>>;
 
 /**
  * usePaginatedContent — drives ONE server-paginated list (e.g. "feed photos",
@@ -21,13 +21,23 @@ export function usePaginatedContent<T extends { id: number }>(
 	fetchPage: Fetcher<T>,
 	pageSize = 6,
 	enabled = true,
-	resetKey?: unknown
+	searchQuery?: string
 ) {
 	const [items, setItems] = useState<T[]>([]);
 	const [nextCursor, setNextCursor] = useState<number | null>(null);
 	const [loading, setLoading] = useState(enabled); // initial page only
 	const [loadingMore, setLoadingMore] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+
+	const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			setDebouncedQuery(searchQuery);
+		}, 300);
+
+		return () => clearTimeout(timer);
+	}, [searchQuery]);
 
 	// Always call the latest fetcher without needing it in effect deps —
 	// callers often pass an inline function reference each render.
@@ -41,7 +51,7 @@ export function usePaginatedContent<T extends { id: number }>(
 		setLoading(true);
 		// setError(null);
 		try {
-			const page = await fetchPageRef.current(undefined, pageSize);
+			const page = await fetchPageRef.current(undefined, pageSize, debouncedQuery);
 			setItems(page.items);
 			setNextCursor(page.nextCursor);
 			setError(null);
@@ -51,7 +61,7 @@ export function usePaginatedContent<T extends { id: number }>(
 		} finally {
 			setLoading(false);
 		}
-	}, [pageSize, enabled]);
+	}, [pageSize, enabled, debouncedQuery]);
 
 	useEffect(() => {
 		let active = true;
@@ -69,7 +79,7 @@ export function usePaginatedContent<T extends { id: number }>(
 		return () => {
 			active = false;
 		};
-	}, [loadFirstPage, resetKey]);
+	}, [loadFirstPage, debouncedQuery]);
 
 	const hasMore = nextCursor !== null;
 
@@ -77,7 +87,7 @@ export function usePaginatedContent<T extends { id: number }>(
 		if (loadingMore || !hasMore || nextCursor === null) return;
 		setLoadingMore(true);
 		try {
-			const page = await fetchPageRef.current(nextCursor, pageSize);
+			const page = await fetchPageRef.current(nextCursor, pageSize, debouncedQuery);
 			setItems((prev) => [...prev, ...page.items]);
 			setNextCursor(page.nextCursor);
 		} catch (err) {
@@ -86,7 +96,7 @@ export function usePaginatedContent<T extends { id: number }>(
 		} finally {
 			setLoadingMore(false);
 		}
-	}, [hasMore, loadingMore, nextCursor, pageSize]);
+	}, [hasMore, loadingMore, nextCursor, pageSize, debouncedQuery]);
 
 	const observerRef = useRef<IntersectionObserver | null>(null);
 	const sentinelRef = useCallback(

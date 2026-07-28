@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router';
+import { useEffect, useState } from 'react';
+import { useNavigate, useOutletContext } from 'react-router';
 import type { FeedMode, User } from '../types/index.ts';
 import { PhotoCard } from '../components/photo/PhotoCard.tsx';
 import { AlbumCard } from '../components/album/AlbumCard.tsx';
@@ -11,9 +11,21 @@ import { AlbumModal } from '../components/album/AlbumModal.tsx';
 import { routeUtils } from '../utils/routes.ts';
 import { useDiscovery } from '../hooks/useDiscovery.ts';
 import { useAuth } from '../hooks/useAuth.ts';
+import type { ContentOutletContext } from '../components/layouts/ContentLayout.tsx';
 
 export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 	const { checkingSession } = useAuth();
+	const { setOnSearch } = useOutletContext<ContentOutletContext>();
+
+	const navigate = useNavigate();
+	const [feedMode, setFeedMode] = useState<FeedMode>('photos');
+	const [searchQuery, setSearchQuery] = useState('');
+
+	useEffect(() => {
+		setOnSearch(setSearchQuery);
+		return () => setOnSearch(null);
+	}, [setOnSearch]);
+
 	const {
 		photoFeed,
 		albumFeed,
@@ -25,10 +37,7 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 		toggleLikeAlbum,
 		toggleFollow,
 		loading,
-	} = useDiscovery(!checkingSession);
-
-	const navigate = useNavigate();
-	const [feedMode, setFeedMode] = useState<FeedMode>('photos');
+	} = useDiscovery(!checkingSession, searchQuery);
 
 	if (checkingSession) {
 		return <div className="flex h-screen items-center justify-center">Verifying session...</div>;

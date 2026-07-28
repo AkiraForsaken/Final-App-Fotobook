@@ -9,18 +9,20 @@ import { APP_ROUTE } from '../utils/routes.ts';
 
 const PAGE_SIZE = 6;
 
-export const useDiscovery = (enabled = true) => {
+export const useDiscovery = (enabled = true, searchQuery: string) => {
 	const { currentUser, updateCurrentUser } = useAuth();
 	const navigate = useNavigate();
 	const photoFeed = usePaginatedContent<Photo>(
 		contentService.getDiscoveryPhotos,
 		PAGE_SIZE,
-		enabled
+		enabled,
+		searchQuery
 	);
 	const albumFeed = usePaginatedContent<Album>(
 		contentService.getDiscoveryAlbums,
 		PAGE_SIZE,
-		enabled
+		enabled,
+		searchQuery
 	);
 
 	const [activePhoto, setActivePhoto] = useState<Photo | null>(null);

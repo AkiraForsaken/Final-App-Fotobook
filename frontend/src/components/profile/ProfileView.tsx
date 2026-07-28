@@ -180,6 +180,7 @@ export const ProfileView = ({
 		<div className="w-full mx-auto">
 			<ProfileHeader
 				profile={profile}
+				isEmailVerified={isOwner ? currentUser?.isEmailVerified : undefined}
 				isOwner={isOwner}
 				currentUserId={currentUser?.id}
 				isFollowing={profile.isFollowedByMe}
