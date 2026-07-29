@@ -41,3 +41,18 @@ export const addPhotoToAlbumRequestSchema = z.object({
 	description: z.string().max(300, 'Description must be 300 characters or fewer.').optional(),
 });
 export type AddPhotoToAlbumRequest = z.infer<typeof addPhotoToAlbumRequestSchema>;
+
+// Body for POST /api/albums/:id/photos/batch — one entry per image the
+// client already uploaded directly to Cloudinary via the signed upload URL.
+export const cloudinaryPhotoInputSchema = z.object({
+	publicId: z.string().min(1),
+	secureUrl: z.string().url(),
+	format: z.string().min(1).max(10),
+	bytes: z.number().int().positive(),
+});
+export type CloudinaryPhotoInput = z.infer<typeof cloudinaryPhotoInputSchema>;
+
+export const batchAddPhotosToAlbumRequestSchema = z.object({
+	photos: z.array(cloudinaryPhotoInputSchema).min(1, 'At least one photo is required.').max(25),
+});
+export type BatchAddPhotosToAlbumRequest = z.infer<typeof batchAddPhotosToAlbumRequestSchema>;

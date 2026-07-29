@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
 import { useAuth } from '../hooks/useAuth.ts';
-import { contentService } from '../service/contentService.ts';
+import { contentService, type CloudinaryPhotoInput } from '../service/contentService.ts';
 import {
 	MediaFormFields,
 	type MediaFormState,
@@ -14,6 +14,7 @@ import { APP_ROUTE } from '../utils/routes.ts';
 import { MAX_ALBUM_PHOTOS } from '../hooks/useAlbumPhotoStaging.ts';
 import type { Album, Photo } from '../types/index.ts';
 import { MultiImageUploadZone } from '../components/MultiImageUploadZone.tsx';
+import { uploadFileToCloudinary } from '../service/cloudinaryUpload.ts';
 
 const TITLE_MAX = 140;
 const DESC_MAX = 300;
@@ -142,20 +143,37 @@ export const EditAlbum = () => {
 
 			setAddingPhotos(true);
 			setAddProgress({ done: 0, total: files.length });
-			let failures = 0;
-			for (let i = 0; i < files.length; i++) {
-				try {
-					const updated = await contentService.addNewPhotoToAlbum(album.id, {}, files[i]);
+			let done = 0;
+
+			try {
+				const signature = await contentService.getAlbumUploadSignature(album.id);
+				const uploads: CloudinaryPhotoInput[] = [];
+				let failures = 0;
+
+				await Promise.all(
+					files.map(async (file) => {
+						try {
+							uploads.push(await uploadFileToCloudinary(file, signature));
+						} catch {
+							failures++;
+						} finally {
+							setAddProgress({ done: ++done, total: files.length });
+						}
+					})
+				);
+
+				if (uploads.length > 0) {
+					const updated = await contentService.addPhotosToAlbumBatch(album.id, uploads);
 					setAlbum(updated);
-				} catch {
-					failures++;
 				}
-				setAddProgress({ done: i + 1, total: files.length });
-			}
-			setAddingPhotos(false);
-			setAddProgress(null);
-			if (failures > 0) {
-				setToast({ message: `${failures} photo(s) failed to upload.`, type: 'error' });
+				if (failures > 0) {
+					setToast({ message: `${failures} photo(s) failed to upload.`, type: 'error' });
+				}
+			} catch {
+				setToast({ message: 'Failed to upload photos. Please try again.', type: 'error' });
+			} finally {
+				setAddingPhotos(false);
+				setAddProgress(null);
 			}
 		},
 		[album, remainingSlots]
