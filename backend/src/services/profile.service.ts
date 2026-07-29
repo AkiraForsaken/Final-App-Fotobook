@@ -1,6 +1,11 @@
 import { Prisma } from '@prisma/client';
 import { prisma } from '../prisma/client.js';
-import { ConflictError, NotFoundError, UnauthorizedError } from '../utils/app-error.js';
+import {
+	ConflictError,
+	ForbiddenError,
+	NotFoundError,
+	ValidationError,
+} from '../utils/app-error.js';
 import { ChangePasswordRequest, UpdateUserRequest } from '../schemas/auth.js';
 import { storage } from './storage.service.js';
 import bcrypt from 'bcryptjs';
@@ -136,7 +141,13 @@ export async function changePassword(userId: number, input: ChangePasswordReques
 	// Verify current password
 	const passwordMatches = await bcrypt.compare(input.currentPassword, user.passwordHash);
 	if (!passwordMatches) {
-		throw new UnauthorizedError('Current password is incorrect.');
+		throw new ForbiddenError('Current password is incorrect.');
+	}
+
+	// New password must differ from current password
+	const isSameAsOld = await bcrypt.compare(input.newPassword, user.passwordHash);
+	if (isSameAsOld) {
+		throw new ValidationError('New password must be different from your current password.');
 	}
 
 	// Hash new password

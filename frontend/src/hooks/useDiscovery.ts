@@ -29,6 +29,10 @@ export const useDiscovery = (enabled = true, searchQuery: string) => {
 	const [activeAlbum, setActiveAlbum] = useState<Album | null>(null);
 
 	const toggleLikePhoto = (photoId: number) => {
+		if (!currentUser) {
+			navigate(APP_ROUTE.LOGIN);
+			return;
+		}
 		const photo = photoFeed.items.find((p) => p.id === photoId);
 		if (!photo) return;
 		const willLike = !photo.likedByMe;
@@ -43,6 +47,10 @@ export const useDiscovery = (enabled = true, searchQuery: string) => {
 	};
 
 	const toggleLikeAlbum = (albumId: number) => {
+		if (!currentUser) {
+			navigate(APP_ROUTE.LOGIN);
+			return;
+		}
 		const album = albumFeed.items.find((a) => a.id === albumId);
 		if (!album) return;
 		const willLike = !album.likedByMe;

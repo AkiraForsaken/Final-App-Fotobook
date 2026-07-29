@@ -115,8 +115,12 @@ export const validatePasswordChange = (data: PasswordChangeData): Record<string,
 
 	if (!data.newPassword) {
 		errors.newPassword = 'New password is required.';
+	} else if (data.newPassword.length < 10) {
+		errors.newPassword = 'Password must be at least 10 characters.';
 	} else if (data.newPassword.length > 64) {
 		errors.newPassword = 'Max 64 characters.';
+	} else if (data.currentPassword && data.newPassword === data.currentPassword) {
+		errors.newPassword = 'New password must be different from your current password.';
 	}
 
 	if (!data.confirmNewPassword) {

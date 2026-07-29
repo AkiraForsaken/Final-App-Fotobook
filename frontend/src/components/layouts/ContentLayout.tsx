@@ -29,12 +29,22 @@ export const ContentLayout = () => {
 		searchHandlerRef.current = handler;
 	}, []);
 
-	const navItems: NavItem[] = currentUser?.isAdmin
-		? [
-				...BASE_NAV_ITEMS,
-				{ label: 'Admin Dashboard', to: APP_ROUTE.ADMIN, icon: 'fa-solid fa-shield-halved' },
-			]
-		: BASE_NAV_ITEMS;
+	const navItems: NavItem[] = [
+		...(currentUser
+			? [
+					{
+						label: 'Profile',
+						to: APP_ROUTE.MY_PROFILE,
+						icon: 'fa-solid fa-user',
+						className: 'sm:hidden', // Hide on desktop screens where sidebar is sticky
+					},
+				]
+			: []),
+		...BASE_NAV_ITEMS,
+		...(currentUser?.isAdmin
+			? [{ label: 'Admin Dashboard', to: APP_ROUTE.ADMIN, icon: 'fa-solid fa-shield-halved' }]
+			: []),
+	];
 
 	return (
 		<div>

@@ -23,7 +23,7 @@ export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => 
 		navigate(APP_ROUTE.LOGIN);
 	};
 	return (
-		<header className="bg-blue-800 sticky top-0 z-20">
+		<header className="bg-blue-800 sm:sticky top-0 z-20">
 			<div className="w-full px-4 lg:px-8">
 				<div className="flex h-14 items-center justify-between">
 					{/* Left: hamburger + logo + search */}
@@ -32,13 +32,13 @@ export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => 
 						<button
 							onClick={onMenuToggle}
 							aria-label="Open menu"
-							className="sm:hidden inline-flex items-center justify-center rounded-md p-2 text-white hover:bg-blue-700 transition-colors"
+							className="sm:hidden inline-flex items-center justify-center rounded-md text-white hover:bg-blue-700 transition-colors"
 						>
 							<i className="fa-solid fa-bars" />
 						</button>
 
 						<span
-							className="shrink-0 text-3xl font-bold text-white tracking-tight cursor-pointer"
+							className="shrink-0 text-2xl sm:text-3xl font-bold text-white tracking-tight cursor-pointer"
 							onClick={() => navigate(APP_ROUTE.HOME)}
 						>
 							{adminLayout ? 'FotoBookAdmin' : 'FotoBook'}
@@ -54,11 +54,11 @@ export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => 
 					</div>
 
 					{/* Right: user control */}
-					<div className="flex items-center gap-4 mr-2 lg:mr-8">
+					<div className="flex items-center gap-2 lg:gap-4 sm:mr-2 lg:mr-8">
 						<button
 							onClick={() => setTheme(isDark ? 'light' : 'dark')}
 							aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-							className="p-2 rounded-md text-white cursor-pointer hover:bg-blue-700 transition-colors"
+							className="rounded-md text-white cursor-pointer hover:bg-blue-700 transition-colors"
 						>
 							<i className={isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon'} />
 						</button>
@@ -72,17 +72,22 @@ export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => 
 										src={currentUser.avatarUrl}
 										firstName={currentUser.firstName}
 										lastName={currentUser.lastName}
+										size="w-8 h-8 sm:w-10 sm:h-10"
 									/>
 									<span className="hidden md:block text-md font-medium text-white truncate max-w-56">
 										{currentUser.firstName} {currentUser.lastName}
 									</span>
 								</div>
-								<Button size="md" variant="secondary" onClick={handleLogout}>
+								<Button size="sm" variant="secondary" onClick={handleLogout}>
 									Logout
 								</Button>
 							</>
 						) : (
-							<Button size="md" variant="secondary">
+							<Button
+								size="sm"
+								variant="secondary"
+								className="sm:px-4 sm:py-2 sm:text-md sm:rounded-md"
+							>
 								<Link to={APP_ROUTE.LOGIN}>Log in</Link>
 							</Button>
 						)}

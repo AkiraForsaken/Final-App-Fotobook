@@ -4,6 +4,7 @@ export type NavItem = {
 	label: string;
 	to: string; // e.g "/feeds"
 	icon: string; // font-awesome class name
+	className?: string;
 };
 
 interface SideBarProps {
@@ -16,9 +17,17 @@ const SideBarItem = ({ item, onClick }: { item: NavItem; onClick?: () => void })
 	<NavLink
 		to={item.to}
 		onClick={onClick}
-		className={({ isActive }) =>
-			`flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium transition-colors
-      ${isActive ? 'bg-nav-active-bg text-nav-active-text' : 'text-text-secondary hover:bg-nav-hover-bg'}`
+		className={
+			({ isActive }) =>
+				cn(
+					'flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium transition-colors',
+					isActive
+						? 'bg-nav-active-bg text-nav-active-text'
+						: 'text-text-secondary hover:bg-nav-hover-bg',
+					item.className ?? ''
+				)
+			// `flex items-center gap-3 rounded-md px-3 py-2 text-base font-medium transition-colors
+			// ${isActive ? 'bg-nav-active-bg text-nav-active-text' : 'text-text-secondary hover:bg-nav-hover-bg'}`
 		}
 	>
 		<i className={cn(item.icon, 'w-5 text-center')} />

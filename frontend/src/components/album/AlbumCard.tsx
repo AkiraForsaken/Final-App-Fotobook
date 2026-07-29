@@ -75,7 +75,7 @@ export const AlbumCard = ({ album, onLike, onClickAlbum, onClickAuthor }: AlbumC
 						onClick={() => onLike?.(album.id)}
 						aria-label={album.likedByMe ? `Unlike ${album.title}` : `Like ${album.title}`}
 						className={cn(
-							'flex items-center gap-1.5 transition-colors focus-visible:outline-none',
+							'flex items-center gap-1.5 transition-colors focus-visible:outline-none cursor-pointer',
 							album.likedByMe ? 'text-red-500' : 'text-text-muted hover:text-red-400'
 						)}
 					>

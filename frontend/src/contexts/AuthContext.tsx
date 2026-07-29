@@ -80,8 +80,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 		};
 
 		verifySession();
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [login, clearLocalSession]);
 
 	const updateCurrentUser = useCallback((updater: (prev: User) => User) => {
 		setCurrentUser((prev) => {

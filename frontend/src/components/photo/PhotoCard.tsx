@@ -103,7 +103,7 @@ export const PhotoCard = ({ photo, onLike, onClickPhoto, onClickAuthor }: PhotoC
 						onClick={() => onLike?.(photo.id)}
 						aria-label={photo.likedByMe ? `Unlike ${photo.title}` : `Like ${photo.title}`}
 						className={cn(
-							'flex items-center gap-1.5 transition-colors focus-visible:outline-none',
+							'flex items-center gap-1.5 transition-colors focus-visible:outline-none cursor-pointer',
 							photo.likedByMe ? 'text-red-500' : 'text-text-muted hover:text-red-400'
 						)}
 					>
