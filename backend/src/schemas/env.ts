@@ -18,6 +18,7 @@ const envSchema = z
 		REQUIRE_EMAIL_VERIFICATION: z.string().optional(),
 		EMAIL_PROVIDER: z.enum(['ethereal', 'resend']).default('ethereal'),
 		EMAIL_FROM: z.string().default('Fotobook <onboarding@resend.dev>'),
+		EMAIL_TO_DEV: z.string().optional(),
 		RESEND_API_KEY: z.string().optional(),
 		ETHEREAL_USER: z.string().optional(),
 		ETHEREAL_PASS: z.string().optional(),

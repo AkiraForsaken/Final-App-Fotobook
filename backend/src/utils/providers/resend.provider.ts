@@ -18,7 +18,7 @@ function getClient(): Resend {
 
 export const resendProvider: EmailProvider = {
 	async send(message: EmailMessage): Promise<void> {
-		const target = 'dasdsa347@gmail.com';
+		const target = env.EMAIL_TO_DEV ?? '';
 		const { error } = await getClient().emails.send({
 			from: env.EMAIL_FROM, // Resend's shared onboarding@resend.dev domain for now
 			to: target,

@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router';
 import type { User } from '../types/index.ts';
 import { validateLogin } from '../utils/validation.ts';
-import { cn } from '../utils/cn.ts';
 import { Button } from '../components/myUI/Button.tsx';
 import { Toast } from '../components/myUI/Toast.tsx';
+import { FormField } from '../components/myUI/FormField.tsx';
 import { APP_ROUTE } from '../utils/routes.ts';
 import { authService } from '../service/authService.ts';
 
@@ -70,42 +70,6 @@ export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 		}
 	};
 
-	// Reuseable form field
-	const field = (
-		id: string,
-		label: string,
-		type: string,
-		value: string,
-		onChange: (v: string) => void,
-		opts?: { placeholder?: string; autoComplete?: string; autoFocus?: boolean }
-	) => (
-		<div>
-			<label htmlFor={id} className="block font-medium text-text-secondary mb-1">
-				{label}
-			</label>
-			<input
-				id={id}
-				type={type}
-				autoComplete={opts?.autoComplete}
-				autoFocus={opts?.autoFocus}
-				required
-				placeholder={opts?.placeholder}
-				value={value}
-				onChange={(ev) => onChange(ev.target.value)}
-				className={cn(
-					'w-full rounded-lg bg-input-bg border px-3 py-2 text-sm text-text-primary placeholder:text-input-placeholder',
-					'focus:outline-none focus:ring-1',
-					errors[id.replace('login-', '')]
-						? 'border-red-400 focus:border-red-500 focus:ring-red-400'
-						: 'border-input-border focus:border-blue-600 focus:ring-blue-600'
-				)}
-			/>
-			{errors[id.replace('login-', '')] && (
-				<p className="mt-1 text-red-600">{errors[id.replace('login-', '')]}</p>
-			)}
-		</div>
-	);
-
 	return (
 		<div className="min-h-screen bg-bg-page flex flex-col items-center justify-center px-4">
 			{/* Login Card */}
@@ -129,54 +93,46 @@ export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 				)}
 
 				{/* Log in form */}
-				<form onSubmit={handleSubmit} className="space-y-4">
-					{field(
-						'login-email',
-						'Email',
-						'email',
-						formData.email,
-						(value) => setFormData((prev) => ({ ...prev, email: value })),
-						{
-							placeholder: 'john@example.com',
-							autoComplete: 'email',
-							autoFocus: true,
-						}
-					)}
+				<form onSubmit={handleSubmit} className="space-y-4" noValidate>
+					<FormField
+						id="login-email"
+						label="Email"
+						type="email"
+						value={formData.email}
+						onChange={(value) => setFormData((prev) => ({ ...prev, email: value }))}
+						error={errors.email}
+						placeholder="john@example.com"
+						autoFocus
+					/>
 
-					{field(
-						'login-password',
-						'Password',
-						'password',
-						formData.password,
-						(value) => setFormData((prev) => ({ ...prev, password: value })),
-						{
-							placeholder: '******',
-							autoComplete: 'current-password',
-						}
-					)}
+					<FormField
+						id="login-password"
+						label="Password"
+						type="password"
+						value={formData.password}
+						onChange={(value) => setFormData((prev) => ({ ...prev, password: value }))}
+						error={errors.password}
+						placeholder="******"
+					/>
 
-					{/* Forgot password */}
 					<div className="text-right">
 						<Link to={APP_ROUTE.FORGOT_PASSWORD} className="text-blue-700 hover:underline">
 							Forgot password?
 						</Link>
 					</div>
 
-					{/* Submit button */}
 					<Button type="submit" disabled={loading} className="w-full py-3">
 						{loading && <i className="fa-solid fa-spinner fa-spin" />}
 						{loading ? 'Signing in…' : 'Sign in'}
 					</Button>
 				</form>
 
-				{/* Divider */}
 				<div className="my-6 flex items-center gap-3">
 					<div className="flex-1 border-t border-border" />
 					<span className="text-sm text-text-muted">or continue with</span>
 					<div className="flex-1 border-t border-border" />
 				</div>
 
-				{/* Social login placeholders */}
 				<div className="w-full flex items-center justify-around text-5xl space-y-2">
 					<button id="google-btn" className="rounded-lg cursor-pointer">
 						<i className={'fa-brands fa-google text-red-600'} />
@@ -189,7 +145,6 @@ export const Login = ({ onLogin }: { onLogin: (user: User) => void }) => {
 					</button>
 				</div>
 
-				{/* Sign up link */}
 				<p className="mt-8 text-center text-text-secondary">
 					Don't have an account?{' '}
 					<Link to={APP_ROUTE.SIGNUP} className="font-medium text-blue-700 hover:underline">
