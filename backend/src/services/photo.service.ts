@@ -93,7 +93,7 @@ export async function createPhoto(
 	input: CreatePhotoRequest,
 	file: Express.Multer.File
 ) {
-	const { url, sizeBytes } = await storage.resolve(file);
+	const { url, sizeBytes, publicId } = await storage.resolve(file);
 	try {
 		const row = await prisma.photo.create({
 			data: {
@@ -102,6 +102,7 @@ export async function createPhoto(
 				description: input.description,
 				sharingMode: input.sharingMode,
 				imageUrl: url,
+				imagePublicId: publicId ?? null,
 				imageMimeType: file.mimetype,
 				imageSizeBytes: sizeBytes,
 				isStandalone: true,
@@ -131,9 +132,14 @@ export async function updatePhoto(
 	let newUrl: string | null = null;
 	let imageFields: Partial<Prisma.PhotoUpdateInput> = {};
 	if (file) {
-		const { url, sizeBytes } = await storage.resolve(file);
+		const { url, sizeBytes, publicId } = await storage.resolve(file);
 		newUrl = url;
-		imageFields = { imageUrl: url, imageMimeType: file.mimetype, imageSizeBytes: sizeBytes };
+		imageFields = {
+			imageUrl: url,
+			imageMimeType: file.mimetype,
+			imagePublicId: publicId,
+			imageSizeBytes: sizeBytes,
+		};
 	}
 
 	let row;

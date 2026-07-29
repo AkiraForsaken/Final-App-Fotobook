@@ -69,7 +69,7 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 				<div className="mt-6">
 					{/* Photos grid */}
 					<div className={feedMode === 'photos' ? '' : 'hidden'}>
-						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+						<div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
 							{photoFeed.items.map((photo) => (
 								<div key={photo.id} className="relative">
 									<PhotoCard
@@ -92,7 +92,7 @@ export const Discovery = ({ currentUser }: { currentUser: User | null }) => {
 
 					{/* Albums grid */}
 					<div className={feedMode === 'albums' ? '' : 'hidden'}>
-						<div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+						<div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
 							{albumFeed.items.map((album) => (
 								<div key={album.id} className="relative">
 									<AlbumCard

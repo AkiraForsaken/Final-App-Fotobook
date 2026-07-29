@@ -8,11 +8,20 @@ export interface MediaPayload {
 	sharingMode: SharingMode;
 }
 
-// Lighter payload for attaching a photo to an album — title/description are
-// optional and there's no sharingMode; the photo inherits the album's.
-export interface AlbumPhotoPayload {
-	title?: string;
-	description?: string;
+export interface AlbumUploadSignature {
+	timestamp: number;
+	signature: string;
+	apiKey: string;
+	cloudName: string;
+	folder: string;
+	allowedFormats: string;
+}
+
+export interface CloudinaryPhotoInput {
+	publicId: string;
+	secureUrl: string;
+	format: string;
+	bytes: number;
 }
 
 function toMediaFormData(payload: MediaPayload, file: File | null | undefined): FormData {
@@ -21,14 +30,6 @@ function toMediaFormData(payload: MediaPayload, file: File | null | undefined): 
 	form.append('description', payload.description);
 	form.append('sharingMode', payload.sharingMode);
 	if (file) form.append('image', file);
-	return form;
-}
-
-function toAlbumPhotoFormData(payload: AlbumPhotoPayload, file: File): FormData {
-	const form = new FormData();
-	if (payload.title) form.append('title', payload.title);
-	if (payload.description) form.append('description', payload.description);
-	form.append('image', file);
 	return form;
 }
 
@@ -79,12 +80,13 @@ export const contentService = {
 	unlikeAlbum: (id: number) =>
 		request<{ likedByMe: boolean }>(`/api/albums/${id}/like`, { method: 'DELETE' }),
 
-	// One image at a time — the frontend creates multiple sequential
-	// calls to this for the "attach N photos on album creation" flow.
-	addNewPhotoToAlbum: (albumId: number, payload: AlbumPhotoPayload, file: File) =>
-		request<Album>(`/api/albums/${albumId}/photos`, {
+	getAlbumUploadSignature: (albumId: number) =>
+		request<AlbumUploadSignature>(`/api/albums/${albumId}/upload-signature`, { method: 'POST' }),
+
+	addPhotosToAlbumBatch: (albumId: number, photos: CloudinaryPhotoInput[]) =>
+		request<Album>(`/api/albums/${albumId}/photos/batch`, {
 			method: 'POST',
-			body: toAlbumPhotoFormData(payload, file),
+			body: { photos },
 		}),
 
 	addExistingPhotoToAlbum: (albumId: number, photoId: number) =>

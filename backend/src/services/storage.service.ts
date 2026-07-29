@@ -29,6 +29,7 @@ function extractPublicId(url: string): string | null {
 export interface ResolvedUpload {
 	url: string;
 	sizeBytes: number;
+	publicId?: string;
 }
 
 export interface StorageAdapter {
@@ -86,7 +87,7 @@ const cloudinaryAdapter: StorageAdapter = {
 						reject(new ExternalServiceError('Failed to upload image. Please try again.'));
 						return;
 					}
-					resolve({ url: result.secure_url, sizeBytes: result.bytes });
+					resolve({ url: result.secure_url, sizeBytes: result.bytes, publicId: result.public_id });
 				}
 			);
 			Readable.from(file.buffer).pipe(uploadStream);
@@ -107,3 +108,57 @@ const cloudinaryAdapter: StorageAdapter = {
 };
 export const storage: StorageAdapter =
 	STORAGE_PROVIDER === 'cloudinary' ? cloudinaryAdapter : localDiskAdapter;
+
+export interface AlbumUploadSignature {
+	timestamp: number;
+	signature: string;
+	apiKey: string;
+	cloudName: string;
+	folder: string;
+	allowedFormats: string;
+}
+
+const ALLOWED_UPLOAD_FORMATS = 'jpg,jpeg,png,gif';
+
+// Every album's direct Cloudinary uploads live under this folder
+export function albumUploadFolder(albumId: number): string {
+	return `${CLOUDINARY_FOLDER}/albums/${albumId}`;
+}
+
+// Signed params for the client to upload straight to Cloudinary
+export function signAlbumUpload(albumId: number): AlbumUploadSignature {
+	if (STORAGE_PROVIDER !== 'cloudinary') {
+		throw new ExternalServiceError(
+			'Direct image upload requires Cloudinary storage to be enabled.'
+		);
+	}
+	const folder = albumUploadFolder(albumId);
+	const timestamp = Math.round(Date.now() / 1000);
+	const paramsToSign = { timestamp, folder, allowed_formats: ALLOWED_UPLOAD_FORMATS };
+	const signature = cloudinary.utils.api_sign_request(
+		paramsToSign,
+		env.CLOUDINARY_API_SECRET ?? ''
+	);
+
+	return {
+		timestamp,
+		signature,
+		apiKey: env.CLOUDINARY_API_KEY ?? '',
+		cloudName: env.CLOUDINARY_CLOUD_NAME ?? '',
+		folder,
+		allowedFormats: ALLOWED_UPLOAD_FORMATS,
+	};
+}
+
+// Cleanup for assets the client uploaded to Cloudinary directly
+export async function removeCloudinaryAssets(publicIds: string[]): Promise<void> {
+	await Promise.all(
+		publicIds.map(async (publicId) => {
+			try {
+				await cloudinary.uploader.destroy(publicId);
+			} catch (err) {
+				console.error(`Failed to delete Cloudinary asset "${publicId}":`, err);
+			}
+		})
+	);
+}

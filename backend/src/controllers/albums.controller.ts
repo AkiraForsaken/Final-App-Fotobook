@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express';
 import * as albumService from '../services/album.service.js';
-import { ValidationError } from '../utils/app-error.js';
 
 export async function create(req: Request, res: Response) {
 	const album = await albumService.createAlbum(req.user!.id, req.body);
@@ -31,13 +30,18 @@ export async function unlike(req: Request, res: Response) {
 	res.json(result);
 }
 
-// Upload a brand-new photo directly into this album.
-export async function addNewPhoto(req: Request, res: Response) {
+// Returns a short-lived signed payload the client uses to upload images
+export async function getUploadSignature(req: Request, res: Response) {
 	const albumId = req.params.id as unknown as number;
-	if (!req.file) {
-		throw new ValidationError('Please select an image to upload.');
-	}
-	const album = await albumService.addNewPhotoToAlbum(albumId, req.user!.id, req.body, req.file);
+	const signature = await albumService.getAlbumUploadSignature(albumId, req.user!.id);
+	res.json(signature);
+}
+
+// Persists every already-uploaded Cloudinary image as a Photo + AlbumPhoto
+// row, all inside a single transaction.
+export async function addPhotosBatch(req: Request, res: Response) {
+	const albumId = req.params.id as unknown as number;
+	const album = await albumService.addPhotosToAlbumBatch(albumId, req.user!.id, req.body.photos);
 	res.status(201).json(album);
 }
 

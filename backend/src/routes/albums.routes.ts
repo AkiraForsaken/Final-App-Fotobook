@@ -1,14 +1,13 @@
 import { Router } from 'express';
 import { optionalAuth, requireAuth, requireVerifiedEmail } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.js';
-import { uploadPhotoImage } from '../middlewares/upload.js';
 import {
 	createAlbumRequestSchema,
 	updateAlbumRequestSchema,
 	addExistingPhotoToAlbumRequestSchema,
 } from '../schemas/album.js';
 import { idParamsSchema } from '../schemas/common.js';
-import { addPhotoToAlbumRequestSchema } from '../schemas/photo.js';
+import { batchAddPhotosToAlbumRequestSchema } from '../schemas/photo.js';
 import * as albumsController from '../controllers/albums.controller.js';
 
 export const albumsRouter = Router();
@@ -40,13 +39,23 @@ albumsRouter
 	.put(albumsController.like)
 	.delete(albumsController.unlike);
 
+// Direct-to-Cloudinary upload: get a signed payload for this album's folder.
 albumsRouter.post(
-	'/:id/photos',
+	'/:id/upload-signature',
 	requireAuth,
-	uploadPhotoImage,
+	requireVerifiedEmail,
 	validate(idParamsSchema, 'params'),
-	validate(addPhotoToAlbumRequestSchema),
-	albumsController.addNewPhoto
+	albumsController.getUploadSignature
+);
+
+// Persist everything the client already uploaded to Cloudinary, in one shot.
+albumsRouter.post(
+	'/:id/photos/batch',
+	requireAuth,
+	requireVerifiedEmail,
+	validate(idParamsSchema, 'params'),
+	validate(batchAddPhotosToAlbumRequestSchema),
+	albumsController.addPhotosBatch
 );
 
 albumsRouter.post(

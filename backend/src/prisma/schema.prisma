@@ -161,6 +161,7 @@ model Photo {
   description    String?     @db.VarChar(300)
   sharingMode    SharingMode @default(public) @map("sharing_mode")
   imageUrl       String      @map("image_url")
+  imagePublicId  String?     @map("image_public_id")
   imageMimeType  String      @map("image_mime_type") @db.VarChar(50)
   imageSizeBytes Int         @map("image_size_bytes")
   isStandalone   Boolean     @default(true) @map("is_standalone")
@@ -189,12 +190,6 @@ model Album {
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
 
-  // NOTE: deleting an Album cascades its `album_photos` link rows (below),
-  // but NOT the Photos themselves — a Photo may stand alone or belong to
-  // another Album. The "delete an album's images" requirement is handled
-  // in the service layer: after removing the links, delete any Photo that's
-  // now orphaned (no remaining album_photos rows) AND wasn't a standalone
-  // post. See fotobook-db-requirements.md §2 (album_photos) for the rationale.
   photoLinks AlbumPhoto[]
   likes      AlbumLike[]
   // notifications Notification[]

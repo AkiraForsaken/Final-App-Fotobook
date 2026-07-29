@@ -7,9 +7,16 @@ import {
 	ValidationError,
 } from '../utils/app-error.js';
 import type { CreateAlbumRequest, UpdateAlbumRequest } from '../schemas/album.js';
-import { storage } from './storage.service.js';
+import {
+	albumUploadFolder,
+	removeCloudinaryAssets,
+	signAlbumUpload,
+	storage,
+} from './storage.service.js';
 import { findFollowedAuthorIds, paginateRows } from '../utils/helpers.js';
 import { albumWithRelations, findLikedAlbumIds, toAlbumDto } from '../utils/dto/album.dto.js';
+import { CloudinaryPhotoInput } from '../schemas/photo.js';
+import { PHOTO_MAX_SIZE_BYTES } from '../middlewares/upload.js';
 
 // Re-fetches a single album with relations and shapes it as a DTO. Accepts
 // either the global `prisma` client or an active transaction client, so
@@ -271,56 +278,83 @@ export async function addExistingPhotoToAlbum(
 	});
 }
 
-// Upload a NEW photo directly into an album. title/description are optional
-// (matches the nullable Prisma columns for non-standalone photos) — there's
-// no sharingMode input at all; the photo inherits the album's sharingMode.
-export interface AddNewPhotoToAlbumInput {
-	title?: string;
-	description?: string;
-}
-
-export async function addNewPhotoToAlbum(
-	albumId: number,
-	requesterId: number,
-	input: AddNewPhotoToAlbumInput,
-	file: Express.Multer.File
-) {
+export async function getAlbumUploadSignature(albumId: number, requesterId: number) {
 	const album = await prisma.album.findUnique({ where: { id: albumId } });
 	if (!album) throw new NotFoundError('Album not found.');
 	if (album.authorId !== requesterId) {
-		throw new ForbiddenError('You can only add photos to your own albums.');
+		throw new ForbiddenError('You can only upload photos to your own albums.');
+	}
+	await assertAlbumNotFull(prisma, albumId);
+	return signAlbumUpload(albumId);
+}
+
+function cloudinaryFormatToMime(format: string): string {
+	const normalized = format.toLowerCase();
+	return normalized === 'jpg' ? 'image/jpeg' : `image/${normalized}`;
+}
+
+export async function addPhotosToAlbumBatch(
+	albumId: number,
+	requesterId: number,
+	photos: CloudinaryPhotoInput[]
+) {
+	const expectedPrefix = `${albumUploadFolder(albumId)}/`;
+
+	// Reject (and clean up) anything that didn't come from the folder we
+	// signed for THIS album, or that's larger than what we allow — a client
+	// could otherwise submit a publicId it uploaded somewhere else entirely.
+	const invalid = photos.filter(
+		(p) => !p.publicId.startsWith(expectedPrefix) || p.bytes > PHOTO_MAX_SIZE_BYTES
+	);
+	if (invalid.length > 0) {
+		await removeCloudinaryAssets(invalid.map((p) => p.publicId));
+		throw new ValidationError('One or more uploaded images were invalid or too large.');
 	}
 
-	// Check before the (potentially slow) upload so we don't burn storage on
-	// a file we're about to reject.
-	await assertAlbumNotFull(prisma, albumId);
-
-	const { url, sizeBytes } = await storage.resolve(file);
-
 	try {
-		return prisma.$transaction(async (tx) => {
-			await assertAlbumNotFull(tx, albumId); // re-check inside the transaction
-			const photo = await tx.photo.create({
-				data: {
-					authorId: requesterId,
-					title: input.title ?? null,
-					description: input.description ?? null,
-					sharingMode: album.sharingMode,
-					imageUrl: url,
-					imageMimeType: file.mimetype,
-					imageSizeBytes: sizeBytes,
-					isStandalone: false,
-				},
-			});
+		return await prisma.$transaction(async (tx) => {
+			const album = await tx.album.findUnique({ where: { id: albumId } });
+			if (!album) throw new NotFoundError('Album not found.');
+			if (album.authorId !== requesterId) {
+				throw new ForbiddenError('You can only add photos to your own albums.');
+			}
 
-			const position = await getNextPosition(tx, albumId);
-			await tx.albumPhoto.create({ data: { albumId, photoId: photo.id, position } });
-			await assignCoverIfNeeded(tx, albumId, photo.id);
+			const existingCount = await tx.albumPhoto.count({ where: { albumId } });
+			if (existingCount + photos.length > MAX_ALBUM_PHOTOS) {
+				throw new ValidationError(`Albums can contain at most ${MAX_ALBUM_PHOTOS} photos.`);
+			}
+
+			let nextPosition = await getNextPosition(tx, albumId);
+			let coverAssigned = Boolean(album.coverPhotoId);
+
+			for (const p of photos) {
+				const photo = await tx.photo.create({
+					data: {
+						authorId: requesterId,
+						title: null,
+						description: null,
+						sharingMode: album.sharingMode,
+						imageUrl: p.secureUrl,
+						imagePublicId: p.publicId,
+						imageMimeType: cloudinaryFormatToMime(p.format),
+						imageSizeBytes: p.bytes,
+						isStandalone: false,
+					},
+				});
+				await tx.albumPhoto.create({
+					data: { albumId, photoId: photo.id, position: nextPosition++ },
+				});
+				if (!coverAssigned) {
+					await tx.album.update({ where: { id: albumId }, data: { coverPhotoId: photo.id } });
+					coverAssigned = true;
+				}
+			}
 
 			return getAlbumDtoById(tx, albumId, requesterId);
 		});
 	} catch (error) {
-		await storage.remove(url);
+		// Transaction rolled back — don't leave the assets orphaned in Cloudinary.
+		await removeCloudinaryAssets(photos.map((p) => p.publicId));
 		throw error;
 	}
 }

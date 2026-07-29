@@ -13,7 +13,7 @@ const ALLOWED_MIME_TYPES = new Set(['image/jpeg', 'image/jpg', 'image/png', 'ima
 const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif']);
 
 // 5MB for Photo/Album images, 2MB for avatar.
-const PHOTO_MAX_SIZE_BYTES = 5 * 1024 * 1024;
+export const PHOTO_MAX_SIZE_BYTES = 5 * 1024 * 1024;
 const AVATAR_MAX_SIZE_BYTES = 2 * 1024 * 1024;
 
 function imageFileFilter(_req: Request, file: Express.Multer.File, cb: FileFilterCallback) {
