@@ -162,6 +162,9 @@ export async function forgotPassword(input: ForgotPasswordRequest) {
 	const user = await prisma.user.findUnique({
 		where: { email: input.email.toLowerCase() },
 	});
+	if (!user) {
+		throw new NotFoundError('Email does not exist on the system');
+	}
 
 	if (user) {
 		const resetToken = createPasswordResetToken();

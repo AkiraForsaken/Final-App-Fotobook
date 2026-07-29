@@ -27,8 +27,8 @@ export const ForgotPassword = () => {
 		try {
 			await authService.forgotPassword({ email: email.trim() });
 			setSubmitted(true);
-		} catch {
-			setError('Something went wrong. Please try again later.');
+		} catch (err: unknown) {
+			setError(err instanceof Error ? err.message : 'Email does not exist on the system');
 		} finally {
 			setLoading(false);
 		}
