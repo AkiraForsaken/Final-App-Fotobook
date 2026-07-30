@@ -66,8 +66,8 @@ export const AlbumThumb = ({ album, isOwner = false, onOpen, onEdit }: AlbumThum
 						e.stopPropagation();
 						onEdit(album);
 					}}
-					className="absolute bottom-2 right-2 z-10 bg-white/90 text-text-secondary cursor-pointer
-					rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-surface"
+					className="absolute bottom-2 right-2 z-10 bg-black/30 sm:bg-white/90 text-text-secondary cursor-pointer
+					rounded-full px-1.5 pb-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity hover:bg-surface"
 					title="Edit album"
 				>
 					<i className="fa-solid fa-pen text-xs" />

@@ -23,7 +23,7 @@ export const TopBar = ({ onMenuToggle, onSearch, adminLayout }: TopBarProps) => 
 		navigate(APP_ROUTE.LOGIN);
 	};
 	return (
-		<header className="bg-blue-800 sm:sticky top-0 z-20">
+		<header className="bg-blue-800 sticky top-0 z-20">
 			<div className="w-full px-4 lg:px-8">
 				<div className="flex h-14 items-center justify-between">
 					{/* Left: hamburger + logo + search */}
