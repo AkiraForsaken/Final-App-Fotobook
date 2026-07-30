@@ -1,6 +1,6 @@
-import { cn } from '../utils/cn.ts';
+import { cn } from '../../utils/cn.ts';
 import { ImageUploadZone } from './ImageUploadZone.tsx';
-import type { SharingMode } from '../types/index.ts';
+import type { SharingMode } from '../../types/index.ts';
 
 export interface MediaFormState {
 	title: string;

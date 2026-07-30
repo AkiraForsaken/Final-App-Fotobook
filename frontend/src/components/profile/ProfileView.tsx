@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router';
 import { Button } from '../myUI/Button';
 import { ProfileHeader } from './ProfileHeader';
-import { ProfileTabs } from '../ProfileTabs';
+import { ProfileTabs } from '../profile/ProfileTabs';
 import { PhotoThumb } from '../photo/PhotoThumb';
 import { AlbumThumb } from '../album/AlbumThumb';
 import { FollowCard } from '../FollowCard';

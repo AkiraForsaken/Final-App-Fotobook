@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { MediaFormState, MediaFormErrors } from '../components/MediaFormFields.tsx';
+import type { MediaFormState, MediaFormErrors } from '../components/form/MediaFormFields.tsx';
 import type { SharingMode } from '../types/index.ts';
 
 const TITLE_MAX = 140;

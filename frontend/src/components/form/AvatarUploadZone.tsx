@@ -1,7 +1,7 @@
 import { useRef } from 'react';
-import { cn } from '../utils/cn.ts';
-import { AVATAR_ACCEPTED_EXT, validateAvatarFile } from '../utils/imageValidation.ts';
-import { Avatar } from './myUI/Avatar.tsx';
+import { cn } from '../../utils/cn.ts';
+import { AVATAR_ACCEPTED_EXT, validateAvatarFile } from '../../utils/imageValidation.ts';
+import { Avatar } from '../myUI/Avatar.tsx';
 
 interface AvatarUploadZoneProps {
 	file: File | null;

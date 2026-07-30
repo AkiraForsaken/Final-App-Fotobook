@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { cn } from '../utils/cn.ts';
-import type { PasswordChangeValues, PasswordChangeErrors } from '../hooks/usePasswordChangeForm.ts';
+import { cn } from '../../utils/cn.ts';
+import type {
+	PasswordChangeValues,
+	PasswordChangeErrors,
+} from '../../hooks/usePasswordChangeForm.ts';
 
 interface PasswordChangeFieldsProps {
 	values: PasswordChangeValues;

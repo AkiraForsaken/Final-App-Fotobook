@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { cn } from '../utils/cn.ts';
-import { ACCEPTED_EXT, validateImageFile } from '../utils/imageValidation.ts';
+import { cn } from '../../utils/cn.ts';
+import { ACCEPTED_EXT, validateImageFile } from '../../utils/imageValidation.ts';
 
 interface ImageUploadZoneProps {
 	file: File | null;

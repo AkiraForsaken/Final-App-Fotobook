@@ -2,7 +2,7 @@ import { useCallback, useState } from 'react';
 import { useNavigate } from 'react-router';
 import { useMediaForm, type MediaPayload } from '../hooks/useMediaForm.ts';
 import { contentService } from '../service/contentService.ts';
-import { MediaFormFields } from '../components/MediaFormFields.tsx';
+import { MediaFormFields } from '../components/form/MediaFormFields.tsx';
 import { Toast } from '../components/myUI/Toast.tsx';
 import { Button } from '../components/myUI/Button.tsx';
 import { APP_ROUTE } from '../utils/routes.ts';

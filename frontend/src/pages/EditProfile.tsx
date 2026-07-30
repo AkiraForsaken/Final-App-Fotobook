@@ -6,7 +6,7 @@ import { usePasswordChangeForm } from '../hooks/usePasswordChangeForm.ts';
 import { useAdminPasswordForm } from '../hooks/useAdminPasswordForm.ts';
 import { adminService } from '../service/adminService.ts';
 import { EditProfileFields } from '../components/profile/EditProfileFields.tsx';
-import { PasswordChangeFields } from '../components/PasswordChangeFields.tsx';
+import { PasswordChangeFields } from '../components/form/PasswordChangeFields.tsx';
 import { Toast } from '../components/myUI/Toast.tsx';
 import { Button } from '../components/myUI/Button.tsx';
 import { APP_ROUTE } from '../utils/routes.ts';

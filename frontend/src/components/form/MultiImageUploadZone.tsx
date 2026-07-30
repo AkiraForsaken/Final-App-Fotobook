@@ -1,11 +1,11 @@
 import { useRef } from 'react';
-import { cn } from '../utils/cn.ts';
-import { ACCEPTED_EXT, validateImageFile } from '../utils/imageValidation.ts';
+import { cn } from '../../utils/cn.ts';
+import { ACCEPTED_EXT, validateImageFile } from '../../utils/imageValidation.ts';
 import {
 	MAX_ALBUM_PHOTOS,
 	type StagedPhoto,
 	type StagedPhotoResult,
-} from '../hooks/useAlbumPhotoStaging.ts';
+} from '../../hooks/useAlbumPhotoStaging.ts';
 
 interface MultiImageUploadZoneProps {
 	files?: File[];

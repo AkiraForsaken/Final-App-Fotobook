@@ -1,6 +1,6 @@
 import { useSearchParams } from 'react-router';
-import type { ProfileTab } from '../types/index';
-import { cn } from '../utils/cn.ts';
+import type { ProfileTab } from '../../types/index';
+import { cn } from '../../utils/cn.ts';
 
 const TABS: { value: ProfileTab; label: string; icon: string }[] = [
 	{ value: 'photos', label: 'Photos', icon: 'fa-solid fa-image' },

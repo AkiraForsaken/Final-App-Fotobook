@@ -12,8 +12,8 @@ import {
 	MediaFormFields,
 	type MediaFormErrors,
 	type MediaFormState,
-} from '../components/MediaFormFields.tsx';
-import { MultiImageUploadZone } from '../components/MultiImageUploadZone.tsx';
+} from '../components/form/MediaFormFields.tsx';
+import { MultiImageUploadZone } from '../components/form/MultiImageUploadZone.tsx';
 
 const TITLE_MAX = 140;
 const DESC_MAX = 300;
