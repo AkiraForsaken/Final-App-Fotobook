@@ -9,6 +9,7 @@ import { errorHandler } from './middlewares/error-handler.js';
 import { env } from './schemas/env.js';
 import { prisma } from './prisma/client.js';
 import { apiRateLimit } from './middlewares/rate-limit.js';
+import { passport } from './config/passport.js';
 
 const UPLOAD_DIR = env.UPLOAD_DIR ?? path.join(process.cwd(), 'uploads');
 export const app = express();
@@ -20,6 +21,7 @@ app.use(morgan(env.NODE_ENV === 'production' ? 'combined' : 'dev'));
 app.use(cors({ origin: env.FRONTEND_URL, credentials: true }));
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
+app.use(passport.initialize());
 app.use('/uploads', express.static(UPLOAD_DIR));
 
 app.get('/health', (_req, res) => res.status(200).json({ status: 'ok' }));

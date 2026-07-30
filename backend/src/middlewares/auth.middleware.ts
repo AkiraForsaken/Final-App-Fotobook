@@ -1,29 +1,19 @@
 import type { NextFunction, Request, Response } from 'express';
-import { verifyAccessToken } from '../utils/jwt.js';
 import { UnauthorizedError } from '../utils/app-error.js';
 import { ForbiddenError } from '../utils/app-error.js';
 import { prisma } from '../prisma/client.js';
-
-function extractBearerToken(req: Request): string | null {
-	const header = req.headers.authorization;
-	if (!header?.startsWith('Bearer ')) return null;
-	return header.slice('Bearer '.length);
-}
-
+import passport from 'passport';
 /** Use on routes that require a logged-in user (e.g. POST /api/photos). */
 
-export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
-	const token = extractBearerToken(req);
-	if (!token) {
-		throw new UnauthorizedError('Please log in to continue.');
-	}
-	try {
-		const payload = verifyAccessToken(token);
-		req.user = { id: payload.sub, role: payload.role };
+export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+	passport.authenticate('jwt', { session: false }, (err: unknown, user: Express.User | false) => {
+		if (err) return next(err);
+		if (!user) {
+			return next(new UnauthorizedError('Your session has expired. Please log in again.'));
+		}
+		req.user = user;
 		next();
-	} catch {
-		throw new UnauthorizedError('Your session has expired. Please log in again.');
-	}
+	})(req, res, next);
 }
 
 /**
@@ -32,21 +22,12 @@ export function requireAuth(req: Request, _res: Response, next: NextFunction): v
  * A missing or invalid token is NOT an error here — it just means
  * req.user stays undefined and the route treats the caller as a guest.
  */
-export function optionalAuth(req: Request, _res: Response, next: NextFunction): void {
-	const header = req.headers.authorization;
-	if (!header?.startsWith('Bearer ')) {
+export function optionalAuth(req: Request, res: Response, next: NextFunction): void {
+	passport.authenticate('jwt', { session: false }, (_err: unknown, user: Express.User | false) => {
+		// <-- was AccessTokenPayload
+		if (user) req.user = user;
 		next();
-		return;
-	}
-
-	try {
-		const payload = verifyAccessToken(header.slice('Bearer '.length));
-		req.user = { id: payload.sub, role: payload.role };
-	} catch {
-		// Invalid/expired token on an optional route — proceed as a guest
-		// rather than failing the request.
-	}
-	next();
+	})(req, res, next);
 }
 
 export function requireAdmin(req: Request, res: Response, next: NextFunction) {

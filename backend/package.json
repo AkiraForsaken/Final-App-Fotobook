@@ -14,7 +14,11 @@
 		"prisma:migrate": "prisma migrate dev",
 		"prisma:studio": "prisma studio",
 		"format": "prettier --write \"src/**/*.{js,ts,tsx,css,html,json,md}\"",
-		"email:create-ethereal-account": "tsx scripts/create-ethereal-account.ts"
+		"email:create-ethereal-account": "tsx scripts/create-ethereal-account.ts",
+		"start:prod": "pm2 start ecosystem.config.cjs --env production",
+		"pm2:reload": "pm2 reload ecosystem.config.cjs --env production",
+		"pm2:stop": "pm2 stop ecosystem.config.cjs",
+		"pm2:logs": "pm2 logs fotobook-api"
 	},
 	"dependencies": {
 		"@prisma/adapter-pg": "^7.8.0",
@@ -30,6 +34,9 @@
 		"morgan": "^1.11.0",
 		"multer": "^2.2.0",
 		"nodemailer": "^9.0.3",
+		"passport": "^0.7.0",
+		"passport-jwt": "^4.0.1",
+		"passport-local": "^1.0.0",
 		"pg": "^8.22.0",
 		"pino": "^10.3.1",
 		"resend": "^6.18.0",
@@ -45,6 +52,9 @@
 		"@types/multer": "^2.2.0",
 		"@types/node": "^24.13.2",
 		"@types/nodemailer": "^8.0.1",
+		"@types/passport": "^1.0.17",
+		"@types/passport-jwt": "^4.0.1",
+		"@types/passport-local": "^1.0.38",
 		"@types/pg": "^8.20.0",
 		"@types/supertest": "^7.2.0",
 		"dotenv": "^17.4.2",

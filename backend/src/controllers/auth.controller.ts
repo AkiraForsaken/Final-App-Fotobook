@@ -1,6 +1,9 @@
-import type { Request, Response } from 'express';
+import type { NextFunction, Request, Response } from 'express';
 import * as authService from '../services/auth.service.js';
 import { env } from '../schemas/env.js';
+import { passport } from '../config/passport.js';
+import { User } from '@prisma/client';
+import { UnauthorizedError } from '../utils/app-error.js';
 
 const REFRESH_TOKEN_COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 const REFRESH_TOKEN_COOKIE_NAME = 'refreshToken';
@@ -33,14 +36,24 @@ export async function signup(req: Request, res: Response) {
 	});
 }
 
-export async function login(req: Request, res: Response) {
-	const result = await authService.login(req.body);
-	setRefreshTokenCookie(res, result.refreshToken, result.refreshTokenExpiresAt);
-
-	res.json({
-		user: result.user,
-		accessToken: result.accessToken,
-	});
+export function login(req: Request, res: Response, next: NextFunction) {
+	passport.authenticate(
+		'local',
+		{ session: false },
+		async (err: unknown, user: User | false, info?: { message?: string }) => {
+			if (err) return next(err);
+			if (!user) {
+				return next(new UnauthorizedError(info?.message ?? 'Incorrect email or password.'));
+			}
+			try {
+				const result = await authService.issueSessionTokens(user);
+				setRefreshTokenCookie(res, result.refreshToken, result.refreshTokenExpiresAt);
+				res.json({ user: result.user, accessToken: result.accessToken });
+			} catch (e) {
+				next(e);
+			}
+		}
+	)(req, res, next);
 }
 
 export async function logout(req: Request, res: Response) {

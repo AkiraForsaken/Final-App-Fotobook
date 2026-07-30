@@ -89,24 +89,22 @@ export async function signup(input: SignupRequest) {
 }
 
 /**
- * Log in user by email/password and return user + tokens.
+ * Verify email/password credentials. Used by the passport-local strategy. Does NOT issue tokens or update lastLoginAt — see issueSessionTokens.
  */
-export async function login(input: LoginRequest) {
+export async function verifyCredentials(email: string, password: string) {
 	const user = await prisma.user.findUnique({
-		where: { email: input.email.toLowerCase() },
+		where: { email: email.toLowerCase() },
 	});
 
 	if (!user) {
 		throw new UnauthorizedError('Incorrect email or password.');
 	}
 
-	// Verify password
-	const passwordMatches = await bcrypt.compare(input.password, user.passwordHash);
+	const passwordMatches = await bcrypt.compare(password, user.passwordHash);
 	if (!passwordMatches) {
 		throw new UnauthorizedError('Incorrect email or password.');
 	}
 
-	// Check if user is active
 	if (!user.isActive) {
 		throw new UnauthorizedError('Your account has been deactivated.');
 	}
@@ -114,15 +112,22 @@ export async function login(input: LoginRequest) {
 		throw new UnauthorizedError('Please verify your email before signing in.');
 	}
 
+	return user;
+}
+
+/**
+ * Issue access + refresh tokens for a user already verified by passport-local, and record the login.
+ */
+export async function issueSessionTokens(user: { id: number; role: 'user' | 'admin' }) {
 	const tokens = await createAuthTokens(user);
 
-	await prisma.user.update({
+	const updated = await prisma.user.update({
 		where: { id: user.id },
 		data: { lastLoginAt: new Date() },
 	});
 
 	return {
-		user: toAuthUserDto(user),
+		user: toAuthUserDto(updated),
 		...tokens,
 	};
 }

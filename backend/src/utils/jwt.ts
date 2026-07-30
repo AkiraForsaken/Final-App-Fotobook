@@ -33,12 +33,6 @@ export function signAccessToken(payload: AccessTokenPayload): string {
 	return jwt.sign(payload, ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
 }
 
-export function verifyAccessToken(token: string): AccessTokenPayload {
-	// Throws jwt.JsonWebTokenError / jwt.TokenExpiredError on failure
-	// jwt.verify()'s return type doesn't know about our payload shape.
-	return jwt.verify(token, ACCESS_TOKEN_SECRET) as unknown as AccessTokenPayload;
-}
-
 // Token Hash (for storing refresh tokens securely in the database)
 export function hashToken(token: string): string {
 	return crypto.createHash('sha256').update(token).digest('hex');
