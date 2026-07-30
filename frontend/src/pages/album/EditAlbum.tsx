@@ -1,20 +1,20 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router';
-import { useAuth } from '../hooks/useAuth.ts';
-import { contentService, type CloudinaryPhotoInput } from '../service/contentService.ts';
+import { useAuth } from '../../hooks/useAuth.ts';
+import { contentService, type CloudinaryPhotoInput } from '../../service/contentService.ts';
 import {
 	MediaFormFields,
 	type MediaFormState,
 	type MediaFormErrors,
-} from '../components/form/MediaFormFields.tsx';
-import { ExistingPhotoPicker } from '../components/ExistingPhotoPicker.tsx';
-import { Toast } from '../components/myUI/Toast.tsx';
-import { Button } from '../components/myUI/Button.tsx';
-import { APP_ROUTE } from '../utils/routes.ts';
-import { MAX_ALBUM_PHOTOS } from '../hooks/useAlbumPhotoStaging.ts';
-import type { Album, Photo } from '../types/index.ts';
-import { MultiImageUploadZone } from '../components/form/MultiImageUploadZone.tsx';
-import { uploadFileToCloudinary } from '../service/cloudinaryUpload.ts';
+} from '../../components/form/MediaFormFields.tsx';
+import { ExistingPhotoPicker } from '../../components/ExistingPhotoPicker.tsx';
+import { Toast } from '../../components/myUI/Toast.tsx';
+import { Button } from '../../components/myUI/Button.tsx';
+import { APP_ROUTE } from '../../utils/routes.ts';
+import { MAX_ALBUM_PHOTOS } from '../../hooks/useAlbumPhotoStaging.ts';
+import type { Album, Photo } from '../../types/index.ts';
+import { MultiImageUploadZone } from '../../components/form/MultiImageUploadZone.tsx';
+import { uploadFileToCloudinary } from '../../service/cloudinaryUpload.ts';
 
 const TITLE_MAX = 140;
 const DESC_MAX = 300;

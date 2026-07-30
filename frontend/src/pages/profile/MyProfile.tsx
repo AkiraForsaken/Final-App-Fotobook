@@ -1,6 +1,6 @@
-import { useProfile } from '../hooks/useProfile.ts';
-import { ProfileView } from '../components/profile/ProfileView.tsx';
-import type { User } from '../types/index.ts';
+import { useProfile } from '../../hooks/useProfile.ts';
+import { ProfileView } from '../../components/profile/ProfileView.tsx';
+import type { User } from '../../types/index.ts';
 
 interface MyProfileProps {
 	currentUser: User;

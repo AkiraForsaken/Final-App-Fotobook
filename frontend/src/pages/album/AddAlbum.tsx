@@ -1,19 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
-import { useAuth } from '../hooks/useAuth.ts';
-import { useAlbumPhotoStaging, type StagedPhoto } from '../hooks/useAlbumPhotoStaging.ts';
-import { Toast } from '../components/myUI/Toast.tsx';
-import { Button } from '../components/myUI/Button.tsx';
-import { ExistingPhotoPicker } from '../components/ExistingPhotoPicker.tsx';
-import { APP_ROUTE } from '../utils/routes.ts';
-// import { cn } from '../utils/cn.ts';
-// import type { SharingMode } from '../types/index.ts';
+import { useAuth } from '../../hooks/useAuth.ts';
+import { useAlbumPhotoStaging, type StagedPhoto } from '../../hooks/useAlbumPhotoStaging.ts';
+import { Toast } from '../../components/myUI/Toast.tsx';
+import { Button } from '../../components/myUI/Button.tsx';
+import { ExistingPhotoPicker } from '../../components/ExistingPhotoPicker.tsx';
+import { APP_ROUTE } from '../../utils/routes.ts';
 import {
 	MediaFormFields,
 	type MediaFormErrors,
 	type MediaFormState,
-} from '../components/form/MediaFormFields.tsx';
-import { MultiImageUploadZone } from '../components/form/MultiImageUploadZone.tsx';
+} from '../../components/form/MediaFormFields.tsx';
+import { MultiImageUploadZone } from '../../components/form/MultiImageUploadZone.tsx';
 
 const TITLE_MAX = 140;
 const DESC_MAX = 300;

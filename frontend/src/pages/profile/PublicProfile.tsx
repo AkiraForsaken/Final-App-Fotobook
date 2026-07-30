@@ -1,7 +1,7 @@
 import { useParams } from 'react-router';
-import { useProfile } from '../hooks/useProfile.ts';
-import { ProfileView } from '../components/profile/ProfileView.tsx';
-import type { User } from '../types/index.ts';
+import { useProfile } from '../../hooks/useProfile.ts';
+import { ProfileView } from '../../components/profile/ProfileView.tsx';
+import type { User } from '../../types/index.ts';
 
 interface PublicProfileProps {
 	currentUser: User | null;
