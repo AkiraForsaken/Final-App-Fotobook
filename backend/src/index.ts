@@ -2,10 +2,16 @@ import 'dotenv/config';
 import { app } from './app.js';
 import { env } from './schemas/env.js';
 import { prisma } from './prisma/client.js';
+import { scheduleTokenCleanup } from './jobs/cleanupTokens.job.js';
 
 const PORT = env.PORT || 4000;
 const server = app.listen(PORT, () => {
-	console.log(`API server running on http://localhost:${PORT}`);
+	console.log(
+		env.NODE_ENV === 'production'
+			? `API server running on production on port ${PORT}`
+			: `API server running on http://localhost:${PORT}`
+	);
+	scheduleTokenCleanup();
 });
 
 async function shutdown(signal: string) {
