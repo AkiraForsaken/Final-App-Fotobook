@@ -8,7 +8,6 @@ import {
 	EMAIL_VERIFICATION_TOKEN_TTL_HOURS,
 } from '../utils/jwt.js';
 import type {
-	LoginRequest,
 	SignupRequest,
 	VerifyEmailRequest,
 	ForgotPasswordRequest,

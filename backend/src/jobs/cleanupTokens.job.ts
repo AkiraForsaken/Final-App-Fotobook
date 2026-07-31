@@ -22,7 +22,7 @@ export async function cleanupExpiredTokens(): Promise<void> {
 				where: { OR: [{ expiresAt: { lt: now } }, { usedAt: { not: null } }] },
 			}),
 			prisma.emailVerificationToken.deleteMany({
-				where: { OR: [{ expiresAt: { lt: now } }, { used: { not: null } }] },
+				where: { OR: [{ expiresAt: { lt: now } }, { usedAt: { not: null } }] },
 			}),
 		]);
 
